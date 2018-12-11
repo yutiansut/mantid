@@ -375,7 +375,6 @@ def pcolormesh(axes, workspace, *args, **kwargs):
             return _pcolorpieces(axes, workspace, distribution, *args, **kwargs)
         else:
             (x, y, z) = get_matrix_2d_data(workspace, distribution, histogram2D=True)
-    print(x.shape,y.shape,z.shape)
     return axes.pcolormesh(x, y, z, *args, **kwargs)
 
 
@@ -410,7 +409,7 @@ class ScalingAxesImage(mimage.AxesImage):
         max_dims = (3840,2160) # 4K resolution
         if dims[0] > max_dims[0] or dims[1] > max_dims[1]:
             new_dims = numpy.minimum(dims, max_dims)
-            self.unsampled_data = resize(A,new_dims,mode='constant',cval=numpy.nan)
+            self.unsampled_data = resize(A, new_dims, mode='constant', cval=numpy.nan, anti_aliasing=True)
         else:
             self.unsampled_data = A
         super(mimage.AxesImage, self).set_data(A)
@@ -426,11 +425,10 @@ class ScalingAxesImage(mimage.AxesImage):
         if dx != self.dx or dy != self.dy:
             if dims[0] > dx or dims[1] > dy:
                 new_dims = numpy.minimum(dims,[dx,dy])
-                sampled_data = resize(self.unsampled_data,new_dims,mode='constant',cval=numpy.nan)
+                sampled_data = resize(self.unsampled_data, new_dims, mode='constant', cval=numpy.nan, anti_aliasing=True)
                 self.dx = dx
                 self.dy = dy
                 super(mimage.AxesImage, self).set_data(sampled_data)
-        #print(dx,dy,dims)
         return super(ScalingAxesImage,self).draw(renderer)
 
 def _imshow(axes, z, cmap=None, norm=None, aspect=None,
@@ -506,7 +504,6 @@ def imshow(axes, workspace, *args, **kwargs):
         raise Exception('Unevenly spaced bins are not supported by imshow')
     if 'extent' not in kwargs:
         kwargs['extent'] = [x[0, 0], x[0, -1], y[0, 0], y[-1, 0]]
-    print(x.shape,y.shape,z.shape)
     return _imshow(axes, z, *args, **kwargs)
 
 

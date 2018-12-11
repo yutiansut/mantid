@@ -196,14 +196,20 @@ def pcolormesh_from_names(names, fig=None):
         return None
 
 def use_imshow(ws):
-    compatible = ws.isCommonBins()
-    #print("compatible? ",compatible)
-    try:
-        _ = ws.blocksize()
-    except RuntimeError:
-        compatible = False
-    #print("compatible? ",compatible)
-    return compatible
+    if not ws.isCommonBins():
+        return False
+
+    x = ws.dataX(0)
+    difference = np.diff(x)
+    if not np.all(np.isclose(x, x[0])):
+        return False
+
+    y = ws.getAxis(1).extractValues()
+    difference = np.diff(y)
+    if not np.all(np.isclose(y, y[0])):
+        return False
+
+    return True
 
 def pcolormesh(workspaces, fig=None):
     """
