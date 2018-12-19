@@ -459,6 +459,7 @@ private:
   bool m_recordHistoryForChild; ///< Flag to indicate whether history should be
                                 /// recorded. Applicable to child algs only
   bool m_alwaysStoreInADS; ///< Always store in the ADS, even for child algos
+  bool m_processGroups; /// < Algorithm is processing a group of workspaces
   bool m_runningAsync;     ///< Algorithm is running asynchronously
   std::atomic<bool> m_running; ///< Algorithm is running
   bool m_rethrow; ///< Algorithm should rethrow exceptions while executing

@@ -962,7 +962,7 @@ void Algorithm::fillHistory() {
     // Loop over the output workspaces
     for (outWS = outputWorkspaces.begin(); outWS != outputWorkspaces.end();
          ++outWS) {
-      WorkspaceGroup_sptr wsGroup =
+      WorkspaceGroup_sptr outWsGroup =
           boost::dynamic_pointer_cast<WorkspaceGroup>(*outWS);
 
       // Loop over the input workspaces, making the call that copies their
@@ -973,12 +973,14 @@ void Algorithm::fillHistory() {
            ++inWS) {
         (*outWS)->history().addHistory((*inWS)->getHistory());
 
+        WorkspaceGroup_sptr inputWsGroup =
+            boost::dynamic_pointer_cast<WorkspaceGroup>(*inWS);
         // Add history to each child of output workspace group
-        if (wsGroup) {
+        if (outWsGroup) {
           for (size_t i = 0; i < wsGroup->size(); i++) {
             wsGroup->getItem(i)->history().addHistory((*inWS)->getHistory());
           }
-        }
+        } else if ()
       }
 
       // Add the history for the current algorithm to all the output workspaces
@@ -1085,8 +1087,17 @@ void Algorithm::findWorkspaceProperties(
       const Property *wsPropProp = dynamic_cast<Property *>(*it);
       // Check we actually have a workspace, it may have been optional
       Workspace_sptr workspace = wsProp->getWorkspace();
-      if (!workspace)
-        continue;
+      if (!workspace) {
+        if (m_processGroups) {
+          workspace =
+              AnalysisDataService::Instance().retrieve(wsPropProp->value());
+          if (!workspace) {
+            continue;
+          }
+        } else {
+          continue;
+        }
+      }
       unsigned int direction = wsPropProp->direction();
       if (direction == Direction::Input || direction == Direction::InOut) {
         inputWorkspaces.emplace_back(workspace);
@@ -1307,6 +1318,7 @@ bool Algorithm::checkGroups() {
   } // end for each group
 
   // If you get here, then the groups are compatible
+  m_processGroups = processGroups;
   return processGroups;
 }
 
@@ -1357,23 +1369,17 @@ bool Algorithm::doCallProcessGroups(
   interruption_point();
 
   if (completed) {
-    // in the base processGroups each individual exec stores its outputs
-    if (!m_usingBaseProcessGroups && m_alwaysStoreInADS)
-      this->store();
-
     // Get how long this algorithm took to run
     const float duration = timer.elapsed();
-    // Log that execution has completed.
-    reportCompleted(duration, true /* this is for group processing*/);
 
     m_history = boost::make_shared<AlgorithmHistory>(this, startTime, duration,
                                                      ++g_execCount);
 
     if (trackingHistory() && m_history) {
+      // std::vector<Workspace_sptr> inputWorkspaces, outputWorkspaces;
+      // findWorkspaceProperties(inputWorkspaces, outputWorkspaces, true);
 
-      std::vector<Workspace_sptr> inputWorkspaces, outputWorkspaces;
-      findWorkspaceProperties(inputWorkspaces, outputWorkspaces);
-
+      /*
       // We need to find the workspaces to add the history to.
       if (outputWorkspaces.size() == 0 && inputWorkspaces.size() == 0) {
         outputWorkspaces.insert(outputWorkspaces.end(),
@@ -1396,9 +1402,42 @@ bool Algorithm::doCallProcessGroups(
           outputWorkspace->history().addHistory(m_history);
         }
       }
-    }
-  }
 
+      // Sanity check to make sure that the history of the original children is
+      // carried to the next children by adding it to the history.
+      for (auto c = 0u; c < outputWorkspaces.size(); c++) {
+        for (auto j = 0u; j < m_groups.size(); j++) {
+          for (auto i = 0u; i < m_groups[j].size(); ++i) {
+            // try {
+              auto originalGroupitem = m_groups[j][i];
+              auto outputWorkspace =
+                  boost::dynamic_pointer_cast<WorkspaceGroup>(
+                      outputWorkspaces[c]);
+              if (outputWorkspace) {
+                auto wsItem = outputWorkspace->getItem(i);
+                if (originalGroupitem->getName() == wsItem->getName()) {
+                  wsItem->history().addHistory(originalGroupitem->history());
+                }
+              }
+            //} catch (...) {
+              // This will catch any exceptions in getting the workspace
+            //  g_log.debug(
+            //      "An exception was thrown when casting to "
+            //      "WorkspaceGroup from outputWorkspaces in processGroup");
+            //}
+          }
+        }
+      }*/
+      fillHistory();
+    }
+
+    // in the base processGroups each individual exec stores its outputs
+    if (!m_usingBaseProcessGroups && m_alwaysStoreInADS)
+      this->store();
+
+    // Log that execution has completed.
+    reportCompleted(duration, true /* this is for group processing*/);
+  }
   setExecuted(completed);
   notificationCenter().postNotification(
       new FinishedNotification(this, isExecuted()));
