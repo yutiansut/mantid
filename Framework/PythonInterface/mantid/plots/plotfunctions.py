@@ -398,6 +398,7 @@ class ScalingAxesImage(mimage.AxesImage):
         self.dx = None
         self.dy = None
         self.unsampled_data = None
+        self.unsampled_extent = extent
         super(mimage.AxesImage, self).__init__(
             ax,
             cmap=cmap,
@@ -434,14 +435,34 @@ class ScalingAxesImage(mimage.AxesImage):
         if dx != self.dx or dy != self.dy:
             if dims[0] > dx or dims[1] > dy:
                 new_dims = numpy.minimum(dims,[dx,dy])
-                if(_skimage_version()):
-                    sampled_data = resize(self.unsampled_data, new_dims, mode='constant', cval=numpy.nan, anti_aliasing=True)
-                else:
-                    sampled_data = resize(self.unsampled_data, new_dims, mode='constant', cval=numpy.nan)
+                #if(_skimage_version()):
+                #    self.sampled_data = resize(self.unsampled_data, new_dims, mode='constant', cval=numpy.nan, anti_aliasing=True)
+                #else:
+                #    self.sampled_data = resize(self.unsampled_data, new_dims, mode='constant', cval=numpy.nan)
                 self.dx = dx
                 self.dy = dy
-                super(mimage.AxesImage, self).set_data(sampled_data)
-        return super(ScalingAxesImage,self).draw(renderer)
+                super(mimage.AxesImage, self).set_data(self.unsampled_data)
+        return super(ScalingAxesImage, self).draw(renderer)
+
+    def _ylim_changed(self, ax):
+        dims = self._A.data.shape
+        print("meow",self._A.shape)
+        new_xlim = ax.get_xlim()
+        new_ylim = ax.get_ylim()
+        print("extent",self.unsampled_extent)
+        pxmin = int(round(float(dims[1])/(self.unsampled_extent[1] - self.unsampled_extent[0])*(new_xlim[0] - self.unsampled_extent[0])))
+        pxmax = int(round(float(dims[1])/(self.unsampled_extent[1] - self.unsampled_extent[0])*(new_xlim[1] - self.unsampled_extent[0])))
+        pymax = dims[0] - int(round(float(dims[0])/(self.unsampled_extent[3] - self.unsampled_extent[2])*(new_ylim[0] - self.unsampled_extent[2])))
+        pymin = dims[0] - int(round(float(dims[0])/(self.unsampled_extent[3] - self.unsampled_extent[2])*(new_ylim[1] - self.unsampled_extent[2])))
+        if self._A.data is not None and pymax - pymin != dims[1] and pymax - pymin != dims[0]:
+            value = numpy.nanmax(self.unsampled_data)*1.01
+            print('marking zoomed section', value)
+            print('xrange',pxmin,pxmax,dims[0])
+            print('yrange',pymin,pymax,dims[1])
+            for i in range(pymin, pymax, 1):
+                for j in range(pxmin, pxmax, 1):
+                    self._A.data[i, j] = value
+        self.stale = True
 
 def _imshow(axes, z, cmap=None, norm=None, aspect=None,
             interpolation=None, alpha=None, vmin=None, vmax=None,
@@ -477,6 +498,7 @@ def _imshow(axes, z, cmap=None, norm=None, aspect=None,
     im.set_extent(im.get_extent())
 
     axes.add_image(im)
+    axes.callbacks.connect('ylim_changed', im._ylim_changed)
     return im
 
 
