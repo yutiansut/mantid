@@ -335,7 +335,58 @@ void MergeMD::doMergeDefault() {
   out->refreshCache();
 }
 
+bool equalBcTreeParams(const BoxController& bc1, const BoxController& bc2) {
+  if (bc1.getMaxDepth() != bc2.getMaxDepth()) return false;
+  if (bc1.getSplitThreshold() != bc2.getSplitThreshold()) return false;
+  if (bc1.getNDims() != bc2.getNDims()) return false;
+  for (size_t d = 0; d < bc1.getNDims(); ++d)
+    if (bc1.getSplitInto(d) != bc2.getSplitInto(d)) return false;
+  return true;
+}
+
 void MergeMD::doMergeIndexed() {
+// Find the biggest workspace with !!!exact!!! the same extensions and as output
+  auto numDims = out->getNumDims();
+  std::vector<boost::shared_ptr<const Mantid::Geometry::IMDDimension>> outDims(numDims);
+  std::generate(outDims.begin(), outDims.end(), [this](){
+    static size_t d = 0;
+    return this->out->getDimension(d++);
+  });
+
+  auto lastIter = std::remove_if(m_workspaces.begin(), m_workspaces.end(),
+      [this, &outDims, &numDims](const Mantid::API::IMDEventWorkspace_sptr& ws) {
+    for (size_t d = 0; d < numDims; ++d)
+      if (ws->getDimension(d).get() != outDims[d].get()) return false;
+    return true;
+  });
+
+  std::sort( m_workspaces.begin(), lastIter,
+      [this](const Mantid::API::IMDEventWorkspace_sptr& ws1,
+      const Mantid::API::IMDEventWorkspace_sptr& ws2) {
+    const auto& outBc = *this->out->getBoxController().get();
+    bool fl1 = equalBcTreeParams(*ws1->getBoxController().get(), outBc);
+    bool fl2 = equalBcTreeParams(*ws2->getBoxController().get(), outBc);
+    if ((fl1 && fl2) || (!fl1 && !fl2))
+      return ws1->getNPoints() > ws2->getNPoints();
+    else
+      return fl1 ? true : false;
+
+  });
+
+  auto firstIter =  m_workspaces.begin();
+  if (lastIter != firstIter) {
+    if (equalBcTreeParams(*(*firstIter)->getBoxController().get(), *out->getBoxController().get()))
+      out->setBox((firstIter++)->get()->cloneBoxes());
+  }
+
+  for(auto it = firstIter; it < lastIter; ++it) {
+    // process workspaces with the same boundaries here
+    // the events TODO
+  }
+
+  for(auto it = lastIter; it != m_workspaces.end(); ++it) {
+    // process workspaces with different boundaries TODO
+  }
 
 }
 
