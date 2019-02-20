@@ -21,6 +21,8 @@ namespace MDAlgorithms {
 */
 class DLLExport MergeMD : public BoxControllerSettingsAlgorithm {
 public:
+  enum struct MergeType {DEFAULT, INDEXED};
+public:
   const std::string name() const override;
   /// Summary of algorithms purpose
   const std::string summary() const override {
@@ -41,6 +43,15 @@ private:
   template <typename MDE, size_t nd>
   void doPlus(typename Mantid::DataObjects::MDEventWorkspace<MDE, nd>::sptr ws);
 
+  /// The robust version of merging algorithm
+  void doMergeDefault();
+
+  /**
+   * The version of algorithm, that uses spatial index
+   * morton number to increse the performance
+   */
+  void doMergeIndexed();
+
   /// Vector of input MDWorkspaces
   std::vector<Mantid::API::IMDEventWorkspace_sptr> m_workspaces;
 
@@ -49,6 +60,8 @@ private:
 
   /// Output MDEventWorkspace
   Mantid::API::IMDEventWorkspace_sptr out;
+
+  MergeType mergeType = MergeType::DEFAULT;
 };
 
 } // namespace MDAlgorithms

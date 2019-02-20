@@ -307,6 +307,21 @@ void MergeMD::exec() {
   // Create a blank output workspace
   this->createOutputWorkspace(inputs);
 
+  switch (mergeType) {
+  case MergeType::DEFAULT:
+    doMergeDefault();
+    break;
+  case MergeType::INDEXED:
+    doMergeIndexed();
+    break;
+  }
+
+  this->setProperty("OutputWorkspace", out);
+
+  g_log.debug() << tim << " to merge all workspaces.\n";
+}
+
+void MergeMD::doMergeDefault() {
   // Run PlusMD on each of the input workspaces, in order.
   double progStep = 1.0 / double(m_workspaces.size());
   for (size_t i = 0; i < m_workspaces.size(); i++) {
@@ -316,12 +331,12 @@ void MergeMD::exec() {
     CALL_MDEVENT_FUNCTION(doPlus, m_workspaces[i]);
   }
 
-  this->progress(0.95, "Refreshing cache");
+  progress(0.95, "Refreshing cache");
   out->refreshCache();
+}
 
-  this->setProperty("OutputWorkspace", out);
+void MergeMD::doMergeIndexed() {
 
-  g_log.debug() << tim << " to merge all workspaces.\n";
 }
 
 } // namespace MDAlgorithms
