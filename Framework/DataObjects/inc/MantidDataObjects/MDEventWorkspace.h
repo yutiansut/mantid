@@ -222,6 +222,7 @@ public:
       Mantid::API::MDNormalization preferredNormalization) override;
   Mantid::API::MDNormalization displayNormalization() const override;
 
+  API::IMDNode* cloneBoxes() const override final;
 protected:
   /// Protected copy constructor. May be used by childs for cloning.
   MDEventWorkspace(const MDEventWorkspace<MDE, nd> &other);

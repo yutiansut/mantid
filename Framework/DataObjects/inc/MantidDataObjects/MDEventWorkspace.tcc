@@ -62,25 +62,11 @@ TMDE(MDEventWorkspace)::MDEventWorkspace(
 /** Copy constructor
  */
 TMDE(MDEventWorkspace)::MDEventWorkspace(const MDEventWorkspace<MDE, nd> &other)
-    : IMDEventWorkspace(other), data(nullptr),
+    : IMDEventWorkspace(other), data{static_cast<MDBoxBase<MDE, nd>*>(other.cloneBoxes())},
       m_BoxController(other.m_BoxController->clone()),
       m_displayNormalization(other.m_displayNormalization),
       m_displayNormalizationHisto(other.m_displayNormalizationHisto),
-      m_coordSystem(other.m_coordSystem) {
-
-  const MDBox<MDE, nd> *mdbox =
-      dynamic_cast<const MDBox<MDE, nd> *>(other.data);
-  const MDGridBox<MDE, nd> *mdgridbox =
-      dynamic_cast<const MDGridBox<MDE, nd> *>(other.data);
-  if (mdbox) {
-    data = new MDBox<MDE, nd>(*mdbox, m_BoxController.get());
-  } else if (mdgridbox) {
-    data = new MDGridBox<MDE, nd>(*mdgridbox, m_BoxController.get());
-  } else {
-    throw std::runtime_error(
-        "MDEventWorkspace::copy_ctor(): unexpected data box type found.");
-  }
-}
+      m_coordSystem(other.m_coordSystem) {}
 
 //-----------------------------------------------------------------------------------------------
 /** Destructor
@@ -90,6 +76,24 @@ TMDE(MDEventWorkspace)::~MDEventWorkspace() { delete data; }
  * @param fileName -- short or full file name of the file, which should be used
  * as the file back end
 */
+
+TMDE(API::IMDNode* MDEventWorkspace)::cloneBoxes() const {
+  API::IMDNode* res;
+  const MDBox<MDE, nd> *mdbox =
+      dynamic_cast<const MDBox<MDE, nd> *>(data);
+  const MDGridBox<MDE, nd> *mdgridbox =
+      dynamic_cast<const MDGridBox<MDE, nd> *>(data);
+  if (mdbox) {
+    res = new MDBox<MDE, nd>(*mdbox, m_BoxController.get());
+  } else if (mdgridbox) {
+    res = new MDGridBox<MDE, nd>(*mdgridbox, m_BoxController.get());
+  } else {
+    throw std::runtime_error(
+        "MDEventWorkspace::copy_ctor(): unexpected data box type found.");
+  }
+  return res;
+}
+
 TMDE(void MDEventWorkspace)::setFileBacked(const std::string & /*fileName*/) {
   throw Kernel::Exception::NotImplementedError(" Not yet implemented");
 }

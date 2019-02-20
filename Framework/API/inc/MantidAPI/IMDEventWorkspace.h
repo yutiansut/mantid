@@ -67,6 +67,8 @@ public:
   virtual void getBoxes(std::vector<API::IMDNode *> &boxes, size_t maxDepth,
                         bool leafOnly) = 0;
 
+  virtual API::IMDNode* cloneBoxes() const = 0;
+
   /// @return true if the workspace is file-backed
   virtual bool isFileBacked() const = 0;
 
