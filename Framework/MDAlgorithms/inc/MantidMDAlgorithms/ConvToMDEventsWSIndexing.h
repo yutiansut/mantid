@@ -203,6 +203,7 @@ void ConvToMDEventsWSIndexing::appendEvents(API::Progress *pProgress,
 
   auto rootAndErr = distributor.distribute(mdEvents);
   m_OutWSWrapper->pWorkspace()->setBox(rootAndErr.root);
+  m_OutWSWrapper->pWorkspace()->setBuiltAsIndexed(true);
   rootAndErr.root->calculateGridCaches();
 
   std::stringstream ss;

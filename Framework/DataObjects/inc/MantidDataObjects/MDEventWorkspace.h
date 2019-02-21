@@ -223,6 +223,8 @@ public:
   Mantid::API::MDNormalization displayNormalization() const override;
 
   API::IMDNode* cloneBoxes() const override final;
+  bool builtAsIndexed() const override final { return m_builtAsIndexed; }
+  void setBuiltAsIndexed(bool fl) override final { m_builtAsIndexed = fl; }
 protected:
   /// Protected copy constructor. May be used by childs for cloning.
   MDEventWorkspace(const MDEventWorkspace<MDE, nd> &other);
@@ -246,7 +248,8 @@ protected:
   Mantid::API::MDNormalization m_displayNormalization;
   /// Display normalization to pass onto generated histo workspaces
   Mantid::API::MDNormalization m_displayNormalizationHisto;
-
+  /// Defines if workspace was built using indexing, is used in MergeMD
+  bool m_builtAsIndexed = false;
 private:
   MDEventWorkspace *doClone() const override {
     return new MDEventWorkspace(*this);

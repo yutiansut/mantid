@@ -119,6 +119,8 @@ public:
 
   virtual void setBox(API::IMDNode *box) = 0;
 
+  virtual bool builtAsIndexed() const = 0;
+  virtual void setBuiltAsIndexed(bool fl) = 0;
 protected:
   /// Protected copy constructor. May be used by childs for cloning.
   IMDEventWorkspace(const IMDEventWorkspace &) = default;
