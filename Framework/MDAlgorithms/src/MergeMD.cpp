@@ -345,7 +345,15 @@ bool equalBcTreeParams(const BoxController& bc1, const BoxController& bc2) {
 }
 
 void MergeMD::doMergeIndexed() {
-// Find the biggest workspace with !!!exact!!! the same extensions and as output
+/* Sort all input ws as following:
+ * 1. WSs have been built as indexed with the same tree params and bounding space
+ * ordered by number of points (larger first);
+ * 2. WSs have been built as indexed with the same bounding space;
+ * 3.  Other WSs.
+ *
+ * The first group is faster to merge, and we can chose the first ws of the first
+ * group as basic one.
+ */
   auto numDims = out->getNumDims();
   std::vector<boost::shared_ptr<const Mantid::Geometry::IMDDimension>> outDims(numDims);
   std::generate(outDims.begin(), outDims.end(), [this](){
@@ -353,16 +361,22 @@ void MergeMD::doMergeIndexed() {
     return this->out->getDimension(d++);
   });
 
-  auto lastIter = std::remove_if(m_workspaces.begin(), m_workspaces.end(),
-      [this, &outDims, &numDims](const Mantid::API::IMDEventWorkspace_sptr& ws) {
+  std::vector<std::size_t> wsIndexes(m_workspaces.size());
+  std::iota(wsIndexes.begin(), wsIndexes.end(), 0);
+
+  auto lastIter = std::remove_if(wsIndexes.begin(), wsIndexes.end(),
+      [this, &outDims, &numDims](const size_t& idx) {
+    const auto& ws = this->m_workspaces[idx];
+    if(!ws->builtAsIndexed()) return false;
     for (size_t d = 0; d < numDims; ++d)
       if (ws->getDimension(d).get() != outDims[d].get()) return false;
     return true;
   });
 
-  std::sort( m_workspaces.begin(), lastIter,
-      [this](const Mantid::API::IMDEventWorkspace_sptr& ws1,
-      const Mantid::API::IMDEventWorkspace_sptr& ws2) {
+  std::sort( wsIndexes.begin(), lastIter,
+      [this](const size_t& idx1, const size_t& idx2) {
+    const auto& ws1 = this->m_workspaces[idx1];
+    const auto& ws2 = this->m_workspaces[idx2];
     const auto& outBc = *this->out->getBoxController().get();
     bool fl1 = equalBcTreeParams(*ws1->getBoxController().get(), outBc);
     bool fl2 = equalBcTreeParams(*ws2->getBoxController().get(), outBc);
@@ -372,11 +386,12 @@ void MergeMD::doMergeIndexed() {
       return fl1 ? true : false;
 
   });
-
-  auto firstIter =  m_workspaces.begin();
+  auto firstIter =  wsIndexes.begin();
   if (lastIter != firstIter) {
-    if (equalBcTreeParams(*(*firstIter)->getBoxController().get(), *out->getBoxController().get()))
-      out->setBox((firstIter++)->get()->cloneBoxes());
+    auto pr = getMDEventWSTypeND(m_workspaces[*firstIter].get());
+    if (equalBcTreeParams(*m_workspaces[*firstIter]->getBoxController().get(), *out->getBoxController().get()))
+      out->setBox(m_workspaces[*(firstIter++)].get()->cloneBoxes());
+
   }
 
   for(auto it = firstIter; it < lastIter; ++it) {
@@ -384,7 +399,7 @@ void MergeMD::doMergeIndexed() {
     // the events TODO
   }
 
-  for(auto it = lastIter; it != m_workspaces.end(); ++it) {
+  for(auto it = lastIter; it != wsIndexes.end(); ++it) {
     // process workspaces with different boundaries TODO
   }
 
