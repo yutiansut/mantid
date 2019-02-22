@@ -159,6 +159,7 @@ inline std::pair<bool, size_t> getMDEventWSTypeND<1>(API::IMDEventWorkspace_sptr
   return res.second ? std::make_pair(res.first, 1) : std::make_pair(res.first, 0);
 }
 
+// returns <is_full_event_ws, number_of_dims>
 inline std::pair<bool, size_t> getMDEventWSTypeND(API::IMDEventWorkspace_sptr ws) {
   return getMDEventWSTypeND<8>(ws);
 }
