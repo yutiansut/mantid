@@ -652,7 +652,6 @@ TMDE(void MDGridBox)::getBoxes(std::vector<API::IMDNode *> &outBoxes,
 TMDE(void MDGridBox)::getBoxes(std::vector<API::IMDNode *>& outBoxes,
     const std::function<bool(API::IMDNode *)> &cond,
     std::vector<size_t> childOrder) {
-  std::cout << "Get boxes\n";
   if(cond(this))
     outBoxes.emplace_back(this);
   if (!childOrder.empty()) {
