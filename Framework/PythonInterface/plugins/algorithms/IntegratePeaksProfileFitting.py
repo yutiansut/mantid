@@ -297,11 +297,34 @@ class IntegratePeaksProfileFitting(PythonAlgorithm):
                                                                                                      peak.getSigmaIntensity(),
                                                                                                      intensity, sigma)
                 logger.information(compStr)
-
+                q0 = peak.getQLabFrame()
+                #Try to do normalization
+                MDNorm(InputWorkspace='MDdata',
+                       SolidAngleWorkspace='sa',
+                       RLU = False,
+                       FluxWorkspace='flux_cdf',
+                       QDimension0='1,0,0',
+                       QDimension1='0,1,0',
+                       QDimension2='0,0,1',
+                       Dimension0Name='QDimension0',
+                       Dimension0Binning='{},{},{}'.format(q0[0]-dQ[0][0],dQPixel,q0[0]+dQ[0][1]),
+                       Dimension1Name='QDimension1',
+                       Dimension1Binning='{},0.003,{}'.format(q0[1]-dQ[1][0],dQPixel,q0[1]+dQ[1][1]),
+                       Dimension2Name='QDimension2',
+                       Dimension2Binning='{},0.003,{}'.format(q0[2]-dQ[2][0],dQPixel,q0[2]+dQ[2][1]),
+                       TemporaryDataWorkspace=None,
+                       TemporaryNormalizationWorkspace=None,
+                       OutputWorkspace='result',
+                       OutputDataWorkspace='dataMD',
+                       OutputNormalizationWorkspace='normMD') 
+                normWS = mtd['normMD'].getSignalArray()
+                normWS[np.isnan(normWS)] = 0.0
+                print(normWS.size(), Y3D.size())
+                normFactor = 1.e-8*np.mean(normWS[peakIDX])
                 # Save the results
                 params['peakNumber'] = peakNumber
-                params['Intens3d'] = intensity
-                params['SigInt3d'] = sigma
+                params['Intens3d'] = intensity/normFactor
+                params['SigInt3d'] = sigma/normFactor
                 params['newQ'] = V3D(params['newQ'][0],params['newQ'][1],params['newQ'][2])
                 params_ws.addRow(params)
                 peak.setIntensity(intensity)
