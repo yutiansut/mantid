@@ -18,6 +18,7 @@
 #include "MantidGeometry/Crystal/SpaceGroupFactory.h"
 #include "MantidGeometry/Crystal/SymmetryOperationFactory.h"
 #include "MantidGeometry/Instrument.h"
+#include "MantidGeometry/Instrument/Goniometer.h"
 #include "MantidGeometry/MDGeometry/HKL.h"
 #include "MantidGeometry/MDGeometry/MDFrameFactory.h"
 #include "MantidGeometry/MDGeometry/QSample.h"
@@ -220,10 +221,19 @@ std::map<std::string, std::string> MDNorm::validateInputs() {
                          "The input workspace must be at least 3D");
   } else {
     for (size_t i = 0; i < 3; i++) {
-      if (inputWS->getDimension(i)->getMDFrame().name() !=
-          Mantid::Geometry::QSample::QSampleName) {
-        errorMessage.emplace("InputWorkspace",
-                             "The input workspace must be in Q_sample");
+      if ((inputWS->getDimension(i)->getMDFrame().name() !=
+          Mantid::Geometry::QSample::QSampleName) && 
+          (inputWS->getDimension(i)->getMDFrame().name() !=
+          Mantid::Geometry::QLab::QLabName )) {
+          errorMessage.emplace("InputWorkspace",
+                             "The input workspace must be in Q_sample or Q_lab");
+      }
+      if ((inputWS->getDimension(i)->getMDFrame().name() !=Mantid::Geometry::QLab::QLabName )){
+        const int numExperimentInfos = inputWS->getNumExperimentInfo();
+        if (numExperimentInfos != 1){
+            errorMessage.emplace("InputWorkspace",
+                                 "If input workspace is in Q_lab, only one experiment may be included."); 
+        }
       }
     }
   }
@@ -521,6 +531,9 @@ std::map<std::string, std::string> MDNorm::getBinParameters() {
     m_UB =
         m_inputWS->getExperimentInfo(0)->sample().getOrientedLattice().getUB() *
         2 * M_PI;
+  //} //else {
+    //std::string qFrameName = m_inputWS->getXDimension()->getMDFrame().name();
+    //bool isSampleFrame = std::strcmp(qFrameName.c_str(), "QSample");
   }
 
   std::vector<double> W(m_Q0Basis);
@@ -698,12 +711,20 @@ MDNorm::binInputWS(std::vector<Geometry::SymmetryOperation> symmetryOps) {
     soMatrix.setColumn(2, v);
 
     DblMatrix Qtransform;
+    bool isSampleFrame = false;
     if (m_isRLU) {
       Qtransform = m_UB * soMatrix * m_W;
     } else {
-      Qtransform = soMatrix * m_W;
+      std::string qFrameName = m_inputWS->getXDimension()->getMDFrame().name();
+      isSampleFrame = qFrameName == Mantid::Geometry::QSample::QSampleName;
+      if (isSampleFrame) {
+        Qtransform = soMatrix * m_W;
+      }
+      else {
+        Mantid::Kernel::DblMatrix goniometer_R = m_inputWS->getExperimentInfo(0)->run().getGoniometer().getR();
+        Qtransform = goniometer_R * soMatrix * m_W;
+      }
     }
-
     // bin the data
     double fraction = 1. / static_cast<double>(symmetryOps.size());
     IAlgorithm_sptr binMD = createChildAlgorithm(
@@ -726,7 +747,11 @@ MDNorm::binInputWS(std::vector<Geometry::SymmetryOperation> symmetryOps) {
         m_hIdx = qindex;
         if (!m_isRLU) {
           projection[0] = 1.;
-          basisVector << "Q_sample_x,A^{-1}";
+          if (isSampleFrame) {
+            basisVector << "Q_sample_x,A^{-1}";
+          } else {
+            basisVector << "Q_lab_x,A^{-1}";
+          }
         } else {
           qDimensionIndices.push_back(qindex);
           projection[0] = Qtransform[0][0];
@@ -738,7 +763,11 @@ MDNorm::binInputWS(std::vector<Geometry::SymmetryOperation> symmetryOps) {
         m_kIdx = qindex;
         if (!m_isRLU) {
           projection[1] = 1.;
-          basisVector << "Q_sample_y,A^{-1}";
+          if (isSampleFrame) {
+            basisVector << "Q_sample_y,A^{-1}";
+          } else {
+            basisVector << "Q_lab_y,A^{-1}";
+          }
         } else {
           qDimensionIndices.push_back(qindex);
           projection[0] = Qtransform[0][1];
@@ -750,7 +779,11 @@ MDNorm::binInputWS(std::vector<Geometry::SymmetryOperation> symmetryOps) {
         m_lIdx = qindex;
         if (!m_isRLU) {
           projection[2] = 1.;
-          basisVector << "Q_sample_z,A^{-1}";
+          if (isSampleFrame) {
+            basisVector << "Q_sample_z,A^{-1}";
+          } else {
+            basisVector << "Q_lab_z,A^{-1}";
+          }
         } else {
           qDimensionIndices.push_back(qindex);
           projection[0] = Qtransform[0][2];
@@ -907,7 +940,12 @@ void MDNorm::calculateNormalization(const std::vector<coord_t> &otherValues,
       currentExptInfo.getLog("MDNorm_high"));
   highValues = (*highValuesLog)();
 
+    
+  std::string qFrameName = m_inputWS->getXDimension()->getMDFrame().name();
+  bool isLabFrame = qFrameName == Mantid::Geometry::QLab::QLabName;
+ 
   DblMatrix R = currentExptInfo.run().getGoniometerMatrix();
+  if (isLabFrame){ R.identityMatrix(); } //Already have R factored into m_inputWS in lab frame
   DblMatrix soMatrix(3, 3);
   auto v = so.transformHKL(V3D(1, 0, 0));
   soMatrix.setColumn(0, v);
