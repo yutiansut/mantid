@@ -344,6 +344,7 @@ bool equalBcTreeParams(const BoxController& bc1, const BoxController& bc2) {
   return true;
 }
 
+
 void MergeMD::doMergeIndexed() {
 /* Sort all input ws as following:
  * 1. WSs have been built as indexed with the same tree params and bounding space
@@ -353,6 +354,28 @@ void MergeMD::doMergeIndexed() {
  *
  * The first group is faster to merge, and we can chose the first ws of the first
  * group as basic one.
+ */
+
+/*
+ * TODO
+ * 1. split all input workspaces into groups according the above (done)
+ * 2. implement functions which gives the permutations from Z-order, to the normal:
+ *   using the arrays of integers indexes and Morton numbers, example 3d for split param = 8:
+ *   ordered index : idx =  [0,1,...511]
+ *   integer indexes: mdi = [(0,0,0), (0,0,1) ... (1,2,3) ... (7,7,7)]
+ *   morton numbers: mon = [m1, m2 .... m512]
+ *   Sort idx with key mon. Possibly do this in compile time
+ *
+ * 3. Create the base tree structure: if some of the input wss can be a sceleton, then clone,
+ * else create the new top node.
+ *
+ * 4. Populate the leaf nodes with the events from all other input wss: for groups (1) and (2) it
+ * is simpler because te events are already in correct Morton order, for the 3d group we need to
+ * collect all events in vector and sort it accordingly using Morton index.
+ * !!! Correct run index !!!
+ *
+ * 5. Launch the tree building for every leaf:
+ *    5.1 Modify MDTreeBuilder to work with events that have indexes retrieved and sorted already.
  */
   auto numDims = out->getNumDims();
   std::vector<boost::shared_ptr<const Mantid::Geometry::IMDDimension>> outDims(numDims);
@@ -388,10 +411,11 @@ void MergeMD::doMergeIndexed() {
   });
   auto firstIter =  wsIndexes.begin();
   if (lastIter != firstIter) {
-    auto pr = getMDEventWSTypeND(m_workspaces[*firstIter].get());
+    auto pr = getMDEventWSTypeND(m_workspaces[*firstIter]);
     if (equalBcTreeParams(*m_workspaces[*firstIter]->getBoxController().get(), *out->getBoxController().get()))
       out->setBox(m_workspaces[*(firstIter++)].get()->cloneBoxes());
-
+    if (pr.first) { // full events - update runIndex with offset
+    }
   }
 
   for(auto it = firstIter; it < lastIter; ++it) {
