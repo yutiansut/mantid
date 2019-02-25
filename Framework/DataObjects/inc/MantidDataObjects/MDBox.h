@@ -211,7 +211,8 @@ public:
                 Mantid::Geometry::MDImplicitFunction *function) override;
 
   void getBoxes(std::vector<API::IMDNode *> &outBoxes,
-                const std::function<bool(API::IMDNode *)> &cond) final override;
+                const std::function<bool(API::IMDNode *)> &cond,
+                std::vector<size_t> childOrder = std::vector<size_t >()) final override;
   //------------------------------------------------------------------------------------------------------------------------------------
   void transformDimensions(std::vector<double> &scaling,
                            std::vector<double> &offset) override;

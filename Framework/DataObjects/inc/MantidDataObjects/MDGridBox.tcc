@@ -649,11 +649,31 @@ TMDE(void MDGridBox)::getBoxes(std::vector<API::IMDNode *> &outBoxes,
  * @param cond :: condition to check
  *(leaves on the tree)
  */
-TMDE(void MDGridBox)::getBoxes(std::vector<API::IMDNode *>& outBoxes, const std::function<bool(API::IMDNode *)> &cond) {
+TMDE(void MDGridBox)::getBoxes(std::vector<API::IMDNode *>& outBoxes,
+    const std::function<bool(API::IMDNode *)> &cond,
+    std::vector<size_t> childOrder) {
+  std::cout << "Get boxes\n";
   if(cond(this))
     outBoxes.emplace_back(this);
-  for(API::IMDNode * child: m_Children){
-    child->getBoxes(outBoxes, cond);
+  if (!childOrder.empty()) {
+    if (childOrder.size() > m_Children.size())
+      throw std::runtime_error("childOrder have to be <= number of children.");
+    std::set<size_t> checkDuplicates;
+    for (auto &&idx: childOrder) {
+      if (checkDuplicates.find(idx) != checkDuplicates.end())
+        throw std::runtime_error("childOprder hasn't contain duplicated inexes");
+      if (idx >= m_Children.size())
+        throw std::runtime_error("childOrder has to contain indexes in range [0, number_of_chidren]");
+      checkDuplicates.insert(idx);
+    }
+
+    for (size_t i = 0; i < childOrder.size(); ++i) {
+      auto &child = m_Children[childOrder[i]];
+      child->getBoxes(outBoxes, cond);
+    }
+  } else {
+    for (auto&& child: m_Children)
+      child->getBoxes(outBoxes, cond);
   }
 }
 //-----------------------------------------------------------------------------------------------

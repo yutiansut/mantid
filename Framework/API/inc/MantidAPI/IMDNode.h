@@ -139,7 +139,8 @@ public:
 
   /// Fill a vector with all the boxes who are satisfying the condition
   virtual void getBoxes(std::vector<IMDNode *> &outBoxes,
-                        const std::function<bool(IMDNode *)> &cond) = 0;
+                        const std::function<bool(IMDNode *)> &cond,
+                        std::vector<size_t> childOrder = std::vector<size_t >()) = 0;
 
   // -------------------------------- Events-Related
   // -------------------------------------------
