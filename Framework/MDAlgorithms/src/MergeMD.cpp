@@ -7,7 +7,6 @@
 #include "MantidMDAlgorithms/MergeMD.h"
 #include "MantidAPI/WorkspaceGroup.h"
 #include "MantidDataObjects/MDBoxIterator.h"
-#include "MantidDataObjects/MDEventFactory.h"
 #include "MantidKernel/ArrayProperty.h"
 #include "MantidKernel/CPUTimer.h"
 #include "MantidKernel/MandatoryValidator.h"
@@ -335,15 +334,11 @@ void MergeMD::doMergeDefault() {
   out->refreshCache();
 }
 
-bool equalBcTreeParams(const BoxController& bc1, const BoxController& bc2) {
-  if (bc1.getMaxDepth() != bc2.getMaxDepth()) return false;
-  if (bc1.getSplitThreshold() != bc2.getSplitThreshold()) return false;
-  if (bc1.getNDims() != bc2.getNDims()) return false;
-  for (size_t d = 0; d < bc1.getNDims(); ++d)
-    if (bc1.getSplitInto(d) != bc2.getSplitInto(d)) return false;
-  return true;
+template <>
+void MergeMD::doMergeIndexedLoop<2>(const std::vector<size_t>& wsIndexes,
+                                 std::vector<size_t>::const_iterator lastIter) {
+  doMergeIndexed<2>(wsIndexes, lastIter);
 }
-
 
 void MergeMD::doMergeIndexed() {
 /* Sort all input ws as following:
@@ -409,24 +404,8 @@ void MergeMD::doMergeIndexed() {
       return fl1 ? true : false;
 
   });
-  auto firstIter =  wsIndexes.begin();
-  if (lastIter != firstIter) {
-    auto pr = getMDEventWSTypeND(m_workspaces[*firstIter]);
-    if (equalBcTreeParams(*m_workspaces[*firstIter]->getBoxController().get(), *out->getBoxController().get()))
-      out->setBox(m_workspaces[*(firstIter++)].get()->cloneBoxes());
-    if (pr.first) { // full events - update runIndex with offset
-    }
-  }
 
-  for(auto it = firstIter; it < lastIter; ++it) {
-    // process workspaces with the same boundaries here
-    // the events TODO
-  }
-
-  for(auto it = lastIter; it != wsIndexes.end(); ++it) {
-    // process workspaces with different boundaries TODO
-  }
-
+  doMergeIndexedLoop<8>(wsIndexes, lastIter);
 }
 
 } // namespace MDAlgorithms
