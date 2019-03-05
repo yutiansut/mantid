@@ -250,7 +250,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="tab">
+     <widget class="QWidget" name="tabPythonExtensions">
       <attribute name="title">
        <string>Python Extensions</string>
       </attribute>
@@ -271,10 +271,10 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_14">
          <item>
-          <widget class="QLineEdit" name="leDirectoryPathPython_3"/>
+          <widget class="QLineEdit" name="leDirectoryPathExtensions"/>
          </item>
          <item>
-          <widget class="QPushButton" name="pbAddDirectoryPython_3">
+          <widget class="QPushButton" name="pbAddDirectoryExtensions">
            <property name="text">
             <string>Add Directory</string>
            </property>
@@ -285,33 +285,33 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_15">
          <item>
-          <widget class="QListWidget" name="lwDataSearchDirs_3"/>
+          <widget class="QListWidget" name="lwExtensionsSearchDirs"/>
          </item>
          <item>
           <layout class="QVBoxLayout" name="verticalLayout_13">
            <item>
-            <widget class="QPushButton" name="pbBrowseToDir_3">
+            <widget class="QPushButton" name="pbBrowseToDirExtensions">
              <property name="text">
               <string>Browse To Directory</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pbRemDir_3">
+            <widget class="QPushButton" name="pbRemDirExtensions">
              <property name="text">
               <string>Remove Directory</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pbMoveUp_3">
+            <widget class="QPushButton" name="pbMoveUpExtensions">
              <property name="text">
               <string>Move Up</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pbMoveDown_3">
+            <widget class="QPushButton" name="pbMoveDownExtensions">
              <property name="text">
               <string>Move Down</string>
              </property>

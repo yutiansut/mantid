@@ -10,6 +10,7 @@
 #include "DllOption.h"
 #include "ui_ManageUserDirectories.h"
 #include <QDialog>
+#include "MantidKernel/ConfigService.h"
 
 namespace MantidQt {
 namespace API {
@@ -20,30 +21,36 @@ class EXPORT_OPT_MANTIDQT_COMMON ManageUserDirectories : public QDialog {
 public:
   ManageUserDirectories(QWidget *parent = nullptr,
                         bool keepPythonExtensions = false);
-  ~ManageUserDirectories() override;
   static void openUserDirsDialog(QWidget *parent);
 
 private:
   virtual void initLayout();
+  void loadFromStringIntoList(const std::string &keyName,
+                              QListWidget *listWidget);
+  void loadExtensionProperties();
+  void initConnectionsForPythonExtensions() ;
   void loadProperties();
-  void saveProperties();
+  void savePropertiesForPythonExtensions(Mantid::Kernel::ConfigServiceImpl &config) const;
+  void saveProperties() const;
   void appendSlashIfNone(QString &path) const;
-  QListWidget *listWidget();
+  QListWidget *listWidget() const;
+  QLineEdit *lineEdit() const;
 
 private slots:
   void helpClicked();
   void cancelClicked();
   void confirmClicked();
-  void addDirectory();
+  void addDirectory() const;
   void browseToDirectory();
-  void remDir();
-  void moveUp();
-  void moveDown();
+  void remDir() const;
+  void moveUp() const;
+  void moveDown() const;
   void selectSaveDir();
 
 private:
   Ui::ManageUserDirectories m_uiForm;
   QString m_userPropFile;
+  bool keepPythonExtensions = false;
 };
 
 } // namespace API
