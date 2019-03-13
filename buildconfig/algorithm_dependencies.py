@@ -52,7 +52,8 @@ def dependencies(name, algs, level=0):
        l += 1
     for used in sorted(used_algs):
         print(offset+used)
-        dependencies(used, algs, level+1)
+        if used != 'CloneWorkspace':
+            dependencies(used, algs, level+1)
         
     return
 
