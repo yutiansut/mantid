@@ -109,7 +109,7 @@ void DataSelector::isOptional(bool optional) {
  */
 void DataSelector::handleFileInput() {
   // Get filename and check it's not empty
-  QString filename = m_uiForm.rfFileInput->getUserInput().toString();
+  QString filename = m_uiForm.rfFileInput->getUserInput().toString().replace(" ","");
 
   if (filename.isEmpty()) {
     return;
