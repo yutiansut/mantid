@@ -59,8 +59,8 @@ def dependencies(name, algs, all_used_algs, level=0):
 
 if __name__== "__main__":
     
-    if len(sys.argv) < 2:
-        exit("Requires the algorithm name or names as arguments!")
+    if len(sys.argv) != 2:
+        exit("Requires a string hint as an argument!")
 
     python_algorithms_path = '../Framework/PythonInterface/plugins/algorithms/'
     python_workflow_algorithms_path = '../Framework/PythonInterface/plugins/algorithms/WorkflowAlgorithms/'
@@ -68,12 +68,18 @@ if __name__== "__main__":
     from mantid.simpleapi import *
     from mantid.api import AlgorithmFactory, AlgorithmManager
     algs = AlgorithmFactory.getRegisteredAlgorithms(True)
-    all_used_algs = []
-    for alg_name in sys.argv[1:]:
-        if alg_name not in algs.keys():
-            print("Provided algorithm {} is not registered in AlgorithmFactory".format(alg_name))
-        else:
-            dependencies(alg_name, algs, all_used_algs)
 
+    matching_algs = []
+    for alg in algs:
+        if sys.argv[1] in alg:
+            matching_algs.append(alg)
+
+    all_used_algs = []
+    for alg_name in matching_algs:
+        dependencies(alg_name, algs, all_used_algs)
+
+    print('Number of algorithms matching {0} is {1}'.format(sys.argv[1], len(matching_algs)))
+    print(sorted(matching_algs))
+    print('Union of all the dependent algorithms contains {}'.format(len(all_used_algs)))
     print(sorted(all_used_algs))
-    print("Total {}".format(len(all_used_algs)))
+
