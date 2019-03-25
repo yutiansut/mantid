@@ -284,11 +284,11 @@ bool ISISEnergyTransfer::validate() {
 
 bool ISISEnergyTransfer::numberInCorrectRange(
     std::size_t const &spectraNumber) const {
-  QMap<QString, QString> instDetails = getInstrumentDetails();
-  auto spectraMin =
-      static_cast<std::size_t>(instDetails["spectra-min"].toInt());
-  auto spectraMax =
-      static_cast<std::size_t>(instDetails["spectra-max"].toInt());
+  auto const instrumentDetails = getInstrumentDetails();
+  auto const spectraMin =
+      static_cast<std::size_t>(instrumentDetails["spectra-min"].toInt());
+  auto const spectraMax =
+      static_cast<std::size_t>(instrumentDetails["spectra-max"].toInt());
   return spectraNumber >= spectraMin && spectraNumber <= spectraMax;
 }
 
@@ -322,15 +322,11 @@ void ISISEnergyTransfer::run() {
   reductionAlg->initialize();
   BatchAlgorithmRunner::AlgorithmRuntimeProps reductionRuntimeProps;
 
-  QString instName = getInstrumentConfiguration()->getInstrumentName();
+  QString instName = getInstrumentName();
 
   reductionAlg->setProperty("Instrument", instName.toStdString());
-  reductionAlg->setProperty(
-      "Analyser",
-      getInstrumentConfiguration()->getAnalyserName().toStdString());
-  reductionAlg->setProperty(
-      "Reflection",
-      getInstrumentConfiguration()->getReflectionName().toStdString());
+  reductionAlg->setProperty("Analyser", getAnalyserName().toStdString());
+  reductionAlg->setProperty("Reflection", getReflectionName().toStdString());
 
   // Override the efixed for QENS spectrometers only
   QStringList qens;
@@ -483,7 +479,8 @@ void ISISEnergyTransfer::setInstrumentDefault() {
   QMap<QString, QString> instDetails = getInstrumentDetails();
 
   // Set the search instrument for runs
-  m_uiForm.dsRunFiles->setInstrumentOverride(instDetails["instrument"]);
+  m_uiForm.dsRunFiles->setInstrumentOverride(
+      getInstrumentDetail(instDetails, "instrument"));
 
   QStringList qens;
   qens << "IRIS"
@@ -532,8 +529,8 @@ void ISISEnergyTransfer::setInstrumentDefault() {
   if (!instDetails["rebin-default"].isEmpty()) {
     m_uiForm.leRebinString->setText(instDetails["rebin-default"]);
     m_uiForm.ckDoNotRebin->setChecked(false);
-    QStringList rbp =
-        instDetails["rebin-default"].split(",", QString::SkipEmptyParts);
+    auto const rbp = getInstrumentDetail(instDetails, "rebin-default")
+                         .split(",", QString::SkipEmptyParts);
     if (rbp.size() == 3) {
       m_uiForm.spRebinLow->setValue(rbp[0].toDouble());
       m_uiForm.spRebinWidth->setValue(rbp[1].toDouble());
@@ -687,24 +684,18 @@ void ISISEnergyTransfer::plotRaw() {
   auto extension = rawFile.right(rawFile.length() - pos);
   QFileInfo rawFileInfo(rawFile);
   std::string name = rawFileInfo.baseName().toStdString();
+  auto const instName =
+      getInstrumentConfiguration()->getInstrumentName().toStdString();
 
   IAlgorithm_sptr loadAlg = AlgorithmManager::Instance().create("Load");
   loadAlg->initialize();
   loadAlg->setProperty("Filename", rawFile.toStdString());
   loadAlg->setProperty("OutputWorkspace", name);
-  loadAlg->setProperty("LoadLogFiles", false);
-  if (extension.compare(".nxs") == 0) {
-    int64_t detectorMin =
-        static_cast<int64_t>(m_uiForm.spPlotTimeSpecMin->value());
-    int64_t detectorMax =
-        static_cast<int64_t>(m_uiForm.spPlotTimeSpecMax->value());
-    loadAlg->setProperty("SpectrumMin", detectorMin);
-    loadAlg->setProperty("SpectrumMax", detectorMax);
-  } else {
+  if (instName != "TOSCA") {
+    loadAlg->setProperty("LoadLogFiles", false);
     loadAlg->setProperty("SpectrumMin", detectorMin);
     loadAlg->setProperty("SpectrumMax", detectorMax);
   }
-
   loadAlg->execute();
 
   if (m_uiForm.ckBackgroundRemoval->isChecked()) {
