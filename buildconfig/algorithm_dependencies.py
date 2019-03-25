@@ -9,7 +9,7 @@
 from __future__ import (absolute_import, division, print_function)
 import sys, os, subprocess
     
-def dependencies(name, algs, level=0):
+def dependencies(name, algs, all_used_algs, level=0):
     version = algs[name]
     used_algs = []
     vname = name
@@ -51,9 +51,9 @@ def dependencies(name, algs, level=0):
        offset += '\t'
        l += 1
     for used in sorted(used_algs):
-        print(offset+used)
-        if used != 'CloneWorkspace':
-            dependencies(used, algs, level+1)
+        if used not in all_used_algs:
+            all_used_algs.append(used)
+            dependencies(used, algs, all_used_algs, level + 1)
         
     return
 
@@ -71,5 +71,7 @@ if __name__== "__main__":
     name = sys.argv[1]
     if name not in algs.keys():
         exit("Provided algorithm is not registered in AlgorithmFactory")
-       
-    dependencies(name, algs)
+
+    all_used_algs = []
+    dependencies(name, algs, all_used_algs)
+    print(sorted(all_used_algs))
