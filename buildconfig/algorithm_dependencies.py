@@ -5,7 +5,13 @@
 #     NScD Oak Ridge National Laboratory, European Spallation Source
 #     & Institut Laue - Langevin
 # SPDX - License - Identifier: GPL - 3.0 +
-""" Utility for generating the dependency tree for an algorithm """
+"""
+Utility for finding conditional dependencies for the suites of algorithms
+Usage: ./algorithms_dependencies SANS
+Will output first all the algorithms that have the word SANS in the name
+Then all the algorithms that the SANS algorithms are conditionally dependent
+"""
+
 from __future__ import (absolute_import, division, print_function)
 import sys, os, subprocess
     
@@ -18,6 +24,7 @@ def dependencies(name, algs, all_used_algs, level=0):
         
     full_path_python = python_algorithms_path+vname+ '.py'
     full_path_python_wkfl = python_workflow_algorithms_path+vname+ '.py'
+    full_path_python_wkfl_sans = python_workflow_algorithms_sans_path + vname + '.py'
     full_path_cpp = subprocess.check_output(['find','../Framework','-iname','{0}.cpp'.format(vname)])[:-1]
 
     is_python = False
@@ -27,6 +34,9 @@ def dependencies(name, algs, all_used_algs, level=0):
         is_python = True
     elif os.path.exists(full_path_python_wkfl):
         path = full_path_python_wkfl
+        is_python = True
+    elif os.path.exists(full_path_python_wkfl_sans):
+        path = full_path_python_wkfl_sans
         is_python = True
     elif os.path.exists(full_path_cpp):
         path = full_path_cpp
@@ -62,8 +72,12 @@ if __name__== "__main__":
     if len(sys.argv) != 2:
         exit("Requires a string hint as an argument!")
 
+    # for the moment we hardcode the python directories for the algorithms, but actually there are subfolders
+    # so one needs to run find also for python algorithms, just like for C++ ones
+    # for the moment we anticipate a subdirectory only for SANS python workflow algorithms
     python_algorithms_path = '../Framework/PythonInterface/plugins/algorithms/'
     python_workflow_algorithms_path = '../Framework/PythonInterface/plugins/algorithms/WorkflowAlgorithms/'
+    python_workflow_algorithms_sans_path = '../Framework/PythonInterface/plugins/algorithms/WorkflowAlgorithms/SANS/'
 
     from mantid.simpleapi import *
     from mantid.api import AlgorithmFactory, AlgorithmManager
@@ -78,8 +92,8 @@ if __name__== "__main__":
     for alg_name in matching_algs:
         dependencies(alg_name, algs, all_used_algs)
 
-    print('Number of algorithms matching {0} is {1}'.format(sys.argv[1], len(matching_algs)))
+    print('=== Number of algorithms matching {0} is {1} ==='.format(sys.argv[1], len(matching_algs)))
     print(sorted(matching_algs))
-    print('Union of all the dependent algorithms contains {}'.format(len(all_used_algs)))
+    print('=== Union of all the conditionally dependent algorithms contains {} ==='.format(len(all_used_algs)))
     print(sorted(all_used_algs))
 
