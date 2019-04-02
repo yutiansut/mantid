@@ -17,6 +17,17 @@
 
 namespace Mantid {
 namespace Kernel {
+
+class MANTID_KERNEL_DLL NewTimer {
+public:
+  NewTimer();
+  double elapsed(bool reset = true);
+  int64_t elapsedNanoSec(bool reset = true);
+  int64_t elapsedCPUNanoSec(bool reset = true);
+  double fraction();
+  void reset();
+};
+
 /** A simple class that provides a wall-clock (not processor time) timer.
 
     @author Russell Taylor, Tessella plc
