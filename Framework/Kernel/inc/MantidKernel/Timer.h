@@ -26,6 +26,8 @@ public:
   int64_t elapsedCPUNanoSec(bool reset = true);
   double fraction();
   void reset();
+private:
+  int64_t m_start; //nanoseconds
 };
 
 /** A simple class that provides a wall-clock (not processor time) timer.
