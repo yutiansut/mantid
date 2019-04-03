@@ -26,11 +26,11 @@ class GuiTest(TestCase):
     GuiTest ensures that a QApplication exists before tests are run
     """
     @classmethod
-    def setUpClass(cls):
+    def setUpClass(cls, be_nosy=False):
         """Prepare for test execution.
         Ensure that a (single copy of) QApplication has been created
         """
-        get_application(cls.__name__)
+        get_application(cls.__name__, be_nosy)
 
 
 def select_item_in_tree(tree, item_label):

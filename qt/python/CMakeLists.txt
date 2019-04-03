@@ -57,7 +57,7 @@ if(ENABLE_WORKBENCH)
       COMMENT "Copying debug PyQt5 to bin/Debug")
   endif()
 
- 
+
   # Testing
 
   # ctest targets
@@ -104,6 +104,8 @@ if(ENABLE_WORKBENCH)
     mantidqt/widgets/workspacedisplay/table/test/test_tableworkspacedisplay_model.py
     mantidqt/widgets/workspacedisplay/table/test/test_tableworkspacedisplay_presenter.py
     mantidqt/widgets/workspacedisplay/table/test/test_tableworkspacedisplay_view.py
+
+    mantidqt/widgets/sillytestinterface/test/test_sillytestinterface_view.py
     )
 
   # ctest target for widgets that only get tested in qt5, because they are only
