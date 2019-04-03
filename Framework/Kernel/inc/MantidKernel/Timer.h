@@ -23,11 +23,13 @@ public:
   NewTimer();
   double elapsed(bool reset = true);
   int64_t elapsedNanoSec(bool reset = true);
-  int64_t elapsedCPUNanoSec(bool reset = true);
-  double fraction();
+// Commented functions are valid only in Linux due to existence of user space and system space
+//  int64_t elapsedCPUNanoSec(bool reset = true);
+//  double fraction();
   void reset();
 private:
-  int64_t m_start; //nanoseconds
+  int64_t m_start; // total nanoseconds
+//  int64)t m_CPUstart; // CPU nanoseconds
 };
 
 /** A simple class that provides a wall-clock (not processor time) timer.

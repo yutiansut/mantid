@@ -12,8 +12,58 @@
 #include <ostream>
 #include <sstream>
 
+#ifdef __linux__
+#include <time.h>
+#endif  // __linux__
+
+
 namespace Mantid {
 namespace Kernel {
+
+#if defined(__linux__)
+uint64_t timespecToNanoSec(const timespec& time) {
+  return time.tv_nsec + time.tv_sec * 1'000'000'000;
+}
+
+uint64_t currentWallClockNanoSec(clockid_t clock_id) {
+  timespec time;
+  clock_gettime(clock_id, &time);
+  return timespecToNanoSec(time);
+}
+
+NewTimer::NewTimer() {
+  m_start = currentWallClockNanoSec(CLOCK_MONOTONIC);
+//  m_CPUstart = currentWallClockNanoSec(CLOCK_PROCESS_CPUTIME_ID);
+}
+
+
+double NewTimer::elapsed(bool reset){
+  return static_cast<double>(elapsedNanoSec(reset)) / 1'000'000'000.0;
+}
+
+int64_t NewTimer::elapsedNanoSec(bool reset) {
+  auto res = currentWallClockNanoSec(CLOCK_MONOTONIC) - m_start;
+  if(reset)
+    m_start = currentWallClockNanoSec(CLOCK_MONOTONIC);
+  return res;
+}
+
+// Commented functions are valid only in Linux due to existence of user space and system space
+//int64_t NewTimer::elapsedCPUNanoSec(bool reset) {
+//}
+//
+//double NewTimer::fraction() {
+//}
+
+void NewTimer::reset() {
+  m_start = currentWallClockNanoSec(CLOCK_MONOTONIC);
+}
+#elif defined(__WINDOWS__)
+// need the implementation for windows
+#else
+// implementation for macos
+#endif // __LINUX__
+
 
 /** Constructor.
  *  Instantiating the object starts the timer.
