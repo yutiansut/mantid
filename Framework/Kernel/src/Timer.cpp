@@ -31,17 +31,17 @@ uint64_t currentWallClockNanoSec(clockid_t clock_id) {
   return timespecToNanoSec(time);
 }
 
-NewTimer::NewTimer() {
+Timer::Timer() {
   m_start = currentWallClockNanoSec(CLOCK_MONOTONIC);
 //  m_CPUstart = currentWallClockNanoSec(CLOCK_PROCESS_CPUTIME_ID);
 }
 
 
-double NewTimer::elapsed(bool reset){
+double Timer::elapsed(bool reset){
   return static_cast<double>(elapsedNanoSec(reset)) / 1'000'000'000.0;
 }
 
-int64_t NewTimer::elapsedNanoSec(bool reset) {
+int64_t Timer::elapsedNanoSec(bool reset) {
   auto res = currentWallClockNanoSec(CLOCK_MONOTONIC) - m_start;
   if(reset)
     m_start = currentWallClockNanoSec(CLOCK_MONOTONIC);
@@ -49,13 +49,13 @@ int64_t NewTimer::elapsedNanoSec(bool reset) {
 }
 
 // Commented functions are valid only in Linux due to existence of user space and system space
-//int64_t NewTimer::elapsedCPUNanoSec(bool reset) {
+//int64_t Timer::elapsedCPUNanoSec(bool reset) {
 //}
 //
-//double NewTimer::fraction() {
+//double Timer::fraction() {
 //}
 
-void NewTimer::reset() {
+void Timer::reset() {
   m_start = currentWallClockNanoSec(CLOCK_MONOTONIC);
 }
 #elif defined(__WINDOWS__)
@@ -65,48 +65,14 @@ void NewTimer::reset() {
 #endif // __LINUX__
 
 
-/** Constructor.
- *  Instantiating the object starts the timer.
- */
-Timer::Timer() { m_start = std::chrono::high_resolution_clock::now(); }
-
-/** Returns the wall-clock time elapsed in seconds since the Timer object's
- *creation, or the last call to elapsed
- *
- * @param reset :: set to true to reset the clock (default)
- * @return time in seconds
- */
-float Timer::elapsed(bool reset) {
-  float retval = elapsed_no_reset();
-  if (reset)
-    this->reset();
-  return retval;
-}
-
-/** Returns the wall-clock time elapsed in seconds since the Timer object's
- *creation, or the last call to elapsed
- *
- * @return time in seconds
- */
-float Timer::elapsed_no_reset() const {
-  const auto now = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<float> duration = now - m_start;
-
-  return duration.count();
-}
-
-/// Explicitly reset the timer.
-void Timer::reset() { m_start = std::chrono::high_resolution_clock::now(); }
-
-/// Convert the elapsed time (without reseting) to a string.
-std::string Timer::str() const {
+std::string Timer::str() {
   std::stringstream buffer;
-  buffer << this->elapsed_no_reset() << "s";
+  buffer << this->elapsed(false) << "s";
   return buffer.str();
 }
 
 /// Convenience function to provide for easier debug printing.
-std::ostream &operator<<(std::ostream &out, const Timer &obj) {
+std::ostream &operator<<(std::ostream &out, Timer &obj) {
   out << obj.str();
   return out;
 }

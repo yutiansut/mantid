@@ -203,7 +203,7 @@ void ProgressBase::setNotifyStep(double notifyStepPct) {
  *
  * @return seconds estimated to remain. 0 if it cannot calculate it */
 double ProgressBase::getEstimatedTime() const {
-  double elapsed = double(m_timeElapsed->elapsed_no_reset());
+  double elapsed = double(m_timeElapsed->elapsed(false));
   double prog = double(m_i) * m_step;
   if (prog <= 1e-4)
     return 0.0; // unknown

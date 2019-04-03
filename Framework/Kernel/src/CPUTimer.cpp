@@ -34,8 +34,8 @@ void CPUTimer::reset() {
  * @param doReset :: true to reset the timer
  * @return time in CPU seconds
  */
-float CPUTimer::elapsedCPU(bool doReset) {
-  float retval = 0;
+double CPUTimer::elapsedCPU(bool doReset) {
+  double retval = 0;
 #ifdef _WIN32
   UNUSED_ARG(doReset);
 #else /* linux & mac */
@@ -52,8 +52,8 @@ float CPUTimer::elapsedCPU(bool doReset) {
  * @param doReset :: true to reset the timer
  * @return wall-clock time, in seconds
  */
-float CPUTimer::elapsedWallClock(bool doReset) {
-  float retVal = m_wallClockTime.elapsed(false);
+double CPUTimer::elapsedWallClock(bool doReset) {
+  auto retVal = m_wallClockTime.elapsed(false);
   if (doReset)
     this->reset();
   return retVal;
@@ -78,7 +78,7 @@ float CPUTimer::CPUfraction(bool doReset) {
 std::string CPUTimer::str() {
   std::stringstream buffer;
   buffer << std::fixed << std::setw(7) << std::setprecision(4)
-         << m_wallClockTime.elapsed_no_reset() << " s, CPU "
+         << m_wallClockTime.elapsed(false) << " s, CPU "
          << std::setprecision(2) << this->CPUfraction(false);
   this->reset();
   return buffer.str();

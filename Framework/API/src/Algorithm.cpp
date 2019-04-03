@@ -513,7 +513,7 @@ bool Algorithm::executeInternal() {
 
   // Check all properties for validity
   constexpr bool resetTimer{true};
-  float timingInit = timer.elapsed(resetTimer);
+  auto timingInit = timer.elapsed(resetTimer);
   if (!validateProperties()) {
     // Reset name on input workspaces to trigger attempt at collection from ADS
     const auto &props = getProperties();
@@ -531,7 +531,7 @@ bool Algorithm::executeInternal() {
       throw std::runtime_error("Some invalid Properties found");
     }
   }
-  const float timingPropertyValidation = timer.elapsed(resetTimer);
+  const auto timingPropertyValidation = timer.elapsed(resetTimer);
 
   // All properties are now valid - cache workspace properties and histories
   cacheWorkspaceProperties();
@@ -591,7 +591,7 @@ bool Algorithm::executeInternal() {
       }
     }
   }
-  const float timingInputValidation = timer.elapsed(resetTimer);
+  const auto timingInputValidation = timer.elapsed(resetTimer);
 
   if (trackingHistory()) {
     // count used for defining the algorithm execution order
@@ -631,9 +631,9 @@ bool Algorithm::executeInternal() {
       registerFeatureUsage();
       // Check for a cancellation request in case the concrete algorithm doesn't
       interruption_point();
-      const float timingExec = timer.elapsed(resetTimer);
+      const auto timingExec = timer.elapsed(resetTimer);
       // The total runtime including all init steps is used for general logging.
-      const float duration = timingInit + timingPropertyValidation +
+      const auto duration = timingInit + timingPropertyValidation +
                              timingInputValidation + timingExec;
       // need it to throw before trying to run fillhistory() on an algorithm
       // which has failed
@@ -1297,7 +1297,7 @@ bool Algorithm::doCallProcessGroups(
 
   if (completed) {
     // Get how long this algorithm took to run
-    const float duration = timer.elapsed();
+    const auto duration = timer.elapsed();
 
     m_history = boost::make_shared<AlgorithmHistory>(this, startTime, duration,
                                                      ++g_execCount);
