@@ -27,6 +27,7 @@ public:
 //  int64_t elapsedCPUNanoSec(bool reset = true);
 //  double fraction();
   void reset();
+  int64_t getStart() {return m_start;}
 private:
   int64_t m_start; // total nanoseconds
 //  int64)t m_CPUstart; // CPU nanoseconds
