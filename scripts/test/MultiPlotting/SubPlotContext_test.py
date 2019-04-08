@@ -6,13 +6,10 @@
 # SPDX - License - Identifier: GPL - 3.0 +
 import unittest
 
+from mantid.py3compat import mock
 from MultiPlotting.subplot.subplot_context import subplotContext
 from mantid import plots
 
-try:
-    from unittest import mock
-except ImportError:
-    import mock
 
 
 class line(object):
@@ -136,7 +133,10 @@ class SubPlotContextTest(unittest.TestCase):
         self.context._vLines = {
             "two": mock.MagicMock(), "four": mock.MagicMock()}
         result = self.context.vlines
-        self.assertEquals(["three", "two", "four"], result)
+        expect = ["two", "three","four"] 
+        for key in expect:
+            self.assertIn(key, result)
+        self.assertEquals(len(result), len(expect))
 
 if __name__ == "__main__":
     unittest.main()

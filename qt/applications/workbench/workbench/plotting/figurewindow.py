@@ -15,11 +15,12 @@ import weakref
 
 # 3rdparty imports
 from qtpy.QtCore import QEvent, Qt, Signal, Slot
+from qtpy.QtGui import QIcon
 from qtpy.QtWidgets import QMainWindow
 
 # local imports
 from mantidqt.plotting.figuretype import FigureType, figure_type
-from mantidqt.widgets.common.observing_view import ObservingView
+from mantidqt.widgets.observers.observing_view import ObservingView
 
 
 class FigureWindow(QMainWindow, ObservingView):
@@ -27,6 +28,7 @@ class FigureWindow(QMainWindow, ObservingView):
     activated = Signal()
     closing = Signal()
     visibility_changed = Signal()
+    show_context_menu = Signal()
     close_signal = Signal()
 
     def __init__(self, canvas, parent=None):
@@ -34,6 +36,7 @@ class FigureWindow(QMainWindow, ObservingView):
         # attributes
         self._canvas = weakref.proxy(canvas)
         self.setAttribute(Qt.WA_DeleteOnClose, True)
+        self.setWindowIcon(QIcon(':/images/MantidIcon.ico'))
 
         self.close_signal.connect(self._run_close)
         self.setAcceptDrops(True)
@@ -50,6 +53,7 @@ class FigureWindow(QMainWindow, ObservingView):
     def closeEvent(self, event):
         self.closing.emit()
         QMainWindow.closeEvent(self, event)
+        self.deleteLater()
 
     def hideEvent(self, event):
         self.visibility_changed.emit()

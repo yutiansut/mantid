@@ -7,6 +7,7 @@
 #include "EnggDiffFittingPresenter.h"
 #include "EnggDiffFittingPresWorker.h"
 #include "IEnggDiffFittingModel.h"
+#include "MantidAPI/Algorithm.h"
 #include "MantidAPI/Axis.h"
 #include "MantidAPI/MatrixWorkspace.h"
 #include "MantidAPI/Run.h"
@@ -501,8 +502,11 @@ void EnggDiffFittingPresenter::doFitting(const std::vector<RunLabel> &runLabels,
     } catch (const std::runtime_error &exc) {
       g_log.error() << "Could not run the algorithm EnggFitPeaks successfully."
                     << exc.what();
-      m_view->userError("Could not run the algorithm EnggFitPeaks successfully",
-                        exc.what());
+      // A userError should be used for this message once the threading has been
+      // looked into
+      return;
+    } catch (Mantid::API::Algorithm::CancelException) {
+      g_log.error() << "Fit terminated by user.\n";
       return;
     }
 

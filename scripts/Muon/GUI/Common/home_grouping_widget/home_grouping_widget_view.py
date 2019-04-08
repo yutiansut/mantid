@@ -7,7 +7,7 @@
 from __future__ import (absolute_import, division, print_function)
 
 from PyQt4 import QtGui, QtCore
-from Muon.GUI.Common.run_string_utils import valid_alpha_regex
+from Muon.GUI.Common.utilities.run_string_utils import valid_alpha_regex
 from Muon.GUI.Common.message_box import warning
 
 
@@ -46,6 +46,7 @@ class HomeGroupingWidgetView(QtGui.QWidget):
         self.alpha_edit = QtGui.QLineEdit(self)
         self.alpha_edit.setObjectName("alphaEdit")
         self.alpha_edit.setText("1.0")
+        self.alpha_edit.setEnabled(False)
 
         reg_ex = QtCore.QRegExp(valid_alpha_regex)
         alpha_validator = QtGui.QRegExpValidator(reg_ex, self.alpha_edit)
@@ -96,7 +97,7 @@ class HomeGroupingWidgetView(QtGui.QWidget):
                            'subcontrol-origin: margin;'
                            "padding: 0 3px;"
                            'subcontrol-position: top center;'
-                           'padding-top: -10px;'
+                           'padding-top: 0px;'
                            'padding-bottom: 0px;'
                            "padding-right: 10px;"
                            ' color: grey; }')

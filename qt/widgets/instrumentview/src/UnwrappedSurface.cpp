@@ -336,7 +336,7 @@ void UnwrappedSurface::getMaskedDetectors(
     return;
   for (size_t i = 0; i < m_unwrappedDetectors.size(); ++i) {
     const UnwrappedDetector &udet = m_unwrappedDetectors[i];
-    if (m_maskShapes.isMasked(udet.u, udet.v)) {
+    if (!udet.empty() && m_maskShapes.isMasked(udet.u, udet.v)) {
       detIndices.push_back(udet.detIndex);
     }
   }
@@ -597,9 +597,9 @@ void UnwrappedSurface::calcUV(UnwrappedDetector &udet,
  */
 void UnwrappedSurface::calcSize(UnwrappedDetector &udet) {
   // U is the horizontal axis on the screen
-  const Mantid::Kernel::V3D U(-1, 0, 0);
+  constexpr Mantid::Kernel::V3D U(-1, 0, 0);
   // V is the vertical axis on the screen
-  const Mantid::Kernel::V3D V(0, 1, 0);
+  constexpr Mantid::Kernel::V3D V(0, 1, 0);
 
   // find the detector's rotation
   Mantid::Kernel::Quat R;

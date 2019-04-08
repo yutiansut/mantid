@@ -645,6 +645,7 @@ bool PropertyHandler::setParameter(QtProperty *prop) {
     double parValue = m_browser->m_parameterManager->value(prop);
     m_fun->setParameter(parName, parValue);
     m_browser->sendParameterChanged(m_fun.get());
+    m_browser->sendParameterChanged(functionPrefix());
     return true;
   }
   if (m_cf) {
@@ -744,7 +745,7 @@ protected:
     m_browser->m_changeSlotsEnabled = true;
   }
   /// Set vector property
-  void apply(const std::vector<double> &) const override {
+  void apply(const std::vector<double> & /*unused*/) const override {
     // this method is supposed to be called when corresponding
     // property value changes but it doesn't have a value because
     // it's a group property

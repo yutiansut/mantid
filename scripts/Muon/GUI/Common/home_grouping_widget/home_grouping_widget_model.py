@@ -6,12 +6,12 @@
 # SPDX - License - Identifier: GPL - 3.0 +
 from __future__ import (absolute_import, division, print_function)
 
-from Muon.GUI.Common.muon_context import MuonContext
+from Muon.GUI.Common.muon_data_context import MuonDataContext
 
 
 class HomeGroupingWidgetModel(object):
 
-    def __init__(self, muon_data=MuonContext()):
+    def __init__(self, muon_data=MuonDataContext()):
         self._data = muon_data
 
     def get_group_names(self):
@@ -52,14 +52,11 @@ class HomeGroupingWidgetModel(object):
         else:
             return 1
 
-    def update_summed_periods(self, summed_periods):
-        self._data.current_data["SummedPeriods"] = summed_periods
-
-    def update_subtracted_periods(self, subtracted_periods):
-        self._data.current_data["SubtractedPeriods"] = subtracted_periods
+    def update_periods(self, summed_periods, subtracted_periods):
+        self._data.add_or_replace_gui_variables(SubtractedPeriods=subtracted_periods, SummedPeriods=summed_periods)
 
     def get_summed_periods(self):
-        return self._data.current_data["SummedPeriods"]
+        return self._data.gui_variables["SummedPeriods"]
 
     def get_subtracted_periods(self):
-        return self._data.current_data["SubtractedPeriods"]
+        return self._data.gui_variables["SubtractedPeriods"]
