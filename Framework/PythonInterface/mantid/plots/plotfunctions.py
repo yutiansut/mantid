@@ -369,7 +369,7 @@ def pcolorfast(axes, workspace, *args, **kwargs):
             return _pcolorpieces(axes, workspace, distribution, *args, **kwargs)
         else:
             (x, y, z) = get_matrix_2d_data(workspace, distribution, histogram2D=True)
-    return axes.pcolorfast(x, y, z, *args, **kwargs)
+    return axes.pcolorfast(x[0], y[:,0], z, *args, **kwargs)
 
 
 def pcolormesh(axes, workspace, *args, **kwargs):
@@ -400,7 +400,7 @@ def pcolormesh(axes, workspace, *args, **kwargs):
             return _pcolorpieces(axes, workspace, distribution, *args, **kwargs)
         else:
             (x, y, z) = get_matrix_2d_data(workspace, distribution, histogram2D=True)
-    return axes.pcolormesh(x, y, z, *args, **kwargs)
+    return axes.pcolormesh(x[0], y[:,0], z, *args, **kwargs)
 
 
 def imshow(axes, workspace, *args, **kwargs):
