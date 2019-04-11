@@ -14,7 +14,7 @@ def trimfname(filename):
 
 
 def findfile(RunNum,file_structure,root_dir,reduced_dir):
-
+    print(RunNum,file_structure,root_dir,reduced_dir)
     if file_structure == "Flat":
         data_dir = root_dir
         if os.path.exists(data_dir):
@@ -66,9 +66,13 @@ def extract_rn(rnstring,file_structure,root_dir,reduced_dir):
     for grp in all_grp:
         ListRN = []
         rg = grp.split(',')
+        print(rg)
         for str in rg:
             if str[0]=='-' or str[-1]=='-':
-                data_dir = os.path.dirname(findfile(int(str.strip('-')),file_structure,root_dir,reduced_dir))
+                print(str)
+                meow = findfile(int(str.strip('-')), file_structure, root_dir, reduced_dir)
+                print(meow)
+                data_dir = os.path.dirname(meow)
                 all_num = findsamerun(str,data_dir)
                 ListRN += all_num
             else:
@@ -228,20 +232,20 @@ class VisionLoadMultipleFiles(PythonAlgorithm):
         ren_flag = self.getProperty("RenameOutputWorkspace").value
         out_name = self.getProperty("Output_name").value
         ListGrp = extract_rn(rn_string,file_structure,root_dir,reduced_dir)
-        for ListRN in ListGrp:
-            merged=merge(ListRN,weight,file_structure,root_dir,raw_dir,reduced_dir,logbook)
-            if reb_flag:
-                Rebin(InputWorkspace=merged,OutputWorkspace=merged,Params=reb_param,PreserveEvents=0)
-            if smooth_flag:
-                SmoothData(InputWorkspace=merged,OutputWorkspace=merged,NPoints=smooth_param)
-            if unit == "cm-1":
-                ConvertUnits(InputWorkspace=merged, OutputWorkspace=merged, Target='DeltaE_inWavenumber', EMode='Indirect', EFixed=3.5)
-        if ren_flag:
-            RenameWorkspace(InputWorkspace=merged,OutputWorkspace=out_name)
-        else:
-            out_name=merged
-        self.declareProperty(WorkspaceProperty("OutputWorkspace", "", direction=Direction.Output))
-        self.setProperty("OutputWorkspace", out_name)
-        RemoveLogs(out_name)
+        #for ListRN in ListGrp:
+        #    merged=merge(ListRN,weight,file_structure,root_dir,raw_dir,reduced_dir,logbook)
+        #    if reb_flag:
+        #        Rebin(InputWorkspace=merged,OutputWorkspace=merged,Params=reb_param,PreserveEvents=0)
+        #    if smooth_flag:
+        #        SmoothData(InputWorkspace=merged,OutputWorkspace=merged,NPoints=smooth_param)
+        #    if unit == "cm-1":
+        #        ConvertUnits(InputWorkspace=merged, OutputWorkspace=merged, Target='DeltaE_inWavenumber', EMode='Indirect', EFixed=3.5)
+        #if ren_flag:
+        #    RenameWorkspace(InputWorkspace=merged,OutputWorkspace=out_name)
+        #else:
+        #    out_name=merged
+        #self.declareProperty(WorkspaceProperty("OutputWorkspace", "", direction=Direction.Output))
+        #self.setProperty("OutputWorkspace", out_name)
+        #RemoveLogs(out_name)
 
 AlgorithmFactory.subscribe(VisionLoadMultipleFiles)
