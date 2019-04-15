@@ -12,7 +12,8 @@ from mantid.simpleapi import VisionLoadMultipleFiles, config, mtd
 
 
 class VisionLoadMultipleFilesTest(unittest.TestCase):
-    pass
+    out = VisionLoadMultipleFiles(Run_numbers='37760-',Weighting_method='estimate from error', File_structure='Flat')
+
 
 if __name__ == "__main__":
     unittest.main()

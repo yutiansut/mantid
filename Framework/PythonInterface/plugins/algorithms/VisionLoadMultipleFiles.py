@@ -232,20 +232,20 @@ class VisionLoadMultipleFiles(PythonAlgorithm):
         ren_flag = self.getProperty("RenameOutputWorkspace").value
         out_name = self.getProperty("Output_name").value
         ListGrp = extract_rn(rn_string,file_structure,root_dir,reduced_dir)
-        #for ListRN in ListGrp:
-        #    merged=merge(ListRN,weight,file_structure,root_dir,raw_dir,reduced_dir,logbook)
-        #    if reb_flag:
-        #        Rebin(InputWorkspace=merged,OutputWorkspace=merged,Params=reb_param,PreserveEvents=0)
-        #    if smooth_flag:
-        #        SmoothData(InputWorkspace=merged,OutputWorkspace=merged,NPoints=smooth_param)
-        #    if unit == "cm-1":
-        #        ConvertUnits(InputWorkspace=merged, OutputWorkspace=merged, Target='DeltaE_inWavenumber', EMode='Indirect', EFixed=3.5)
-        #if ren_flag:
-        #    RenameWorkspace(InputWorkspace=merged,OutputWorkspace=out_name)
-        #else:
-        #    out_name=merged
-        #self.declareProperty(WorkspaceProperty("OutputWorkspace", "", direction=Direction.Output))
-        #self.setProperty("OutputWorkspace", out_name)
-        #RemoveLogs(out_name)
+        for ListRN in ListGrp:
+            merged=merge(ListRN,weight,file_structure,root_dir,raw_dir,reduced_dir,logbook)
+            if reb_flag:
+                Rebin(InputWorkspace=merged,OutputWorkspace=merged,Params=reb_param,PreserveEvents=0)
+            if smooth_flag:
+                SmoothData(InputWorkspace=merged,OutputWorkspace=merged,NPoints=smooth_param)
+            if unit == "cm-1":
+               ConvertUnits(InputWorkspace=merged, OutputWorkspace=merged, Target='DeltaE_inWavenumber', EMode='Indirect', EFixed=3.5)
+        if ren_flag:
+            RenameWorkspace(InputWorkspace=merged,OutputWorkspace=out_name)
+        else:
+            out_name=merged
+        self.declareProperty(WorkspaceProperty("OutputWorkspace", "", direction=Direction.Output))
+        self.setProperty("OutputWorkspace", out_name)
+        RemoveLogs(out_name)
 
 AlgorithmFactory.subscribe(VisionLoadMultipleFiles)
