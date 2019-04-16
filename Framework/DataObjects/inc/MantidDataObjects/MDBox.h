@@ -139,6 +139,8 @@ public:
   const std::vector<MDE> &getConstEvents() const;
   // the same as getConstEvents above,
   const std::vector<MDE> &getEvents() const;
+  template <typename func>
+  void transformEvents(func&& fnc) { std::for_each(data.begin(), data.end(), fnc); }
   void releaseEvents();
 
   std::vector<MDE> *getEventsCopy() override;

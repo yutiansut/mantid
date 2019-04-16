@@ -84,28 +84,49 @@ private:
   Mantid::API::IMDEventWorkspace_sptr out;
 
   MergeType mergeType = MergeType::DEFAULT;
+//  MergeType mergeType = MergeType::INDEXED;
 };
 
 namespace mdo = Mantid::DataObjects;
 
+template <size_t ND>
+struct SetRunIndex {
+  template <typename MDE>
+  static decltype(std::declval<MDE>().setRunIndex()) set(MDE& event, uint16_t offset) {
+    event.setRunIndex(event.getRunIndex() + offset);
+  }
+  static void set(...) {}
+
+};
+
+
 template <size_t ND, template <size_t> class MDEventType>
 std::vector<MDEventType<ND>> MergeMD::collectEvents(std::vector<size_t> wsIdxs) const {
+  if (wsIdxs.empty())
+    return std::vector<MDEventType<ND>>();
   size_t evCnt = std::accumulate(wsIdxs.cbegin(), wsIdxs.cend(), 0ul, [this](size_t& a, const size_t& i){
     return a += this->m_workspaces[i]->getNPoints();
   });
   std::vector<MDEventType<ND>> res;
   res.reserve(evCnt);
+  auto pr = mdo::getMDEventWSTypeND(m_workspaces[*wsIdxs.begin()]);
   for(auto&& idx: wsIdxs) {
     auto ws = boost::static_pointer_cast<mdo::MDEventWorkspace<MDEventType<ND>, ND>>(m_workspaces[idx]);
     auto data = ws->getBox();
     std::vector<API::IMDNode *> boxes;
     data->getBoxes(boxes, 1000, true);
+    auto setNewRunIndexOffsetIterFirst = res.end();
     for (auto&& ibox: boxes) {
       auto box = static_cast<mdo::MDBox<MDEventType<ND>, ND>*>(ibox);
       if (box && !box->getIsMasked()) {
         const auto &events = box->getConstEvents();
-        res.insert(res.end(), events.begin(), events.end());
+        setNewRunIndexOffsetIterFirst = res.insert(res.end(), events.begin(), events.end());
       }
+    }
+    if (pr.first) {// full events - update runIndex with offset
+      uint16_t runIndexOffset = experimentInfoNo[idx];
+      for (auto iter = setNewRunIndexOffsetIterFirst; iter < res.end(); ++iter)
+        SetRunIndex<ND>::set(*iter, runIndexOffset);
     }
   }
   return res;
@@ -163,21 +184,33 @@ template <size_t ND, template <size_t> class MDEventType>
 void MergeMD::doMergeIndexed(const std::vector<size_t>& wsIndexes,
                     std::vector<size_t>::const_iterator lastIter) {
   auto firstIter =  wsIndexes.begin();
-  if (lastIter != firstIter) {
+  if (lastIter == firstIter) { // just copy, sort and rebuild
+    auto mdEvents = collectEvents<ND, MDEventType>(wsIndexes);
+
+  } else {
     auto pr = mdo::getMDEventWSTypeND(m_workspaces[*firstIter]);
     if (equalBcTreeParams(*m_workspaces[*firstIter]->getBoxController().get(), *out->getBoxController().get()))
       out->setBox(m_workspaces[*(firstIter++)].get()->cloneBoxes());
     if (pr.first) { // full events - update runIndex with offset
+      uint16_t runIndexOffset = experimentInfoNo[*firstIter];
+      std::vector<API::IMDNode *> boxes;
+      out->getBoxes(boxes, 1000, true);
+      for (auto &box: boxes) {
+        DataObjects::MDBox<MDEventType<ND>, ND> *leafBox = dynamic_cast<DataObjects::MDBox<MDEventType<ND>, ND> *>(box);
+        leafBox->transformEvents([&runIndexOffset](MDEventType<ND> &event) {
+          SetRunIndex<ND>::set(event, runIndexOffset);
+        });
+      }
     }
-  }
 
-  for(auto it = firstIter; it < lastIter; ++it) {
-    // process workspaces with the same boundaries here
-    // the events TODO
-  }
+    for (auto it = firstIter; it < lastIter; ++it) {
+      // process workspaces with the same boundaries here
+      // the events TODO
+    }
 
-  for(auto it = lastIter; it != wsIndexes.end(); ++it) {
-    // process workspaces with different boundaries TODO
+    for (auto it = lastIter; it != wsIndexes.end(); ++it) {
+      // process workspaces with different boundaries TODO
+    }
   }
 }
 

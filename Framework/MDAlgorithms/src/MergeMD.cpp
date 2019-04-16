@@ -306,6 +306,8 @@ void MergeMD::exec() {
   // Create a blank output workspace
   this->createOutputWorkspace(inputs);
 
+  std::cerr << "\n\n" << "My brand new merge" << "\n\n";
+
   switch (mergeType) {
   case MergeType::DEFAULT:
     doMergeDefault();
