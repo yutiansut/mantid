@@ -134,7 +134,17 @@ def merge(ListRN,weight_tag,file_structure,root_dir,raw_dir,reduced_dir,logfile)
         Scale(InputWorkspace=merged,OutputWorkspace=merged,Factor=tpchg,Operation='Multiply')
 		
     elif weight==2:
-        f = open(logfile, 'r')
+
+        try:
+          f = open(logfile, 'r')
+        except IOError:
+            print('root_dir',root_dir,logfile)
+            if os.path.exists(root_dir):
+                for filename in os.listdir(root_dir):
+                    if logfile in filename:
+                        fullfilename=os.path.join(root_dir, filename)
+                        f = open(fullfilename,'r')
+                        break;
         full_text = f.read()
         f.close()
         chopped = full_text.split('\n')

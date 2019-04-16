@@ -13,7 +13,7 @@ from mantid.simpleapi import VisionLoadMultipleFiles, config, mtd
 
 class VisionLoadMultipleFilesTest(unittest.TestCase):
     out = VisionLoadMultipleFiles(Run_numbers='37760-',Weighting_method='estimate from error', File_structure='Flat')
-
+    out = VisionLoadMultipleFiles(Run_numbers='37760-',Weighting_method='pchg from logbook', File_structure='Flat', Logbook='VIS_logbook.csv')
 
 if __name__ == "__main__":
     unittest.main()
