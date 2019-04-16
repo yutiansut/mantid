@@ -17,6 +17,7 @@
 // Includes
 //------------------------------------------------------------------------------
 #include "MantidTestHelpers/ComponentCreationHelper.h"
+#include "MantidGeometry/IDetector.h"
 #include "MantidGeometry/Instrument.h"
 #include "MantidGeometry/Instrument/CompAssembly.h"
 #include "MantidGeometry/Instrument/Detector.h"
@@ -34,10 +35,8 @@
 #include "MantidKernel/V2D.h"
 #include "MantidKernel/make_unique.h"
 
-#include "MantidGeometry/IDetector.h"
 #include <Poco/Path.h>
 #include <boost/make_shared.hpp>
-#include <boost/shared_array.hpp>
 
 using namespace Mantid::Geometry;
 using Mantid::Kernel::Quat;
@@ -84,6 +83,39 @@ void addSourceToInstrument(Instrument_sptr &instrument, const V3D &sourcePos,
   source->setPos(sourcePos);
   instrument->add(source);
   instrument->markAsSource(source);
+}
+//----------------------------------------------------------------------------------------------
+
+/**
+ * Return the XML for a hollow cylinder
+ */
+std::string hollowCylinderXML(double innerRadius, double outerRadius,
+                              double height,
+                              const Mantid::Kernel::V3D &baseCentre,
+                              const Mantid::Kernel::V3D &axis,
+                              const std::string &id) {
+  std::ostringstream xml;
+  xml << "<hollow-cylinder id=\"" << id << "\">"
+      << "<centre-of-bottom-base x=\"" << baseCentre.X() << "\" y=\""
+      << baseCentre.Y() << "\" z=\"" << baseCentre.Z() << "\"/>"
+      << "<axis x=\"" << axis.X() << "\" y=\"" << axis.Y() << "\" z=\""
+      << axis.Z() << "\"/>"
+      << "<inner-radius val=\"" << innerRadius << "\" />"
+      << "<outer-radius val=\"" << outerRadius << "\" />"
+      << "<height val=\"" << height << "\" />"
+      << "</hollow-cylinder>";
+  return xml.str();
+}
+
+/**
+ * Create a hollow cylinder object
+ */
+boost::shared_ptr<CSGObject>
+createHollowCylinder(double innerRadius, double outerRadius, double height,
+                     const V3D &baseCentre, const V3D &axis,
+                     const std::string &id) {
+  return ShapeFactory().createShape(hollowCylinderXML(
+      innerRadius, outerRadius, height, baseCentre, axis, id));
 }
 
 void addSampleToInstrument(Instrument_sptr &instrument, const V3D &samplePos) {
@@ -211,15 +243,6 @@ boost::shared_ptr<CompAssembly> createTestAssemblyOfFourCylinders() {
 }
 
 /**
- * Create an object component that has a defined shape
- */
-ObjComponent *createSingleObjectComponent() {
-  auto pixelShape = ComponentCreationHelper::createCappedCylinder(
-      0.5, 1.5, V3D(0.0, 0.0, 0.0), V3D(0., 1.0, 0.), "tube");
-  return new ObjComponent("pixel", pixelShape);
-}
-
-/**
  * Create a hollow shell, i.e. the intersection of two spheres or radius r1 and
  * r2
  */
@@ -328,10 +351,10 @@ createRingOfCylindricalDetectors(const double R_min, const double R_max,
   std::vector<boost::shared_ptr<const IDetector>> groupMembers;
   groupMembers.reserve(vecOfDetectors.size());
   for (auto &det : vecOfDetectors) {
-    groupMembers.push_back(boost::shared_ptr<const IDetector>(std::move(det)));
+    groupMembers.emplace_back(std::move(det));
   }
 
-  return boost::make_shared<DetectorGroup>(groupMembers);
+  return boost::make_shared<DetectorGroup>(std::move(groupMembers));
 }
 
 Instrument_sptr createTestInstrumentCylindrical(
@@ -427,7 +450,7 @@ createCylInstrumentWithVerticalOffsetsSpecified(
   return instrument;
 }
 
-/** create instrument with cylindrical detecotrs located in specific positions
+/** create instrument with cylindrical detectors located in specific positions
  *
  *
  */
@@ -540,11 +563,10 @@ void addRectangularBank(Instrument &testInstrument, int idStart, int pixels,
 //----------------------------------------------------------------------------------------------
 /**
  * Create an test instrument with n panels of rectangular detectors,
- *pixels*pixels in size,
- * a source and spherical sample shape.
+ * pixels*pixels in size, a source and spherical sample shape.
  *
  * Banks' lower-left corner is at position (0,0,5*banknum) and they go up to
- *(pixels*0.008, pixels*0.008, Z)
+ * (pixels*0.008, pixels*0.008, Z)
  * Pixels are 4 mm wide.
  *
  * @param num_banks :: number of rectangular banks to create
@@ -576,8 +598,7 @@ Instrument_sptr createTestInstrumentRectangular(int num_banks, int pixels,
 //----------------------------------------------------------------------------------------------
 /**
  * Create an test instrument with n panels of rectangular detectors,
- *pixels*pixels in size,
- * a source and spherical sample shape.
+ * pixels*pixels in size, a source and spherical sample shape.
  *
  * Banks are centered at (1*banknum, 0, 0) and are facing 0,0.
  * Pixels are 4 mm wide.
@@ -632,8 +653,8 @@ Instrument_sptr createTestInstrumentRectangular2(int num_banks, int pixels,
 
 /**
  * createOneDetectorInstrument, creates the most simple possible definition of
- *an instrument in which we can extract a valid L1 and L2 distance for unit
- *calculations.
+ * an instrument in which we can extract a valid L1 and L2 distance for unit
+ * calculations.
  *
  * Beam direction is along X,
  * Up direction is Y

@@ -5,12 +5,18 @@
 #     & Institut Laue - Langevin
 # SPDX - License - Identifier: GPL - 3.0 +
 from __future__ import (absolute_import, division, print_function)
-import mantid.simpleapi as simple
-import Engineering.EnggUtils as Utils
-import os
+
 import csv
+import matplotlib.pyplot as plt
+import numpy as np
+import os
 from platform import system
 from shutil import copy2
+from six import u
+
+import mantid.plots  # noqa
+import Engineering.EnggUtils as Utils
+import mantid.simpleapi as simple
 
 
 def main(vanadium_run, user, focus_run, **kwargs):
@@ -108,8 +114,7 @@ def run(ceria_run, do_cal, do_van, van_run, calibration_directory, calibration_g
     """
 
     # check whether creating a vanadium is required or requested
-    vanadium = _gen_filename(van_run)
-    if not os.path.isfile(vanadium) or do_van:
+    if (not os.path.isfile(_get_van_names(van_run, calibration_directory)[0])) or do_van:
         create_vanadium(van_run, calibration_directory)
 
     # find the file names of calibration files that would be created by this run
@@ -217,7 +222,7 @@ def create_calibration_cropped_file(ceria_run, van_run, curve_van, int_van, cali
         save_calibration(ceria_run, van_run, calibration_directory, calibration_general, "all_banks", [param_tbl_name],
                          tzero, difc)
         save_calibration(ceria_run, van_run, calibration_directory, calibration_general,
-                         "bank_{}".format(param_tbl_name), [param_tbl_name],  tzero, difc)
+                         "bank_{}".format(param_tbl_name), [param_tbl_name], tzero, difc)
     else:
         # work out which bank number to crop on, then calibrate
         if spec_nos.lower() == "north":
@@ -239,6 +244,7 @@ def create_calibration_cropped_file(ceria_run, van_run, curve_van, int_van, cali
                          [spec_nos], tzero, difc)
     # create the table workspace containing the parameters
     create_params_table(difc, tzero, difa)
+    create_difc_zero_workspace(difc, tzero, spec_nos, param_tbl_name)
 
 
 def create_calibration_files(ceria_run, van_run, curve_van, int_van, calibration_directory, calibration_general):
@@ -278,6 +284,7 @@ def create_calibration_files(ceria_run, van_run, curve_van, int_van, calibration
     save_calibration(ceria_run, van_run, calibration_directory, calibration_general, "all_banks", bank_names, tzeros,
                      difcs)
     create_params_table(difcs, tzeros, difa)
+    create_difc_zero_workspace(difcs, tzeros, "", None)
 
 
 def load_van_files(curves_van, ints_van):
@@ -308,7 +315,7 @@ def save_calibration(ceria_run, van_run, calibration_directory, calibration_gene
 
     """
 
-    gsas_iparm_fname = os.path.join(calibration_directory, "ENGINX_"+van_run+"_"+ceria_run+"_"+name+".prm")
+    gsas_iparm_fname = os.path.join(calibration_directory, "ENGINX_" + van_run + "_" + ceria_run + "_" + name + ".prm")
     # work out what template to use
     if name == "all_banks":
         template_file = None
@@ -348,6 +355,98 @@ def create_params_table(difc, tzero, difa):
     for i in range(len(difc)):
         next_row = {"bankid": i, "difc": difc[i], "difa": difa[i], "tzero": tzero[i]}
         param_table.addRow(next_row)
+
+
+def create_difc_zero_workspace(difc, tzero, crop_on, name):
+    """
+    create a workspace that can be used to plot the expected peaks against the fitted ones
+
+    @param difc :: the list of difc values to add to the table
+    @param tzero :: the list of tzero values to add to the table
+    @param crop_on :: where the cropping occured, either a bank, a spectra, or empty
+    @param name :: the name of a cropped workspace to use, if it is a non default name
+
+    """
+    plot_spec_num = False
+    # check what banks to use
+    banks = [1]
+    correction = 0
+    if crop_on == "":
+        banks = [1, 2]
+    elif crop_on.lower() == "south":
+        correction = 1
+    elif not crop_on == "":
+        plot_spec_num = True
+
+    # loop through used banks
+    for i in banks:
+        actual_i = correction + i
+        # retrieve required workspace
+        if not plot_spec_num:
+            bank_ws = simple.AnalysisDataService.retrieve("engg_calibration_bank_{}".format(actual_i))
+        else:
+            bank_ws = simple.AnalysisDataService.retrieve(name)
+
+        # get the data to be used
+        x_val = []
+        y_val = []
+        y2_val = []
+        for irow in range(0, bank_ws.rowCount()):
+            x_val.append(bank_ws.cell(irow, 0))
+            y_val.append(bank_ws.cell(irow, 5))
+            y2_val.append(x_val[irow] * difc[i - 1] + tzero[i - 1])
+
+        # create workspaces to temporary hold the data
+        simple.CreateWorkspace(OutputWorkspace="ws1", DataX=x_val, DataY=y_val,
+                               UnitX="Expected Peaks Centre(dSpacing, A)",
+                               YUnitLabel="Fitted Peaks Centre(TOF, us)")
+        simple.CreateWorkspace(OutputWorkspace="ws2", DataX=x_val, DataY=y2_val)
+
+        # get correct name for output
+        if not plot_spec_num:
+            name = actual_i
+        output_name = "Engg difc Zero Peaks Bank {}".format(name)
+
+        # use the two workspaces to creat the output
+        output = simple.AppendSpectra(InputWorkspace1="ws1", InputWorkspace2="ws2",
+                                      OutputWorkspace=output_name)
+        plot_calibration(output, output_name)
+
+    # remove the left-over workspaces
+    simple.DeleteWorkspace("ws1")
+    simple.DeleteWorkspace("ws2")
+
+
+def plot_calibration(workspace, name):
+    """
+    Plot the fitted peaks and expected peaks of a bank
+    @param workspace :: The workspace object to be plotted
+    @param name :: The name to be plotted, should be a variation of "Engg difc Zero Peaks Bank..."
+
+    """
+    fig, ax = plt.subplots(subplot_kw={"projection": "mantid"})
+    fig.canvas.set_window_title(name)
+
+    # plot lines based off of old gui plot
+    ax.plot(workspace, wkspIndex=0, label="Peaks Fitted", linestyle=":", color="black", marker='o', markersize=2,
+            linewidth=1.5)
+    ax.plot(workspace, wkspIndex=1, label="Expected Peaks Centre(dspacing, A)", color="orange", marker='o',
+            markersize=2)
+
+    # set the plot and axes titles
+    ax.set_title(name, fontweight="bold")
+    ax.set_xlabel("Expected Peaks Centre(dspacing, A)", fontweight="bold")
+    ax.set_ylabel("Fitted Peaks Centre(TOF, us)", fontweight="bold")
+
+    # set the ticks on the axes
+    ax.set_xticks(np.arange(0.5, 3.6, step=0.1), True)
+    ax.set_xticks(np.arange(0.5, 4, step=0.5))
+
+    ax.set_yticks(np.arange(1e4, 7e4, step=1e4))
+    ax.set_yticks(np.arange(1e4, 6.2e4, step=0.2e4), True)
+
+    ax.legend()
+    fig.show()
 
 
 def focus(run_no, van_run, calibration_directory, focus_directory, focus_general, do_pre_process, params, time_period,
@@ -410,10 +509,11 @@ def focus_whole(run_number, van_curves, van_int, focus_directory, focus_general,
         simple.EnggFocus(InputWorkspace=ws_to_focus, OutputWorkspace=output_ws,
                          VanIntegrationWorkspace=van_integrated_ws, VanCurvesWorkspace=van_curves_ws,
                          Bank=str(i))
-        _save_out(run_number, focus_directory, focus_general, output_ws, "ENGINX_{}_{}", str(i))
+        _save_out(run_number, focus_directory, focus_general, output_ws, "ENGINX_{}_{}{{}}", str(i))
 
 
-def focus_cropped(run_number, van_curves, van_int, focus_directory, focus_general, do_pre_process, params, time_period, crop_on,
+def focus_cropped(run_number, van_curves, van_int, focus_directory, focus_general, do_pre_process, params, time_period,
+                  crop_on,
                   use_spectra):
     """
     focus a partial run, cropping either on banks or on specific spectra
@@ -442,17 +542,18 @@ def focus_cropped(run_number, van_curves, van_int, focus_directory, focus_genera
         simple.EnggFocus(InputWorkspace=ws_to_focus, OutputWorkspace=output_ws,
                          VanIntegrationWorkspace=van_integrated_ws, VanCurvesWorkspace=van_curves_ws,
                          Bank=bank.get(crop_on))
-        _save_out(run_number, focus_directory, focus_general, output_ws, "ENGINX_{}_{}", crop_on)
+        _save_out(run_number, focus_directory, focus_general, output_ws, "ENGINX_{}_{}{{}}", crop_on)
     else:
         # crop on the spectra passed in, focus and save it out
         output_ws = output_ws.format("", "")
         simple.EnggFocus(InputWorkspace=ws_to_focus, OutputWorkspace=output_ws,
                          VanIntegrationWorkspace=van_integrated_ws,
                          VanCurvesWorkspace=van_curves_ws, SpectrumNumbers=crop_on)
-        _save_out(run_number, focus_directory, focus_general, output_ws, "ENGINX_{}_bank_{}", "cropped")
+        _save_out(run_number, focus_directory, focus_general, output_ws, "ENGINX_{}_bank_{}{{}}", "cropped")
 
 
-def focus_texture_mode(run_number, van_curves, van_int, focus_directory, focus_general, do_pre_process, params, time_period,
+def focus_texture_mode(run_number, van_curves, van_int, focus_directory, focus_general, do_pre_process, params,
+                       time_period,
                        dg_file):
     """
     perform a texture mode focusing using the grouping csv file
@@ -485,7 +586,7 @@ def focus_texture_mode(run_number, van_curves, van_int, focus_directory, focus_g
         simple.EnggFocus(InputWorkspace=ws_to_focus, OutputWorkspace=output_ws,
                          VanIntegrationWorkspace=van_integrated_ws, VanCurvesWorkspace=van_curves_ws,
                          SpectrumNumbers=banks.get(bank))
-        _save_out(run_number, focus_directory, focus_general, output_ws, "ENGINX_{}_texture_{}", bank)
+        _save_out(run_number, focus_directory, focus_general, output_ws, "ENGINX_{}_texture_{}{{}}", bank)
 
 
 def _prepare_focus(run_number, van_curves, van_int, do_pre_process, params, time_period):
@@ -508,7 +609,7 @@ def _prepare_focus(run_number, van_curves, van_int, do_pre_process, params, time
     return van_curves_ws, van_integrated_ws, ws_to_focus
 
 
-def _save_out(run_number, focus_directory, focus_general, output, join_string, bank_id):
+def _save_out(run_number, focus_directory, focus_general, output, enginx_file_name_format, bank_id):
     """
     save out the files required for the focus
 
@@ -516,31 +617,45 @@ def _save_out(run_number, focus_directory, focus_general, output, join_string, b
     @param focus_directory :: the user directory to save to
     @param focus_general :: the general folder to copy the saved out files to
     @param output :: the workspace to save
-    @param join_string :: the nameing scheme of the files
+    @param enginx_file_name_format :: the nameing scheme of the files
     @param bank_id :: the bank being saved
 
     """
     # work out where to save the files
-    filename = os.path.join(focus_directory, join_string.format(run_number, bank_id))
-    hdf5_name = os.path.join(focus_directory, run_number + ".hdf5")
-    if not unicode(bank_id).isnumeric():
+    dat_name, genie_filename, gss_name, hdf5_name, nxs_name = _find_focus_file_location(bank_id, focus_directory,
+                                                                                        enginx_file_name_format,
+                                                                                        run_number)
+    if not u(bank_id).isnumeric():
         bank_id = 0
     # save the files out to the user directory
-    simple.SaveFocusedXYE(InputWorkspace=output, Filename=filename + ".dat", SplitFiles=False,
+    simple.SaveFocusedXYE(InputWorkspace=output, Filename=dat_name, SplitFiles=False,
                           StartAtBankNumber=bank_id)
-    simple.SaveGSS(InputWorkspace=output, Filename=filename + ".gss", SplitFiles=False, Bank=bank_id)
-    simple.SaveOpenGenieAscii(InputWorkspace=output, Filename=filename + ".his", OpenGenieFormat="ENGIN-X Format")
-    simple.SaveNexus(InputWorkspace=output, Filename=filename + ".nxs")
+    simple.SaveGSS(InputWorkspace=output, Filename=gss_name, SplitFiles=False, Bank=bank_id)
+    simple.SaveOpenGenieAscii(InputWorkspace=output, Filename=genie_filename, OpenGenieFormat="ENGIN-X Format")
+    simple.SaveNexus(InputWorkspace=output, Filename=nxs_name)
     simple.ExportSampleLogsToHDF5(InputWorkspace=output, Filename=hdf5_name, Blacklist="bankid")
     if not focus_general == focus_directory:
         if not os.path.exists(focus_general):
             os.makedirs(focus_general)
         # copy the files to the general directory
-        copy2(filename+".dat", focus_general)
-        copy2(filename + ".gss", focus_general)
-        copy2(filename + ".his", focus_general)
-        copy2(filename + ".nxs", focus_general)
+        copy2(dat_name, focus_general)
+        copy2(gss_name, focus_general)
+        copy2(genie_filename, focus_general)
+        copy2(nxs_name, focus_general)
         copy2(hdf5_name, focus_general)
+
+
+def _find_focus_file_location(bank_id, focus_directory, enginx_file_name_format, run_number):
+    # Leave final {} in string so that file extension can be set.
+    run_and_bank = enginx_file_name_format.format(run_number, bank_id)
+    filename = os.path.join(focus_directory, run_and_bank)
+    genie_filename = os.path.join(focus_directory, run_and_bank.replace("_", "", 1).format(".his"))
+
+    dat_name = filename.format(".dat")
+    gss_name = filename.format(".gss")
+    nxs_name = filename.format(".nxs")
+    hdf5_name = os.path.join(focus_directory, run_number + ".hdf5")
+    return dat_name, genie_filename, gss_name, hdf5_name, nxs_name
 
 
 def _decomment_csv(csvfile):

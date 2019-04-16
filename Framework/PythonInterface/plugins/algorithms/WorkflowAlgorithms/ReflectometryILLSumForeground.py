@@ -8,6 +8,7 @@
 
 from __future__ import (absolute_import, division, print_function)
 
+import ILL_utilities as utils
 from mantid.api import (AlgorithmFactory, DataProcessorAlgorithm, MatrixWorkspaceProperty, PropertyMode,
                         WorkspaceUnitValidator)
 from mantid.kernel import (CompositeValidator, Direction, FloatArrayBoundedValidator, FloatArrayProperty,
@@ -21,7 +22,7 @@ import ReflectometryILL_common as common
 
 class Prop:
     CLEANUP = 'Cleanup'
-    DIRECT_WS = 'DirectBeamWorkspace'
+    DIRECT_WS = 'DirectLineWorkspace'
     DIRECT_FOREGROUND_WS = 'DirectForegroundWorkspace'
     FOREGROUND_INDICES = 'Foreground'
     INPUT_WS = 'InputWorkspace'
@@ -67,9 +68,9 @@ class ReflectometryILLSumForeground(DataProcessorAlgorithm):
         """Execute the algorithm."""
         self._subalgLogging = self.getProperty(Prop.SUBALG_LOGGING).value == SubalgLogging.ON
         cleanupMode = self.getProperty(Prop.CLEANUP).value
-        self._cleanup = common.WSCleanup(cleanupMode, self._subalgLogging)
+        self._cleanup = utils.Cleanup(cleanupMode, self._subalgLogging)
         wsPrefix = self.getPropertyValue(Prop.OUTPUT_WS)
-        self._names = common.WSNameSource(wsPrefix, cleanupMode)
+        self._names = utils.NameSource(wsPrefix, cleanupMode)
 
         ws = self._inputWS()
         processReflected = not self._directOnly()
@@ -120,8 +121,8 @@ class ReflectometryILLSumForeground(DataProcessorAlgorithm):
             doc='Enable or disable child algorithm logging.')
         self.declareProperty(
             Prop.CLEANUP,
-            defaultValue=common.WSCleanup.ON,
-            validator=StringListValidator([common.WSCleanup.ON, common.WSCleanup.OFF]),
+            defaultValue=utils.Cleanup.ON,
+            validator=StringListValidator([utils.Cleanup.ON, utils.Cleanup.OFF]),
             doc='Enable or disable intermediate workspace cleanup.')
         self.declareProperty(
             Prop.SUM_TYPE,
@@ -189,7 +190,7 @@ class ReflectometryILLSumForeground(DataProcessorAlgorithm):
         ReflectometryBeamStatistics(
             ReflectedBeamWorkspace=ws,
             ReflectedForeground=reflectedForeground,
-            DirectBeamWorkspace=directWS,
+            DirectLineWorkspace=directWS,
             DirectForeground=directForeground,
             PixelSize=pixelSize,
             DetectorResolution=detResolution,
@@ -328,14 +329,14 @@ class ReflectometryILLSumForeground(DataProcessorAlgorithm):
         """Sum the foreground region into a single histogram using the coherent method."""
         foreground = self._foregroundIndices(ws)
         sumIndices = [i for i in range(foreground[0], foreground[2] + 1)]
-        beamPosIndex = foreground[1]
+        linePosition = ws.run().getProperty(common.SampleLogs.LINE_POSITION).value
         isFlatSample = not ws.run().getProperty('beam_stats.bent_sample').value
         sumWSName = self._names.withSuffix('summed_in_Q')
         sumWS = ReflectometrySumInQ(
             InputWorkspace=ws,
             OutputWorkspace=sumWSName,
             InputWorkspaceIndexSet=sumIndices,
-            BeamCentre=beamPosIndex,
+            BeamCentre=linePosition,
             FlatSample=isFlatSample,
             EnableLogging=self._subalgLogging)
         self._cleanup.cleanup(ws)

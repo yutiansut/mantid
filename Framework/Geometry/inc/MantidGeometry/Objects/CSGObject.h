@@ -49,7 +49,7 @@ class vtkGeometryCacheWriter;
 A Constructive Solid Geometry (CSG) object, implemented
 as a collection of Rules and surface objects
 */
-class MANTID_GEOMETRY_DLL CSGObject : public IObject {
+class MANTID_GEOMETRY_DLL CSGObject final : public IObject {
 public:
   /// Default constructor
   CSGObject();
@@ -84,7 +84,7 @@ public:
   int getName() const override { return ObjNum; } ///< Get Name
 
   void setMaterial(const Kernel::Material &material);
-  const Kernel::Material material() const override;
+  const Kernel::Material &material() const override;
 
   /// Return whether this object has a valid shape
   bool hasValidShape() const override;
@@ -137,10 +137,10 @@ public:
   double solidAngle(const Kernel::V3D &observer,
                     const Kernel::V3D &scaleFactor) const override;
   // solid angle via triangulation
-  double triangleSolidAngle(const Kernel::V3D &observer) const;
+  double triangulatedSolidAngle(const Kernel::V3D &observer) const;
   // Solid angle via triangulation with scaling factor for object size
-  double triangleSolidAngle(const Kernel::V3D &observer,
-                            const Kernel::V3D &scaleFactor) const;
+  double triangulatedSolidAngle(const Kernel::V3D &observer,
+                                const Kernel::V3D &scaleFactor) const;
   // solid angle via ray tracing
   double rayTraceSolidAngle(const Kernel::V3D &observer) const;
 
@@ -186,8 +186,8 @@ public:
   detail::ShapeInfo::GeometryShape shape() const override;
   const detail::ShapeInfo &shapeInfo() const;
   void GetObjectGeom(detail::ShapeInfo::GeometryShape &type,
-                     std::vector<Kernel::V3D> &vectors, double &myradius,
-                     double &myheight) const override;
+                     std::vector<Kernel::V3D> &vectors, double &innerRadius,
+                     double &radius, double &height) const override;
   /// Getter for the shape xml
   std::string getShapeXML() const;
 
@@ -207,22 +207,6 @@ private:
   void calcBoundingBoxByGeometry();
 
   int searchForObject(Kernel::V3D &) const;
-  double getTriangleSolidAngle(const Kernel::V3D &a, const Kernel::V3D &b,
-                               const Kernel::V3D &c,
-                               const Kernel::V3D &observer) const;
-  double CuboidSolidAngle(const Kernel::V3D observer,
-                          const std::vector<Kernel::V3D> vectors) const;
-  double SphereSolidAngle(const Kernel::V3D observer,
-                          const std::vector<Kernel::V3D> vectors,
-                          const double radius) const;
-  double CylinderSolidAngle(const Kernel::V3D &observer,
-                            const Mantid::Kernel::V3D &centre,
-                            const Mantid::Kernel::V3D &axis,
-                            const double radius, const double height) const;
-  double ConeSolidAngle(const Kernel::V3D &observer,
-                        const Mantid::Kernel::V3D &centre,
-                        const Mantid::Kernel::V3D &axis, const double radius,
-                        const double height) const;
 
   /// Returns the volume.
   double monteCarloVolume() const;
@@ -265,7 +249,7 @@ private:
   /// Optional string identifier
   std::string m_id;
   /// material composition
-  std::unique_ptr<Kernel::Material> m_material;
+  mutable std::unique_ptr<Kernel::Material> m_material;
   /// Whether or not the object geometry is finite
   bool m_isFiniteGeometry = true;
 

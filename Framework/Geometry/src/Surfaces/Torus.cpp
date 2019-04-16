@@ -153,7 +153,6 @@ int Torus::setSurface(const std::string &Pstr)
     return errAxis;
 
   Kernel::V3D Norm;
-  Kernel::V3D Cent;
   Kernel::V3D PtVec;
   Norm[ptype] = 1.0;
 
@@ -205,9 +204,9 @@ void Torus::setNorm(const Kernel::V3D &A)
   @param A :: New Normal direction
 */
 {
-  if (A.norm() > Tolerance) {
-    Normal = A;
-    Normal.normalize();
+  const auto length = A.norm();
+  if (length > Tolerance) {
+    Normal = A / length;
   }
 }
 

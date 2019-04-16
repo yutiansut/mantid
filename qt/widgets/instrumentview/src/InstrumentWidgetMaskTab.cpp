@@ -535,7 +535,7 @@ void InstrumentWidgetMaskTab::clearShapes() {
   setSelectActivity();
 }
 
-void InstrumentWidgetMaskTab::showEvent(QShowEvent *) {
+void InstrumentWidgetMaskTab::showEvent(QShowEvent * /*unused*/) {
   setActivity();
   m_instrWidget->setMouseTracking(true);
   enableApplyButtons();
@@ -1012,9 +1012,9 @@ InstrumentWidgetMaskTab::generateMaskWorkspaceName(bool temp) const {
   auto wsNames = Mantid::API::AnalysisDataService::Instance().getObjectNames();
   int maxIndex = 0;
   const std::string baseName = "MaskWorkspace";
-  for (auto name = wsNames.begin(); name != wsNames.end(); ++name) {
-    if (name->find(baseName) == 0) {
-      int index = Mantid::Kernel::Strings::endsWithInt(*name);
+  for (auto &wsName : wsNames) {
+    if (wsName.find(baseName) == 0) {
+      int index = Mantid::Kernel::Strings::endsWithInt(wsName);
       if (index > 0 && index > maxIndex)
         maxIndex = index;
       else
@@ -1193,7 +1193,8 @@ void InstrumentWidgetMaskTab::storeMask() {
   }
 }
 
-void InstrumentWidgetMaskTab::changedIntegrationRange(double, double) {
+void InstrumentWidgetMaskTab::changedIntegrationRange(double /*unused*/,
+                                                      double /*unused*/) {
   enableApplyButtons();
 }
 
@@ -1387,7 +1388,8 @@ bool InstrumentWidgetMaskTab::saveMaskViewToProject(
       return false; // no mask workspace was found
 
     // save mask to file inside project folder
-    auto alg = AlgorithmManager::Instance().create("SaveMask", -1);
+    auto alg = AlgorithmManager::Instance().createUnmanaged("SaveMask", -1);
+    alg->setChild(true);
     alg->setProperty("InputWorkspace",
                      boost::dynamic_pointer_cast<Workspace>(outputWS));
     alg->setPropertyValue("OutputFile", fileName);

@@ -75,7 +75,7 @@ public:
 
   int getName() const override { return 0; }
 
-  const Kernel::Material material() const override;
+  const Kernel::Material &material() const override;
 
   /// Return whether this object has a valid shape
   bool hasValidShape() const override;
@@ -126,8 +126,8 @@ public:
 
   detail::ShapeInfo::GeometryShape shape() const override;
   void GetObjectGeom(detail::ShapeInfo::GeometryShape &type,
-                     std::vector<Kernel::V3D> &vectors, double &myradius,
-                     double &myheight) const override;
+                     std::vector<Kernel::V3D> &vectors, double &innerRadius,
+                     double &radius, double &height) const override;
 
   /// Read access to mesh object for rendering
   size_t numberOfVertices() const;

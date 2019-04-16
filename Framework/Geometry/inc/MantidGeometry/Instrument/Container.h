@@ -89,9 +89,9 @@ public:
   }
 
   void GetObjectGeom(detail::ShapeInfo::GeometryShape &type,
-                     std::vector<Kernel::V3D> &vectors, double &myradius,
-                     double &myheight) const override {
-    m_shape->GetObjectGeom(type, vectors, myradius, myheight);
+                     std::vector<Kernel::V3D> &vectors, double &innerRadius,
+                     double &radius, double &height) const override {
+    m_shape->GetObjectGeom(type, vectors, innerRadius, radius, height);
   }
   boost::shared_ptr<GeometryHandler> getGeometryHandler() const override {
     return m_shape->getGeometryHandler();
@@ -100,7 +100,7 @@ public:
   void draw() const override { m_shape->draw(); }
   void initDraw() const override { m_shape->initDraw(); }
 
-  const Kernel::Material material() const override {
+  const Kernel::Material &material() const override {
     return m_shape->material();
   }
   void setID(const std::string &id);

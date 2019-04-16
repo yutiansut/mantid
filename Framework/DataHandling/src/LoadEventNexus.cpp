@@ -281,6 +281,11 @@ void LoadEventNexus::init() {
                   "Set type of loader. 2 options {Default, Multiproceess},"
                   "'Multiprocess' should work faster for big files and it is "
                   "experimental, available only in Linux");
+
+  declareProperty(make_unique<PropertyWithValue<bool>>("LoadNexusInstrumentXML",
+                                                       true, Direction::Input),
+                  "Reads the embedded Instrument XML from the NeXus file "
+                  "(optional, default True). ");
 }
 
 //----------------------------------------------------------------------------------------------
@@ -423,17 +428,17 @@ firstLastPulseTimes(::NeXus::File &file, Kernel::Logger &logger) {
   std::string isooffset; // ISO8601 offset
   file.getAttr("offset", isooffset);
   DateAndTime offset(isooffset);
-  std::string unit; // time units
-  if (file.hasAttr("unit"))
-    file.getAttr("unit", unit);
+  std::string units; // time units
+  if (file.hasAttr("units"))
+    file.getAttr("units", units);
   file.closeData();
 
   // TODO. Logic here is similar to BankPulseTimes (ctor) should be consolidated
   if (heldTimeZeroType == ::NeXus::UINT64) {
-    if (unit != "ns")
+    if (units != "ns")
       logger.warning(
           "event_time_zero is uint64_t, but units not in ns. Found to be: " +
-          unit);
+          units);
     std::vector<uint64_t> nanoseconds;
     file.readData("event_time_zero", nanoseconds);
     if (nanoseconds.empty())
@@ -445,10 +450,10 @@ firstLastPulseTimes(::NeXus::File &file, Kernel::Logger &logger) {
                         offset.totalNanoseconds();
     return std::make_pair(absoluteFirst, absoluteLast);
   } else if (heldTimeZeroType == ::NeXus::FLOAT64) {
-    if (unit != "second")
+    if (units != "second")
       logger.warning("event_time_zero is double_t, but units not in seconds. "
                      "Found to be: " +
-                     unit);
+                     units);
     std::vector<double> seconds;
     file.readData("event_time_zero", seconds);
     if (seconds.empty())
@@ -488,10 +493,10 @@ std::size_t numEvents(::NeXus::File &file, bool &hasTotalCounts,
         auto info = file.getInfo();
         file.closeData();
         if (info.type == NeXus::UINT64) {
-          uint64_t numEvents;
-          file.readData("total_counts", numEvents);
+          uint64_t eventCount;
+          file.readData("total_counts", eventCount);
           hasTotalCounts = true;
-          return numEvents;
+          return eventCount;
         }
       } catch (::NeXus::Exception &) {
       }
@@ -850,37 +855,35 @@ void LoadEventNexus::loadEvents(API::Progress *const prog,
 
   // --------- Loading only one bank ? ----------------------------------
   std::vector<std::string> someBanks = getProperty("BankName");
-  bool SingleBankPixelsOnly = getProperty("SingleBankPixelsOnly");
+  const bool SingleBankPixelsOnly = getProperty("SingleBankPixelsOnly");
   if ((!someBanks.empty()) && (!monitors)) {
+    std::vector<std::string> eventedBanks;
+    eventedBanks.reserve(someBanks.size());
+    for (const auto &bank : someBanks) {
+      eventedBanks.emplace_back(bank + "_events");
+    }
     // check that all of the requested banks are in the file
-    for (auto &someBank : someBanks) {
-      bool foundIt = false;
-      for (auto &bankName : bankNames) {
-        if (bankName == someBank + "_events") {
-          foundIt = true;
-          break;
-        }
-      }
-      if (!foundIt) {
-        throw std::invalid_argument("No entry named '" + someBank +
-                                    "' was found in the .NXS file.\n");
-      }
+    const auto invalidBank =
+        std::find_if(eventedBanks.cbegin(), eventedBanks.cend(),
+                     [&bankNames](const auto &someBank) {
+                       return std::none_of(bankNames.cbegin(), bankNames.cend(),
+                                           [&someBank](const auto &name) {
+                                             return name == someBank;
+                                           });
+                     });
+    if (invalidBank != eventedBanks.cend()) {
+      throw std::invalid_argument("No entry named '" + *invalidBank +
+                                  "' was found in the .NXS file.");
     }
 
     // change the number of banks to load
-    bankNames.clear();
-    for (auto &someBank : someBanks)
-      bankNames.push_back(someBank + "_events");
+    bankNames.assign(eventedBanks.cbegin(), eventedBanks.cend());
 
-    // how many events are in a bank
-    bankNumEvents.clear();
-    bankNumEvents.assign(someBanks.size(),
-                         1); // TODO this equally weights the banks
+    // TODO this equally weights the banks
+    bankNumEvents.assign(someBanks.size(), 1);
 
     if (!SingleBankPixelsOnly)
       someBanks.clear(); // Marker to load all pixels
-  } else {
-    someBanks.clear();
   }
 
   prog->report("Initializing all pixels");

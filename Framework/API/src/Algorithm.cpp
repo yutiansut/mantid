@@ -487,17 +487,10 @@ void Algorithm::unlockWorkspaces() {
 }
 
 //---------------------------------------------------------------------------------------------
-/** The actions to be performed by the algorithm on a dataset. This method is
- *  invoked for top level algorithms by the application manager.
- *  This method invokes exec() method.
- *  For Child Algorithms either the execute() method or exec() method
- *  must be EXPLICITLY invoked by the parent algorithm.
- *
- *  @throw runtime_error Thrown if algorithm or Child Algorithm cannot be
- *executed
- *  @return true if executed successfully.
+/** Invoced internally in execute()
  */
-bool Algorithm::execute() {
+
+bool Algorithm::executeInternal() {
   Timer timer;
   AlgorithmManager::Instance().notifyAlgorithmStarting(this->getAlgorithmID());
   {
@@ -1630,7 +1623,7 @@ Poco::ActiveResult<bool> Algorithm::executeAsync() {
  * @param i :: Unused argument
  * @return true if executed successfully.
  */
-bool Algorithm::executeAsyncImpl(const Poco::Void &) {
+bool Algorithm::executeAsyncImpl(const Poco::Void & /*unused*/) {
   AsyncFlagHolder running(m_runningAsync);
   return this->execute();
 }

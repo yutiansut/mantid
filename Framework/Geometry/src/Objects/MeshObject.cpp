@@ -48,7 +48,7 @@ void MeshObject::initialize() {
 /**
  * @return The Material that the object is composed from
  */
-const Kernel::Material MeshObject::material() const { return m_material; }
+const Kernel::Material &MeshObject::material() const { return m_material; }
 
 /**
  * Returns whether this object has a valid shape
@@ -520,14 +520,15 @@ detail::ShapeInfo::GeometryShape MeshObject::shape() const {
  */
 void MeshObject::GetObjectGeom(detail::ShapeInfo::GeometryShape &type,
                                std::vector<Kernel::V3D> &vectors,
-                               double &myradius, double &myheight) const {
+                               double &innerRadius, double &radius,
+                               double &height) const {
   // In practice, this outputs type = -1,
   // to indicate not a "standard" object (cuboid/cone/cyl/sphere).
   // Retained for possible future use.
   type = detail::ShapeInfo::GeometryShape::NOSHAPE;
   if (m_handler == nullptr)
     return;
-  m_handler->GetObjectGeom(type, vectors, myradius, myheight);
+  m_handler->GetObjectGeom(type, vectors, innerRadius, radius, height);
 }
 
 } // NAMESPACE Geometry

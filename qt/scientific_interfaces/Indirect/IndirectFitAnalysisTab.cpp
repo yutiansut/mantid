@@ -52,10 +52,10 @@ void updateParameters(
 void updateAttributes(
     IFunction_sptr function, std::vector<std::string> const &attributeNames,
     std::unordered_map<std::string, IFunction::Attribute> const &attributes) {
-  for (auto i = 0u; i < attributeNames.size(); ++i) {
-    auto const value = attributes.find(attributeNames[i]);
+  for (const auto &attributeName : attributeNames) {
+    auto const value = attributes.find(attributeName);
     if (value != attributes.end())
-      function->setAttribute(attributeNames[i], value->second);
+      function->setAttribute(attributeName, value->second);
   }
 }
 
@@ -130,7 +130,7 @@ void IndirectFitAnalysisTab::setup() {
   connect(m_dataPresenter.get(), SIGNAL(dataChanged()), this,
           SLOT(updateResultOptions()));
   connect(m_dataPresenter.get(), SIGNAL(updateAvailableFitTypes()), this,
-          SLOT(updateAvailableFitTypes()));
+          SIGNAL(updateAvailableFitTypes()));
 
   connect(m_outOptionsPresenter.get(), SIGNAL(plotSpectra()), this,
           SLOT(plotSelectedSpectra()));
@@ -453,7 +453,7 @@ void IndirectFitAnalysisTab::tableEndXChanged(double endX,
   }
 }
 
-void IndirectFitAnalysisTab::tableExcludeChanged(const std::string &,
+void IndirectFitAnalysisTab::tableExcludeChanged(const std::string & /*unused*/,
                                                  std::size_t dataIndex,
                                                  std::size_t spectrum) {
   if (isRangeCurrentlySelected(dataIndex, spectrum))
@@ -998,7 +998,8 @@ void IndirectFitAnalysisTab::enableOutputOptions(bool enable) {
     m_outOptionsPresenter->setMultiWorkspaceOptionsVisible(enable);
 
   m_outOptionsPresenter->setPlotEnabled(
-      enable && m_outOptionsPresenter->isResultGroupPlottable());
+      enable && m_outOptionsPresenter->isSelectedGroupPlottable());
+  m_outOptionsPresenter->setEditResultEnabled(enable);
   m_outOptionsPresenter->setSaveEnabled(enable);
 }
 
@@ -1017,6 +1018,14 @@ void IndirectFitAnalysisTab::setPDFWorkspace(std::string const &workspaceName) {
   } else
     m_outOptionsPresenter->removePDFWorkspace();
   m_outOptionsPresenter->setMultiWorkspaceOptionsVisible(enablePDFOptions);
+}
+
+/**
+ * Sets the visiblity of the output options Edit Result button
+ * @param visible :: true to make the edit result button visible
+ */
+void IndirectFitAnalysisTab::setEditResultVisible(bool visible) {
+  m_outOptionsPresenter->setEditResultVisible(visible);
 }
 
 void IndirectFitAnalysisTab::setAlgorithmProperties(
@@ -1082,6 +1091,7 @@ void IndirectFitAnalysisTab::updateResultOptions() {
   if (isFit)
     m_outOptionsPresenter->setResultWorkspace(getResultWorkspace());
   m_outOptionsPresenter->setPlotEnabled(isFit);
+  m_outOptionsPresenter->setEditResultEnabled(isFit);
   m_outOptionsPresenter->setSaveEnabled(isFit);
 }
 

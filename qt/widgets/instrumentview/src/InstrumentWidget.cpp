@@ -537,7 +537,7 @@ void InstrumentWidget::setupColorMap() { emit colorMapChanged(); }
 /**
  * Connected to QTabWidget::currentChanged signal
  */
-void InstrumentWidget::tabChanged(int) { updateInfoText(); }
+void InstrumentWidget::tabChanged(int /*unused*/) { updateInfoText(); }
 
 /**
  * Change color map button slot. This provides the file dialog box to select
@@ -807,7 +807,6 @@ void InstrumentWidget::changeNthPower(double nth_power) {
 }
 
 void InstrumentWidget::changeColorMapMinValue(double minValue) {
-  m_instrumentActor->setAutoscaling(false);
   m_instrumentActor->setMinValue(minValue);
   setupColorMap();
   updateInstrumentView();
@@ -815,7 +814,6 @@ void InstrumentWidget::changeColorMapMinValue(double minValue) {
 
 /// Set the maximumu value of the colour map
 void InstrumentWidget::changeColorMapMaxValue(double maxValue) {
-  m_instrumentActor->setAutoscaling(false);
   m_instrumentActor->setMaxValue(maxValue);
   setupColorMap();
   updateInstrumentView();
@@ -867,7 +865,8 @@ void InstrumentWidget::componentSelected(size_t componentIndex) {
   }
 }
 
-void InstrumentWidget::executeAlgorithm(const QString &, const QString &) {
+void InstrumentWidget::executeAlgorithm(const QString & /*unused*/,
+                                        const QString & /*unused*/) {
   // emit execMantidAlgorithm(alg_name, param_list, this);
 }
 
@@ -960,6 +959,13 @@ bool InstrumentWidget::eventFilter(QObject *obj, QEvent *ev) {
     return true;
   }
   return QWidget::eventFilter(obj, ev);
+}
+
+/**
+ * Disable colormap autoscaling
+ */
+void InstrumentWidget::disableColorMapAutoscaling() {
+  setColorMapAutoscaling(false);
 }
 
 /**

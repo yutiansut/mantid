@@ -61,7 +61,8 @@ private:
 };
 
 struct CheckZeroSpectrum : boost::static_visitor<bool> {
-  bool operator()(const std::pair<std::size_t, std::size_t> &) const {
+  bool
+  operator()(const std::pair<std::size_t, std::size_t> & /*unused*/) const {
     return false;
   }
   bool operator()(const DiscontinuousSpectra<std::size_t> &spectra) const {
@@ -116,8 +117,10 @@ std::vector<std::string> splitStringBy(std::string const &str,
 }
 
 std::string getSpectraRange(std::string const &string) {
-  auto bounds = splitStringBy(string, "-");
-  return bounds[0] > bounds[1] ? bounds[1] + "-" + bounds[0] : string;
+  auto const bounds = splitStringBy(string, "-");
+  return std::stoull(bounds[0]) > std::stoull(bounds[1])
+             ? bounds[1] + "-" + bounds[0]
+             : string;
 }
 
 std::string rearrangeSpectraSubString(std::string const &string) {
