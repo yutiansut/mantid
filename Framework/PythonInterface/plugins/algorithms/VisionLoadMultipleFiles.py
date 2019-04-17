@@ -141,7 +141,7 @@ def merge(ListRN,weight_tag,file_structure,root_dir,raw_dir,reduced_dir,logfile)
             print('root_dir',root_dir,logfile)
             if os.path.exists(root_dir):
                 for filename in os.listdir(root_dir):
-                    if logfile in filename:
+                    if logfile == filename:
                         fullfilename=os.path.join(root_dir, filename)
                         f = open(fullfilename,'r')
                         break;
@@ -150,8 +150,11 @@ def merge(ListRN,weight_tag,file_structure,root_dir,raw_dir,reduced_dir,logfile)
         chopped = full_text.split('\n')
         rn_list = []
         pc_list = []
+        print(f,chopped)
         for i in range(1,len(chopped)):
+            print('i',i)
             line = chopped[i].split(',')
+            print('line',chopped[i],line)
             if len(line)>=5:
                 if line[4][-1].isdigit():
                     rn_list.append(int(line[0].strip()))
@@ -159,6 +162,7 @@ def merge(ListRN,weight_tag,file_structure,root_dir,raw_dir,reduced_dir,logfile)
                 else:
                     rn_list.append(int(line[0].strip()))
                     pc_list.append(float(line[3].strip()))
+        print('pc_list:',pc_list)
         pcharges=[]
         for RunNum in ListRN:
             pchg=pc_list[rn_list.index(RunNum)]
