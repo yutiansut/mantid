@@ -69,14 +69,21 @@ public:
    * @param mdEvents :: events to distribute around the tree
    * @return :: pointer to the root node and error
    */
-  TreeWithIndexError distribute(std::vector<MDEventType<ND>> &mdEvents);
+  template<typename EventsContainer>
+  TreeWithIndexError distribute(EventsContainer &mdEvents);
 
 private:
+  template<typename EventsContainer>
   morton_index::MDCoordinate<ND>
-  convertToIndex(std::vector<MDEventType<ND>> &mdEvents,
+  convertToIndex(EventsContainer &mdEvents,
                  const morton_index::MDSpaceBounds<ND> &space);
-  void sortEvents(std::vector<MDEventType<ND>> &mdEvents);
-  BoxBase *doDistributeEvents(std::vector<MDEventType<ND>> &mdEvents);
+
+  template<typename EventsContainer>
+  void sortEvents(EventsContainer &mdEvents);
+
+  template<typename EventsContainer>
+  BoxBase *doDistributeEvents(EventsContainer &mdEvents);
+
   void distributeEvents(Task &tsk, const WORKER_TYPE &wtp);
   void pushTask(Task &&tsk);
   std::unique_ptr<Task> popTask();
@@ -117,9 +124,10 @@ MDEventTreeBuilder<ND, MDEventType, EventIterator>::MDEventTreeBuilder(
 
 template <size_t ND, template <size_t> class MDEventType,
           typename EventIterator>
+template<typename EventsContainer>
 typename MDEventTreeBuilder<ND, MDEventType, EventIterator>::TreeWithIndexError
 MDEventTreeBuilder<ND, MDEventType, EventIterator>::distribute(
-    std::vector<MDEvent> &mdEvents) {
+    EventsContainer &mdEvents) {
   auto err = convertToIndex(mdEvents, m_space);
   sortEvents(mdEvents);
   auto root = doDistributeEvents(mdEvents);
@@ -128,9 +136,10 @@ MDEventTreeBuilder<ND, MDEventType, EventIterator>::distribute(
 
 template <size_t ND, template <size_t> class MDEventType,
           typename EventIterator>
+template<typename EventsContainer>
 DataObjects::MDBoxBase<MDEventType<ND>, ND> *
 MDEventTreeBuilder<ND, MDEventType, EventIterator>::doDistributeEvents(
-    std::vector<MDEventType<ND>> &mdEvents) {
+    EventsContainer &mdEvents) {
   if (mdEvents.size() <= m_bc->getSplitThreshold()) {
     m_bc->incBoxesCounter(0);
     return new DataObjects::MDBox<MDEvent, ND>(
@@ -166,9 +175,10 @@ MDEventTreeBuilder<ND, MDEventType, EventIterator>::doDistributeEvents(
 
 template <size_t ND, template <size_t> class MDEventType,
           typename EventIterator>
+template<typename EventsContainer>
 morton_index::MDCoordinate<ND>
 MDEventTreeBuilder<ND, MDEventType, EventIterator>::convertToIndex(
-    std::vector<MDEventType<ND>> &mdEvents,
+    EventsContainer &mdEvents,
     const morton_index::MDSpaceBounds<ND> &space) {
   std::vector<morton_index::MDCoordinate<ND>> perThread(
       m_numWorkers, morton_index::MDCoordinate<ND>(0));
@@ -194,8 +204,9 @@ MDEventTreeBuilder<ND, MDEventType, EventIterator>::convertToIndex(
 
 template <size_t ND, template <size_t> class MDEventType,
           typename EventIterator>
+template<typename EventsContainer>
 void MDEventTreeBuilder<ND, MDEventType, EventIterator>::sortEvents(
-    std::vector<MDEventType<ND>> &mdEvents) {
+    EventsContainer &mdEvents) {
   tbb::task_scheduler_init init{m_numWorkers};
   tbb::parallel_sort(mdEvents.begin(), mdEvents.end(),
                      [](const MDEventType<ND> &a, const MDEventType<ND> &b) {

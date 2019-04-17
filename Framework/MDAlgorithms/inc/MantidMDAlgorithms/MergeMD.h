@@ -197,8 +197,10 @@ void MergeMD::doMergeIndexed(const std::vector<size_t>& wsIndexes,
       out->getBoxes(boxes, 1000, true);
       for (auto &box: boxes) {
         DataObjects::MDBox<MDEventType<ND>, ND> *leafBox = dynamic_cast<DataObjects::MDBox<MDEventType<ND>, ND> *>(box);
-        leafBox->transformEvents([&runIndexOffset](MDEventType<ND> &event) {
-          SetRunIndex<ND>::set(event, runIndexOffset);
+        using DataIter = typename std::vector<MDEventType<ND>>::iterator;
+        leafBox->transformEvents([&runIndexOffset](DataIter start, DataIter finish) {
+          std::for_each(start, finish, 
+              [&runIndexOffset](MDEventType<ND>& event) { SetRunIndex<ND>::set(event, runIndexOffset);});
         });
       }
     }
