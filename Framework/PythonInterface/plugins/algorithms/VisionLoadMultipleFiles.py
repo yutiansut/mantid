@@ -120,7 +120,8 @@ def merge(ListRN,weight_tag,file_structure,root_dir,raw_dir,reduced_dir,logfile)
                 pchg=pchg.split('=')[1]
                 pchg=float(pchg.split('\n')[0])
             else:
-                pchg=mtd[WS].run().getProperty('gd_prtn_chrg').value
+                pchg = mtd[WS].run().getProtonCharge()
+                #pchg=mtd[WS].run().getProperty('gd_prtn_chrg').value 
             print('pcharge for run number ', RunNum, ':', pchg)
             pcharges.append(pchg)
             Scale(InputWorkspace=WS,OutputWorkspace=WS,Factor=pchg,Operation='Multiply')
