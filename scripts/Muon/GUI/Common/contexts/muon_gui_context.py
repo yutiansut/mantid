@@ -6,6 +6,11 @@
 # SPDX - License - Identifier: GPL - 3.0 +
 from Muon.GUI.Common.observer_pattern import Observable
 
+default_dict = {'FirstGoodDataFromFile': True,
+                'LastGoodDataFromFile': True,
+                'TimeZeroFromFile': True,
+                'SummedPeriods': '1',
+                'SubtractedPeriods': ''}
 
 class GuiVariablesNotifier(Observable):
     def __init__(self, outer):
@@ -20,6 +25,7 @@ class MuonGuiContext(dict):
     def __init__(self, *args, **kwargs):
         super(MuonGuiContext, self).__init__(*args, **kwargs)
         self.gui_variables_notifier = GuiVariablesNotifier(self)
+        self.update(default_dict)
 
     def update_and_send_signal(self, *args, **kwargs):
         updated_items = {k: kwargs[k] for k in kwargs if k in self and kwargs[k] != self[k] or k not in self}

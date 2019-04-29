@@ -135,6 +135,7 @@ class MuonWorkspaceWrapper(object):
         if len(name) > 0 and self.is_hidden:
             self.name = str(name)
             # add workspace to ADS
+            mtd.remove(self._workspace_name)
             mtd.addOrReplace(self._workspace_name, self._workspace)
 
             if self._directory_structure != "":

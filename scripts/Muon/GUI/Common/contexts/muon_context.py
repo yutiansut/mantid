@@ -43,6 +43,9 @@ class MuonContext(object):
         return self._group_pair_context
 
     def calculate_group(self, group_name, run, rebin=False):
+        pre_processing_params = self.get_pre_processing_params(run, rebin)
+        grouping_counts_params = self.get_muon_grouping_counts_params(group_name)
+        grouping_asymmetry_params = self.get_muon_grouping_asymmetry_params(group_name, run)
         group_workspace = calculate_group_data(self, group_name, run, rebin)
         group_asymmetry = estimate_group_asymmetry_data(self, group_name, run, rebin)
 
@@ -209,3 +212,113 @@ class MuonContext(object):
             return self.data_context.get_loaded_data_for_run(run)["DataDeadTimeTable"]
         elif self.gui_context['DeadTimeSource'] == 'None':
             return None
+
+    def get_pre_processing_params(self, run, rebin):
+        pre_process_params = {}
+
+        pre_process_params["TimeMin"] = self.first_good_data(run)
+
+        if self.gui_context['TimeZeroFromFile']:
+            time_offset = 0.0
+        else:
+            time_offset = self.data_context.get_loaded_data_for_run(run)["TimeZero"] - self.gui_context[
+                'TimeZero']
+        pre_process_params["TimeOffset"] = time_offset
+
+        dead_time_table = self.dead_time_table(run)
+        if dead_time_table is not None:
+            pre_process_params["DeadTimeTable"] = dead_time_table
+
+        if rebin:
+            if self.gui_context['RebinType'] == 'Variable' and self.gui_context["RebinVariable"]:
+                pre_process_params["RebinArgs"] = self.gui_context["RebinVariable"]
+
+            if self.gui_context['RebinType'] == 'Fixed' and self.gui_context["RebinFixed"]:
+                x_data = \
+                self.data_context._loaded_data.get_data(run=run, instrument=self.data_context.instrument
+                                                           )['workspace']['OutputWorkspace'][0].workspace.dataX(0)
+                original_step = x_data[1] - x_data[0]
+                pre_process_params["RebinArgs"] = float(self.gui_context["RebinFixed"]) * original_step
+
+        return pre_process_params
+
+    def get_muon_grouping_counts_params(self, group_name):
+        params = {}
+        if self.data_context.is_multi_period() and 'SummedPeriods' in self.gui_context:
+            summed_periods = self.gui_context["SummedPeriods"]
+            params["SummedPeriods"] = summed_periods
+        else:
+            params["SummedPeriods"] = "1"
+
+        if self.data_context.is_multi_period() and 'SubtractedPeriods' in self.gui_context:
+            subtracted_periods = self.gui_context["SubtractedPeriods"]
+            params["SubtractedPeriods"] = subtracted_periods
+        else:
+            params["SubtractedPeriods"] = ""
+
+        group = self.group_pair_context[group_name]
+        if group:
+            params["GroupName"] = group_name
+            params["Grouping"] = ",".join([str(i) for i in group.detectors])
+
+        return params
+
+    def get_muon_grouping_asymmetry_params(self, group_name, run):
+        params = {}
+
+        if 'GroupRangeMin' in self.gui_context:
+            params['AsymmetryTimeMin'] = self.gui_context['GroupRangeMin']
+        else:
+            params['AsymmetryTimeMin'] = self.data_context.get_loaded_data_for_run(run)["FirstGoodData"]
+
+        if 'GroupRangeMax' in self.gui_context:
+            params['AsymmetryTimeMax'] = self.gui_context['GroupRangeMax']
+        else:
+            params['AsymmetryTimeMax'] = max(
+                self.data_context.get_loaded_data_for_run(run)['OutputWorkspace'][0].workspace.dataX(0))
+
+        if self.data_context.is_multi_period() and 'SummedPeriods' in self.gui_context:
+            summed_periods = self.gui_context["SummedPeriods"]
+            params["SummedPeriods"] = summed_periods
+        else:
+            params["SummedPeriods"] = "1"
+
+        if self.data_context.is_multi_period() and 'SubtractedPeriods' in self.gui_context:
+            subtracted_periods = self.gui_context["SubtractedPeriods"]
+            params["SubtractedPeriods"] = subtracted_periods
+        else:
+            params["SubtractedPeriods"] = ""
+
+        group = self.group_pair_context[group_name]
+        if group:
+            params["GroupName"] = group_name
+            params["Grouping"] = ",".join([str(i) for i in group.detectors])
+
+        return params
+
+    def get_muon_pairing_asymmetry_params(self, pair_name):
+        params = {}
+        if self.data_context.is_multi_period() and 'SummedPeriods' in self.gui_context:
+            summed_periods = self.gui_context["SummedPeriods"]
+            params["SummedPeriods"] = summed_periods
+        else:
+            params["SummedPeriods"] = "1"
+
+        if self.data_context.is_multi_period() and 'SubtractedPeriods' in self.gui_context:
+            subtracted_periods = self.gui_context["SubtractedPeriods"]
+            params["SubtractedPeriods"] = subtracted_periods
+        else:
+            params["SubtractedPeriods"] = ""
+
+        pair = self.group_pair_context[pair_name]
+
+        if pair:
+            params["SpecifyGroupsManually"] = True
+            params["PairName"] = str(pair_name)
+            detectors1 = ",".join([str(i) for i in self.group_pair_context[pair.forward_group].detectors])
+            detectors2 = ",".join([str(i) for i in self.group_pair_context[pair.backward_group].detectors])
+            params["Group1"] = detectors1
+            params["Group2"] = detectors2
+            params["Alpha"] = str(pair.alpha)
+
+        return params
