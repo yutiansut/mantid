@@ -83,6 +83,18 @@ class MuonPair(object):
 
     def update_asymmetry_workspace(self, asymmetry_workspace, run, rebin=False):
         if not rebin:
-            self._workspace.update({str(run): MuonWorkspaceWrapper(asymmetry_workspace)})
+            self._workspace.update({str(run): asymmetry_workspace})
         else:
-            self.workspace_rebin.update({str(run): MuonWorkspaceWrapper(asymmetry_workspace)})
+            self.workspace_rebin.update({str(run): asymmetry_workspace})
+
+    def get_pair_workspace(self, run, rebin):
+        if rebin:
+            if str(run) in self.workspace_rebin:
+                return self.workspace_rebin[str(run)]
+            else:
+                return None
+        else:
+            if str(run) in self.workspace:
+                return self.workspace[str(run)]
+            else:
+                return None

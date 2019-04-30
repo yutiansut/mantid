@@ -7,40 +7,35 @@
 import Muon.GUI.Common.utilities.algorithm_utils as algorithm_utils
 
 
-def calculate_group_data(context, group_name, run, rebin):
-    processed_data = _run_pre_processing(context, run, rebin)
+def calculate_group_data(pre_process_params, grouping_counts_params):
+    processed_data = algorithm_utils.run_MuonPreProcess(pre_process_params)
 
-    params = _get_MuonGroupingCounts_parameters(context, group_name, run)
-    params["InputWorkspace"] = processed_data
-    group_data = algorithm_utils.run_MuonGroupingCounts(params)
+    grouping_counts_params["InputWorkspace"] = processed_data
+    group_data = algorithm_utils.run_MuonGroupingCounts(grouping_counts_params)
 
     return group_data
 
 
-def calculate_pair_data(context, pair_name, run, rebin):
-    processed_data = _run_pre_processing(context, run, rebin)
+def calculate_pair_data(pre_process_params, pair_asymmetry_params):
+    processed_data = algorithm_utils.run_MuonPreProcess(pre_process_params)
 
-    params = _get_MuonPairingAsymmetry_parameters(context, pair_name, run)
-    params["InputWorkspace"] = processed_data
-    pair_data = algorithm_utils.run_MuonPairingAsymmetry(params)
+    pair_asymmetry_params["InputWorkspace"] = processed_data
+    pair_data = algorithm_utils.run_MuonPairingAsymmetry(pair_asymmetry_params)
 
     return pair_data
 
 
-def estimate_group_asymmetry_data(context, group_name, run, rebin):
-    processed_data = _run_pre_processing(context, run, rebin)
+def estimate_group_asymmetry_data(pre_process_params, group_asymmetry_params):
+    processed_data = algorithm_utils.run_MuonPreProcess(pre_process_params)
 
-    params = _get_MuonGroupingAsymmetry_parameters(context, group_name, run)
-    params["InputWorkspace"] = processed_data
-    group_asymmetry = algorithm_utils.run_MuonGroupingAsymmetry(params)
+    group_asymmetry_params["InputWorkspace"] = processed_data
+    group_asymmetry = algorithm_utils.run_MuonGroupingAsymmetry(group_asymmetry_params)
 
     return group_asymmetry
 
 
-def _run_pre_processing(context, run, rebin):
-    params = _get_pre_processing_params(context, run, rebin)
-    params["InputWorkspace"] = context.data_context.loaded_workspace_as_group(run)
-    processed_data = algorithm_utils.run_MuonPreProcess(params)
+def _run_pre_processing(pre_processing_params):
+    processed_data = algorithm_utils.run_MuonPreProcess(pre_processing_params)
     return processed_data
 
 

@@ -63,11 +63,12 @@ class MuonWorkspaceWrapper(object):
     A basic muon workspace which is either the workspace or the name of the workspace in the ADS
     """
 
-    def __init__(self, workspace):
+    def __init__(self, workspace, params_hash=''):
         self._is_in_ads = False
         self._workspace = None
         self._directory_structure = ""
         self._workspace_name = ""
+        self.params_hash = params_hash
 
         self.workspace = workspace
 

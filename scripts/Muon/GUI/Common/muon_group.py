@@ -82,11 +82,35 @@ class MuonGroup(object):
 
     def update_workspaces(self, run, counts_workspace, asymmetry_workspace, rebin):
         if rebin:
-            self._workspace_rebin.update({str(run): MuonWorkspaceWrapper(counts_workspace)})
-            self._asymmetry_estimate_rebin.update({str(run): MuonWorkspaceWrapper(asymmetry_workspace)})
+            self._workspace_rebin.update({str(run): counts_workspace})
+            self._asymmetry_estimate_rebin.update({str(run): asymmetry_workspace})
         else:
-            self._workspace.update({str(run): MuonWorkspaceWrapper(counts_workspace)})
-            self._asymmetry_estimate.update({str(run): MuonWorkspaceWrapper(asymmetry_workspace)})
+            self._workspace.update({str(run): counts_workspace})
+            self._asymmetry_estimate.update({str(run): asymmetry_workspace})
 
     def update_counts_workspace(self, counts_workspace, run):
-        self._workspace.update({run: MuonWorkspaceWrapper(counts_workspace)})
+        self._workspace.update({run: counts_workspace})
+
+    def get_group_counts_workspace(self, run, rebin):
+        if not rebin:
+            if str(run) in self.workspace:
+                return self.workspace[str(run)]
+            else:
+                return None
+        else:
+            if str(run) in self._workspace_rebin:
+                return self._workspace_rebin[str(run)]
+            else:
+                return None
+
+    def get_group_asymmetry_workspace(self, run, rebin):
+        if not rebin:
+            if str(run) in self._asymmetry_estimate:
+                return self._asymmetry_estimate[str(run)]
+            else:
+                return None
+        else:
+            if str(run) in self._asymmetry_estimate_rebin:
+                return self._asymmetry_estimate_rebin[str(run)]
+            else:
+                return None

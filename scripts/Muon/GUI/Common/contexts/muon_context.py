@@ -17,7 +17,8 @@ from Muon.GUI.Common.contexts.phase_table_context import PhaseTableContext
 from Muon.GUI.Common.utilities.run_string_utils import run_list_to_string
 import Muon.GUI.Common.ADSHandler.workspace_naming as wsName
 from Muon.GUI.Common.contexts.muon_data_context import get_default_grouping
-
+import hashlib
+from Muon.GUI.Common.ADSHandler.muon_workspace_wrapper import MuonWorkspaceWrapper
 
 class MuonContext(object):
     def __init__(self, muon_data_context=MuonDataContext(), muon_gui_context=MuonGuiContext(),
@@ -46,13 +47,38 @@ class MuonContext(object):
         pre_processing_params = self.get_pre_processing_params(run, rebin)
         grouping_counts_params = self.get_muon_grouping_counts_params(group_name)
         grouping_asymmetry_params = self.get_muon_grouping_asymmetry_params(group_name, run)
-        group_workspace = calculate_group_data(self, group_name, run, rebin)
-        group_asymmetry = estimate_group_asymmetry_data(self, group_name, run, rebin)
 
-        return group_workspace, group_asymmetry
+        existing_counts_workspace = self.group_pair_context[group_name].get_group_counts_workspace(run, rebin)
+        counts_param_string = str({'pre_processing_params': pre_processing_params, 'grouping_counts_params': grouping_counts_params})
+        group_counts_hash = hashlib.sha224(counts_param_string.encode("utf8")).hexdigest()
+
+        if existing_counts_workspace and existing_counts_workspace.params_hash == group_counts_hash:
+            counts_workspace = existing_counts_workspace
+        else:
+            counts_workspace = MuonWorkspaceWrapper(calculate_group_data(pre_processing_params, grouping_counts_params), group_counts_hash)
+
+        existing_asymmetry_workspace = self.group_pair_context[group_name].get_group_asymmetry_workspace(run, rebin)
+        asymmetry_params_string = str({'pre_processing_params': pre_processing_params, 'grouping_asymmetry_params': grouping_asymmetry_params})
+        group_asymmetry_hash = hashlib.sha224(asymmetry_params_string.encode("utf8")).hexdigest()
+
+        if existing_asymmetry_workspace and existing_asymmetry_workspace.params_hash == group_asymmetry_hash:
+            asymmetry_workspace = existing_asymmetry_workspace
+        else:
+            asymmetry_workspace = MuonWorkspaceWrapper(estimate_group_asymmetry_data(pre_processing_params, grouping_asymmetry_params), group_asymmetry_hash)
+
+        return counts_workspace, asymmetry_workspace
 
     def calculate_pair(self, pair_name, run, rebin=False):
-        return calculate_pair_data(self, pair_name, run, rebin)
+        pre_processing_params = self.get_pre_processing_params(run, rebin)
+        pair_asymmetry_params = self.get_muon_pairing_asymmetry_params(pair_name)
+        params_string = str({'pre_processing_params': pre_processing_params, 'pair_asymmetry_params': pair_asymmetry_params})
+        pair_asym_params_hash = hashlib.sha224(params_string.encode("utf8")).hexdigest()
+        existing_workspace = self.group_pair_context[pair_name].get_pair_workspace(run, rebin)
+
+        if existing_workspace and pair_asym_params_hash == existing_workspace.params_hash:
+            return existing_workspace
+        else:
+            return MuonWorkspaceWrapper(calculate_pair_data(pre_processing_params, pair_asymmetry_params), pair_asym_params_hash)
 
     def show_all_groups(self):
         self.calculate_all_groups()
@@ -215,6 +241,8 @@ class MuonContext(object):
 
     def get_pre_processing_params(self, run, rebin):
         pre_process_params = {}
+
+        pre_process_params["InputWorkspace"] = self.data_context.loaded_workspace_as_group(run)
 
         pre_process_params["TimeMin"] = self.first_good_data(run)
 
