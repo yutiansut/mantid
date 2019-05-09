@@ -67,7 +67,7 @@ void WFMConvertToTof::exec() {
       if (no_frame_found)
         to_be_removed.push_back(j);
     }
-    event_list.addTofsAndRemoveUnshiftedEvents(shifts);
+    event_list.convertWFMEventsToTof(shifts);
   }
 
 }

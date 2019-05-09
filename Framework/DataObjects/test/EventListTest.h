@@ -2835,7 +2835,7 @@ public:
     for (size_t i = 0; i < 2000; i++)
       offsets[i] = static_cast<double>(i);
     // Do convert
-    this->el.addTofsAndRemoveUnshiftedEvents(offsets);
+    this->el.convertWFMEventsToTof(offsets);
     // Unchanged size
     TS_ASSERT_EQUALS(old_num, this->el.getNumberEvents());
     // Original tofs were 100, 5100, 10100, etc.)
