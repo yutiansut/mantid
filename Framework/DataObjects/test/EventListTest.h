@@ -2826,6 +2826,32 @@ public:
     TS_ASSERT_EQUALS(freqHist.counts()[0], 4.0);
     TS_ASSERT_EQUALS(freqHist.counts()[1], 2.0);
   }
+
+  void test_convertWFMEventsToTof() {
+    this->fake_uniform_data();
+    size_t old_num = this->el.getNumberEvents();
+    // Create vector of offsets
+    std::vector<double> offsets(2000);
+    for (size_t i = 0; i < 2000; i++)
+      offsets[i] = static_cast<double>(i);
+    // Do convert
+    this->el.addTofsAndRemoveUnshiftedEvents(offsets);
+    // Unchanged size
+    TS_ASSERT_EQUALS(old_num, this->el.getNumberEvents());
+    // Original tofs were 100, 5100, 10100, etc.)
+    TS_ASSERT_EQUALS(this->el.getEvent(0).tof(), 100.0);
+    TS_ASSERT_EQUALS(this->el.getEvent(1).tof(), 5101.0);
+    TS_ASSERT_EQUALS(this->el.getEvent(2).tof(), 10102.0);
+    // Try a negative offset
+    for (size_t i = 0; i < 2000; i++)
+      offsets[i] = -0.5 * static_cast<double>(i);
+    // Do convert
+    this->el.addTofs(offsets);
+    TS_ASSERT_EQUALS(this->el.getEvent(0).tof(), 100.0);
+    TS_ASSERT_EQUALS(this->el.getEvent(1).tof(), 5100.5);
+    TS_ASSERT_EQUALS(this->el.getEvent(2).tof(), 10101.0);
+  }
+
 };
 
 //==========================================================================================

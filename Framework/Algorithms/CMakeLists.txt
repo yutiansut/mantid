@@ -331,6 +331,7 @@ set(SRC_FILES
     src/WeightedMean.cpp
     src/WeightedMeanOfWorkspace.cpp
     src/WeightingStrategy.cpp
+    src/WFMConvertToTof.cpp
     src/WienerSmooth.cpp
     src/WorkflowAlgorithmRunner.cpp
     src/WorkspaceJoiners.cpp
@@ -676,6 +677,7 @@ set(INC_FILES
     inc/MantidAlgorithms/WeightedMean.h
     inc/MantidAlgorithms/WeightedMeanOfWorkspace.h
     inc/MantidAlgorithms/WeightingStrategy.h
+    inc/MantidAlgorithms/WFMConvertToTof.h
     inc/MantidAlgorithms/WienerSmooth.h
     inc/MantidAlgorithms/WorkflowAlgorithmRunner.h
     inc/MantidAlgorithms/WorkspaceJoiners.h

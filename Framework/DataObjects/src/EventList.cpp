@@ -4898,5 +4898,28 @@ void EventList::checkIsYAndEWritable() const {
                            "generated automatically based on the events");
 }
 
+ /** Convert WFM event data back to real Tof
+ *
+ * @param offsets :: A vector of the same size as the event list that contains
+ * a different time-of-flight shift for each event in the list. If the shift is
+ * zero, then the event is discarded.
+ */
+void EventList::convertWFMEventsToTof( const std::vector<double> &offsets) {
+  auto &events = this->events;
+  std::vector<Types::Event::TofEvent> new_events;
+  if (events.size() != offsets.size())
+    throw std::runtime_error("Sizes of EventList and offsets vector do not "
+                             "match in EventList::convertWFMEventsToTof().");
+  for (size_t i = 0; i < events.size(); i++) {
+    auto ev = events[i];
+    if (offsets[i] != 0.0) {
+      ev.m_tof += offsets[i];
+      new_events.push_back(ev);
+    }
+  }
+  events = new_events;
+}
+
+
 } // namespace DataObjects
 } // namespace Mantid
