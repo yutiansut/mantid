@@ -2846,7 +2846,7 @@ public:
     for (size_t i = 0; i < 2000; i++)
       offsets[i] = -0.5 * static_cast<double>(i);
     // Do convert
-    this->el.addTofs(offsets);
+    this->el.convertWFMEventsToTof(offsets);
     TS_ASSERT_EQUALS(this->el.getEvent(0).tof(), 100.0);
     TS_ASSERT_EQUALS(this->el.getEvent(1).tof(), 5100.5);
     TS_ASSERT_EQUALS(this->el.getEvent(2).tof(), 10101.0);
