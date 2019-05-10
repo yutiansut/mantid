@@ -14,6 +14,7 @@
 #define MANTID_NEXUSCPP_NEXUSTESTHELPER_H_
 
 #include <string>
+#include <memory>
 
 namespace NeXus {
 class File;

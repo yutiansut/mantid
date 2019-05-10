@@ -13,6 +13,7 @@
 #include "MantidTestHelpers/NexusTestHelper.h"
 #include "MantidKernel/ConfigService.h"
 #include <Poco/File.h>
+#include <memory>
 
 #if defined(_MSC_VER)
 #pragma warning(push, 0)
