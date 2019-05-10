@@ -92,8 +92,8 @@ void Workspace2D::init(const std::size_t &NVectors, const std::size_t &XLength,
 
   // Add axes that reference the data
   m_axes.resize(2);
-  m_axes[0] = new API::RefAxis(this);
-  m_axes[1] = new API::SpectraAxis(this);
+  m_axes[0] = std::make_unique<API::RefAxis>(this);
+  m_axes[1] = std::make_unique<API::SpectraAxis>(this);
 }
 
 void Workspace2D::init(const HistogramData::Histogram &histogram) {
@@ -119,8 +119,8 @@ void Workspace2D::init(const HistogramData::Histogram &histogram) {
 
   // Add axes that reference the data
   m_axes.resize(2);
-  m_axes[0] = new API::RefAxis(this);
-  m_axes[1] = new API::SpectraAxis(this);
+  m_axes[0] = std::make_unique<API::RefAxis>(this);
+  m_axes[1] = std::make_unique<API::SpectraAxis>(this);
 }
 
 /** Gets the number of histograms

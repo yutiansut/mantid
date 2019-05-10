@@ -112,8 +112,8 @@ void EventWorkspace::init(const std::size_t &NVectors,
 
   // Create axes.
   m_axes.resize(2);
-  m_axes[0] = new API::RefAxis(this);
-  m_axes[1] = new API::SpectraAxis(this);
+  m_axes[0] = std::make_unique<API::RefAxis>(this);
+  m_axes[1] = std::make_unique<API::SpectraAxis>(this);
 }
 
 void EventWorkspace::init(const HistogramData::Histogram &histogram) {
@@ -135,8 +135,8 @@ void EventWorkspace::init(const HistogramData::Histogram &histogram) {
   }
 
   m_axes.resize(2);
-  m_axes[0] = new API::RefAxis(this);
-  m_axes[1] = new API::SpectraAxis(this);
+  m_axes[0] = std::make_unique<API::RefAxis>(this);
+  m_axes[1] = std::make_unique<API::SpectraAxis>(this);
 }
 
 /// The total size of the workspace
