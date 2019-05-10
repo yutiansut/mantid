@@ -7,13 +7,13 @@
 #ifndef MANTIDQT_CUSTOMINTERFACES_MDFLOGVALUEFINDERTEST_H_
 #define MANTIDQT_CUSTOMINTERFACES_MDFLOGVALUEFINDERTEST_H_
 
-#include "MantidQtWidgets/Common/LogValueFinder.h"
 #include "MantidAPI/MatrixWorkspace.h"
 #include "MantidAPI/Run.h"
 #include "MantidAPI/ScopedWorkspace.h"
 #include "MantidAPI/WorkspaceFactory.h"
 #include "MantidKernel/DateAndTime.h"
 #include "MantidKernel/TimeSeriesProperty.h"
+#include "MantidQtWidgets/Common/LogValueFinder.h"
 
 #include <QStringList>
 #include <cxxtest/TestSuite.h>
@@ -26,14 +26,12 @@ using Mantid::Kernel::TimeSeriesProperty;
 using Mantid::Types::Core::DateAndTime;
 using MantidQt::MantidWidgets::LogValueFinder;
 
-class MDFLogValueFinderTest : public CxxTest::TestSuite {
+class LogValueFinderTest : public CxxTest::TestSuite {
 public:
   // This pair of boilerplate methods prevent the suite being created statically
   // This means the constructor isn't called when running other tests
-  static MDFLogValueFinderTest *createSuite() {
-    return new MDFLogValueFinderTest();
-  }
-  static void destroySuite(MDFLogValueFinderTest *suite) { delete suite; }
+  static LogValueFinderTest *createSuite() { return new LogValueFinderTest(); }
+  static void destroySuite(LogValueFinderTest *suite) { delete suite; }
 
   void test_getLogNames() {
     ScopedWorkspace ws1(createTestWS(1));

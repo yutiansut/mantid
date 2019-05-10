@@ -5,9 +5,9 @@
 //     & Institut Laue - Langevin
 // SPDX - License - Identifier: GPL - 3.0 +
 #include "MantidQtWidgets/Common/EditLocalParameterDialog.h"
+#include "MantidKernel/make_unique.h"
 #include "MantidQtWidgets/Common/FunctionMultiDomainPresenter.h"
 #include "MantidQtWidgets/Common/LocalParameterItemDelegate.h"
-#include "MantidKernel/make_unique.h"
 
 #include <QClipboard>
 #include <QMenu>
@@ -29,8 +29,6 @@ namespace MantidWidgets {
  * @param funcBrowser :: [input] Function browser this is working with
  * @param parName :: [input] Name of parameter to edit in this dialog
  * @param wsNames :: [input] Names of workspaces being fitted
- * @param wsIndices :: [input] Indices of which spectrum in each workspace is
- * fitted
  */
 EditLocalParameterDialog::EditLocalParameterDialog(
     QWidget *parent, FunctionMultiDomainPresenter *funcBrowser,
@@ -57,8 +55,6 @@ EditLocalParameterDialog::EditLocalParameterDialog(
  * m_ties and set up the UI first
  * @param parName :: [input] Name of parameter to edit in this dialog
  * @param wsNames :: [input] Names of workspaces being fitted
- * @param wsIndices :: [input] Indices of which spectrum in each workspace is
- * fitted
  */
 void EditLocalParameterDialog::doSetup(const QString &parName,
                                        const QStringList &wsNames) {
@@ -334,7 +330,7 @@ void EditLocalParameterDialog::setValueToLog(int i) {
   } catch (const std::invalid_argument &err) {
     const auto &message =
         QString("Failed to get log value:\n\n %1").arg(err.what());
-    QMessageBox::critical(this, "MantidPlot - Error", message);
+    QMessageBox::critical(this, "Mantid - Error", message);
   }
   m_values[i] = value;
   m_uiForm.tableWidget->item(i, valueColumn)->setText(makeNumber(value));

@@ -184,8 +184,8 @@ void MultiDatasetFit::initLayout() {
           SLOT(setCurrentDataset(int)));
   connect(m_dataController, SIGNAL(spectraRemoved(QList<int>)),
           m_functionBrowser, SLOT(removeDatasets(QList<int>)));
-  connect(m_dataController, SIGNAL(spectraAdded(const QStringList&)), m_functionBrowser,
-          SLOT(addDatasets(const QStringList&)));
+  connect(m_dataController, SIGNAL(spectraAdded(const QStringList &)),
+          m_functionBrowser, SLOT(addDatasets(const QStringList &)));
 
   m_fitOptionsBrowser = new MantidQt::MantidWidgets::FitOptionsBrowser(
       nullptr,
@@ -309,7 +309,7 @@ void MultiDatasetFit::fitSequential() {
       mess += "...";
     }
     QMessageBox::critical(
-        this, "MantidPlot - Error",
+        this, "Mantid - Error",
         QString("PlotPeakByLogValue failed:\n\n  %1").arg(mess));
     m_uiForm.btnFit->setEnabled(true);
   }
@@ -369,7 +369,7 @@ void MultiDatasetFit::fitSimultaneous() {
       mess = mess.mid(0, maxSize);
       mess += "...";
     }
-    QMessageBox::critical(this, "MantidPlot - Error",
+    QMessageBox::critical(this, "Mantid - Error",
                           QString("Fit failed:\n\n  %1").arg(mess));
     m_uiForm.btnFit->setEnabled(true);
   }
@@ -378,14 +378,14 @@ void MultiDatasetFit::fitSimultaneous() {
 /// Run the fitting algorithm.
 void MultiDatasetFit::fit() {
   if (!m_functionBrowser->hasFunction()) {
-    QMessageBox::warning(this, "MantidPlot - Warning", "Function wasn't set.");
+    QMessageBox::warning(this, "Mantid - Warning", "Function wasn't set.");
     return;
   }
 
   auto fittingType = m_fitOptionsBrowser->getCurrentFittingType();
   auto n = getNumberOfSpectra();
   if (n == 0) {
-    QMessageBox::warning(this, "MantidPlot - Warning", "Data wasn't set.");
+    QMessageBox::warning(this, "Mantid - Warning", "Data wasn't set.");
     return;
   }
   int fitAll = QMessageBox::Yes;
