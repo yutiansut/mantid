@@ -173,15 +173,12 @@ void PropertyManager::splitByTime(
  */
 void PropertyManager::filterByProperty(
     const Kernel::TimeSeriesProperty<bool> &filter) {
-  constexpr bool transferOwnership(
-      false); // New FilteredProperty should not own the original time series
   for (auto &orderedProperty : m_orderedProperties) {
     Property *currentProp = orderedProperty;
     if (auto doubleSeries =
             dynamic_cast<TimeSeriesProperty<double> *>(currentProp)) {
       std::unique_ptr<Property> filtered =
-          make_unique<FilteredTimeSeriesProperty<double>>(doubleSeries, filter,
-                                                          transferOwnership);
+          make_unique<FilteredTimeSeriesProperty<double>>(doubleSeries, filter);
       // Replace the property in the ordered properties list
       orderedProperty = filtered.get();
       // Now replace in the map
