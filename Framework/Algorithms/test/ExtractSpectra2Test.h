@@ -129,7 +129,7 @@ public:
 
   void test_BinEdgeAxis() {
     auto input = createWorkspace();
-    BinEdgeAxis *axis = new BinEdgeAxis(input->getNumberHistograms() + 1);
+    auto axis = std::make_unique<BinEdgeAxis>(input->getNumberHistograms() + 1);
     for (size_t i = 0; i < axis->length(); ++i) {
       axis->setValue(i, -2. + static_cast<double>(i));
     }
