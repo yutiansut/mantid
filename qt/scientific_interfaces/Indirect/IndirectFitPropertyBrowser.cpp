@@ -81,6 +81,17 @@ bool IndirectFitPropertyBrowser::isFullFunctionBrowserActive() const
   return m_functionWidget->currentIndex() == 1;
 }
 
+MultiDomainFunction_sptr IndirectFitPropertyBrowser::getGlobalFunction() const
+{
+  auto fun = isFullFunctionBrowserActive() ? m_functionBrowser->getGlobalFunction() : m_templateBrowser->getGlobalFunction();
+  return boost::dynamic_pointer_cast<MultiDomainFunction>(fun);
+}
+
+IFunction_sptr IndirectFitPropertyBrowser::getSingleFunction() const
+{
+  return isFullFunctionBrowserActive() ? m_functionBrowser->getFunction() : m_templateBrowser->getFunction();
+}
+
 void IndirectFitPropertyBrowser::init() {
   initFunctionBrowser();
   initFitOptionsBrowser();
@@ -112,20 +123,27 @@ void IndirectFitPropertyBrowser::setFunctionTemplateBrowser(FunctionTemplateBrow
   }
   m_templateBrowser = templateBrowser;
   m_templateBrowser->init();
+  m_templateBrowser->setObjectName("templateBrowser");
+  connect(m_templateBrowser, SIGNAL(functionStructureChanged()), this,
+    SIGNAL(functionChanged()));
 }
 
 void IndirectFitPropertyBrowser::setFunction(const QString &funStr) {
-  m_functionBrowser->setFunction(funStr);
+  if (isFullFunctionBrowserActive()) {
+    m_functionBrowser->setFunction(funStr);
+  } else {
+    m_templateBrowser->setFunction(funStr);
+  }
 }
 
 MultiDomainFunction_sptr
 IndirectFitPropertyBrowser::getFittingFunction() const {
   try {
-    if (m_functionBrowser->getNumberOfDatasets() > 0) {
-      return boost::dynamic_pointer_cast<MultiDomainFunction>(m_functionBrowser->getGlobalFunction());
+    if (getNumberOfDatasets() > 0) {
+      return getGlobalFunction();
     } else {
         auto multiDomainFunction = boost::make_shared<MultiDomainFunction>();
-        auto singleFunction = m_functionBrowser->getFunction();
+        auto singleFunction = getSingleFunction();
         if (singleFunction) {
           multiDomainFunction->addFunction(singleFunction);
           multiDomainFunction->setDomainIndex(0, 0);
@@ -139,7 +157,7 @@ IndirectFitPropertyBrowser::getFittingFunction() const {
 
 QString IndirectFitPropertyBrowser::getSingleFunctionStr() const
 {
-  return m_functionBrowser->getFunctionString();
+  return QString::fromStdString(getSingleFunction()->asString());
 }
 
 std::string IndirectFitPropertyBrowser::minimizer(bool withProperties) const {
@@ -166,7 +184,7 @@ bool IndirectFitPropertyBrowser::ignoreInvalidData() const { return false; }
 
 int IndirectFitPropertyBrowser::getNumberOfDatasets() const
 {
-  return m_functionBrowser->getNumberOfDatasets();
+  return isFullFunctionBrowserActive() ? m_functionBrowser->getNumberOfDatasets() : m_templateBrowser->getNumberOfDatasets();
 }
 
 void IndirectFitPropertyBrowser::updateParameters(
@@ -251,6 +269,7 @@ int IndirectFitPropertyBrowser::workspaceIndex() const { return m_functionBrowse
 void IndirectFitPropertyBrowser::updateFunctionBrowserData(size_t nData, const QStringList &datasetNames) {
   m_functionBrowser->setNumberOfDatasets(static_cast<int>(nData));
   m_functionBrowser->setDatasetNames(datasetNames);
+  m_templateBrowser->setNumberOfDatasets(nData);
 }
 
 void IndirectFitPropertyBrowser::setFitEnabled(bool enable) {

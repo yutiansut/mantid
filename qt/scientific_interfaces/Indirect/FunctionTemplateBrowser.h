@@ -8,34 +8,26 @@
 #define INDIRECT_FUNCTIONTEMPLATEBROWSER_H_
 
 #include "DllConfig.h"
+#include "MantidAPI/IFunction_fwd.h"
 
 #include <QMap>
 #include <QWidget>
 
-/* Forward declarations */
-class QtProperty;
-class QtTreePropertyBrowser;
-class QtDoublePropertyManager;
-class QtIntPropertyManager;
 class QtBoolPropertyManager;
+class QtIntPropertyManager;
+class QtDoublePropertyManager;
 class QtStringPropertyManager;
 class QtEnumPropertyManager;
 class QtGroupPropertyManager;
 class ParameterPropertyManager;
-class QSettings;
-
-namespace Mantid {
-namespace Kernel {
-class Property;
-}
-namespace API {
-class IAlgorithm;
-}
-} // namespace Mantid
+class QtTreePropertyBrowser;
+class QtProperty;
 
 namespace MantidQt {
 namespace CustomInterfaces {
 namespace IDA {
+
+using namespace Mantid::API;
 
 /**
  * Class FunctionTemplateBrowser implements QtPropertyBrowser to display
@@ -48,12 +40,24 @@ public:
   FunctionTemplateBrowser(QWidget *parent = nullptr);
   void init();
 
+  virtual void setFunction(const QString &funStr) = 0;
+  virtual IFunction_sptr getGlobalFunction() const = 0;
+  virtual IFunction_sptr getFunction() const = 0;
+  virtual void setNumberOfDatasets(int) = 0;
+  virtual int getNumberOfDatasets() const = 0;
+
+signals:
+  void functionStructureChanged();
+
 protected slots:
   virtual void intChanged(QtProperty *) {}
+  virtual void boolChanged(QtProperty *) {}
+  virtual void enumChanged(QtProperty *) {}
+  virtual void popupMenu(const QPoint &) = 0;
 
 private:
   void createBrowser();
-  virtual void createProperties() {}
+  virtual void createProperties() = 0;
 
 protected:
   QtBoolPropertyManager *m_boolManager;

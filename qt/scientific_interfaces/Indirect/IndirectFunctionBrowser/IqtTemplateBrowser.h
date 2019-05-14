@@ -9,29 +9,12 @@
 
 #include "DllConfig.h"
 #include "FunctionTemplateBrowser.h"
+#include "IqtTemplatePresenter.h"
 
 #include <QMap>
 #include <QWidget>
 
-/* Forward declarations */
 class QtProperty;
-class QtTreePropertyBrowser;
-class QtDoublePropertyManager;
-class QtIntPropertyManager;
-class QtBoolPropertyManager;
-class QtStringPropertyManager;
-class QtEnumPropertyManager;
-class QtGroupPropertyManager;
-class QSettings;
-
-namespace Mantid {
-namespace Kernel {
-class Property;
-}
-namespace API {
-class IAlgorithm;
-}
-} // namespace Mantid
 
 namespace MantidQt {
 namespace CustomInterfaces {
@@ -46,20 +29,43 @@ class MANTIDQT_INDIRECT_DLL IqtTemplateBrowser : public FunctionTemplateBrowser 
   Q_OBJECT
 public:
   IqtTemplateBrowser(QWidget *parent = nullptr);
+  void addExponentialOne();
+  void removeExponentialOne();
+  void addExponentialTwo();
+  void removeExponentialTwo();
+  void addStretchExponential();
+  void removeStretchExponential();
+  void addFlatBackground();
+  void removeBackground();
 
- signals:
-   void changedNumberOfExponentials(int n);
+  void setFunction(const QString &funStr) override;
+  IFunction_sptr getGlobalFunction() const override;
+  IFunction_sptr getFunction() const override;
+  void setNumberOfDatasets(int) override;
+  int getNumberOfDatasets() const override;
 
-protected slots:
+ protected slots:
   void intChanged(QtProperty *) override;
+  void boolChanged(QtProperty *) override;
+  void enumChanged(QtProperty *) override;
 
 private:
   void createProperties() override;
-
-
-  QtProperty *m_exponentialsGroup;
+  void popupMenu(const QPoint &);
   QtProperty *m_numberOfExponentials;
-  QtProperty *m_hasStretchExponential;
+  QtProperty *m_exp1Height = nullptr;
+  QtProperty *m_exp1Lifetime = nullptr;
+  QtProperty *m_exp2Height = nullptr;
+  QtProperty *m_exp2Lifetime = nullptr;
+  QtProperty *m_stretchExponential;
+  QtProperty *m_stretchExpHeight = nullptr;
+  QtProperty *m_stretchExpLifetime = nullptr;
+  QtProperty *m_stretchExpStretching = nullptr;
+  QtProperty *m_background;
+  QtProperty *m_A0 = nullptr;
+
+private:
+  IqtTemplatePresenter m_presenter;
 };
 
 } // namespace IDA

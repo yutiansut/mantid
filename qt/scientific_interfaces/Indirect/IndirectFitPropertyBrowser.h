@@ -28,6 +28,9 @@ namespace MantidWidgets {
 namespace CustomInterfaces {
 namespace IDA {
 
+using namespace Mantid::API;
+using namespace MantidWidgets;
+
 class FunctionTemplateBrowser;
 
 class MANTIDQT_INDIRECT_DLL IndirectFitPropertyBrowser
@@ -50,7 +53,7 @@ public:
   Q_INVOKABLE QString getSingleFunctionStr() const;
 
   /// Get the global multi-domain function. Even if there is only 1 dataset.
-  Mantid::API::MultiDomainFunction_sptr getFittingFunction() const;
+  MultiDomainFunction_sptr getFittingFunction() const;
   /// Get the minimizer
   std::string minimizer(bool withProperties = false) const;
   /// Get the max number of iterations
@@ -66,16 +69,16 @@ public:
   /// Get the ignore invalid data option
   bool ignoreInvalidData() const;
 
-  void updateParameters(const Mantid::API::IFunction &fun);
-  void updateMultiDatasetParameters(const Mantid::API::IFunction &fun);
-  void updateMultiDatasetParameters(const Mantid::API::IFunction & fun, const Mantid::API::ITableWorkspace &params);
+  void updateParameters(const IFunction &fun);
+  void updateMultiDatasetParameters(const IFunction &fun);
+  void updateMultiDatasetParameters(const IFunction & fun, const ITableWorkspace &params);
   QString selectedFitType() const;
   void setConvolveMembers(bool convolveMembers);
   void setFitEnabled(bool enable);
   void setWorkspaceIndex(int i);
   int workspaceIndex() const;
   void updateFunctionBrowserData(size_t nData, const QStringList &datasetNames);
-  void updatePlotGuess(Mantid::API::MatrixWorkspace_const_sptr sampleWorkspace);
+  void updatePlotGuess(MatrixWorkspace_const_sptr sampleWorkspace);
 
 public slots:
   void fit();
@@ -99,10 +102,12 @@ private:
   void initFunctionBrowser();
   void initFitOptionsBrowser();
   bool isFullFunctionBrowserActive() const;
+  MultiDomainFunction_sptr getGlobalFunction() const;
+  IFunction_sptr getSingleFunction() const;
 
   QVBoxLayout *m_mainLayout;
-  MantidWidgets::FunctionBrowser *m_functionBrowser;
-  MantidWidgets::FitOptionsBrowser *m_fitOptionsBrowser;
+  FunctionBrowser *m_functionBrowser;
+  FitOptionsBrowser *m_fitOptionsBrowser;
   FunctionTemplateBrowser *m_templateBrowser;
   QStackedWidget *m_functionWidget;
 

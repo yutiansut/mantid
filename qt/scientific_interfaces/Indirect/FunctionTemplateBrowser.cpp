@@ -84,6 +84,14 @@ void FunctionTemplateBrowser::createBrowser()
 
   connect(m_intManager, SIGNAL(propertyChanged(QtProperty *)), this,
     SLOT(intChanged(QtProperty *)));
+  connect(m_boolManager, SIGNAL(propertyChanged(QtProperty *)), this,
+    SLOT(boolChanged(QtProperty *)));
+  connect(m_enumManager, SIGNAL(propertyChanged(QtProperty *)), this,
+    SLOT(enumChanged(QtProperty *)));
+
+  m_browser->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(m_browser, SIGNAL(customContextMenuRequested(const QPoint &)), this,
+    SLOT(popupMenu(const QPoint &)));
 
 }
 

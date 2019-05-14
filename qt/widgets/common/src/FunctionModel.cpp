@@ -16,6 +16,10 @@ namespace MantidWidgets {
 using namespace Mantid::API;
 
 void IFunctionModel::setFunctionString(const QString &funStr) {
+  if (funStr.isEmpty()) {
+    clear();
+    return;
+  }
   setFunction(
       FunctionFactory::Instance().createInitialized(funStr.toStdString()));
 }

@@ -59,7 +59,9 @@ set(SRC_FILES
     Iqt.cpp
     IqtFit.cpp
     IqtFitModel.cpp
-    IqtTemplateBrowser.cpp
+    IndirectFunctionBrowser/IqtFunctionModel.cpp
+    IndirectFunctionBrowser/IqtTemplateBrowser.cpp
+    IndirectFunctionBrowser/IqtTemplatePresenter.cpp
     JumpFit.cpp
     JumpFitAddWorkspaceDialog.cpp
     JumpFitDataPresenter.cpp
@@ -139,7 +141,9 @@ set(INC_FILES
     Iqt.h
     IqtFit.h
     IqtFitModel.h
-    IqtTemplateBrowser.h
+    IndirectFunctionBrowser/IqtFunctionModel.h
+    IndirectFunctionBrowser/IqtTemplateBrowser.h
+    IndirectFunctionBrowser/IqtTemplatePresenter.h
     JumpFit.h
     JumpFitAddWorkspaceDialog.h
     JumpFitDataPresenter.h
@@ -207,7 +211,8 @@ set(MOC_FILES
     IndirectTab.h
     Iqt.h
     IqtFit.h
-    IqtTemplateBrowser.h
+    IndirectFunctionBrowser/IqtTemplateBrowser.h
+    IndirectFunctionBrowser/IqtTemplatePresenter.h
     JumpFit.h
     JumpFitAddWorkspaceDialog.h
     JumpFitDataPresenter.h

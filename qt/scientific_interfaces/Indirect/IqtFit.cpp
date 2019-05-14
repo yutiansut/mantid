@@ -5,7 +5,7 @@
 //     & Institut Laue - Langevin
 // SPDX - License - Identifier: GPL - 3.0 +
 #include "IqtFit.h"
-#include "IqtTemplateBrowser.h"
+#include "IndirectFunctionBrowser/IqtTemplateBrowser.h"
 
 #include "MantidQtWidgets/Common/UserInputValidator.h"
 
