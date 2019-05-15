@@ -107,23 +107,23 @@ void IqtFunctionModel::setFunction(const QString & funStr)
         throw std::runtime_error("Function has wrong structure.");
       }
       if (m_numberOfExponentials == 0) {
-        setExponentialOne(*fun);
+        setExponentialOne(*f);
       } else {
-        setExponentialTwo(*fun);
+        setExponentialTwo(*f);
         areExponentialsSet = true;
       }
     } else if (name == "StretchExp") {
       if (isStretchSet) {
         throw std::runtime_error("Function has wrong structure.");
       }
-      setStretchExponential(*fun);
+      setStretchExponential(*f);
       areExponentialsSet = true;
       isStretchSet = true;
     } else if (name == "FlatBackground") {
       if (isBackgroundSet) {
         throw std::runtime_error("Function has wrong structure.");
       }
-      setBackground(*fun);
+      setBackground(*f);
       areExponentialsSet = true;
       isStretchSet = true;
       isBackgroundSet = true;
@@ -142,6 +142,7 @@ IFunction_sptr IqtFunctionModel::getGlobalFunction() const
 IFunction_sptr IqtFunctionModel::getFunction() const
 {
   auto fun = m_model.getCurrentFunction();
+  std::cerr << ">>" << fun->asString() << std::endl;
   return m_model.getCurrentFunction();
 }
 
@@ -172,6 +173,51 @@ void IqtFunctionModel::updateMultiDatasetParameters(const IFunction & fun)
   std::cerr << m_model.getFunctionString().toStdString() << std::endl;
   setFunction(m_model.getFunctionString());
   setStretchingGlobal(m_isStretchGlobal);
+}
+
+void IqtFunctionModel::setCurrentDataset(int i)
+{
+  m_model.setCurrentDomainIndex(i);
+}
+
+double IqtFunctionModel::getExp1Height() const
+{
+  return m_exp1Height;
+}
+
+double IqtFunctionModel::getExp1Lifetime() const
+{
+  return m_exp1Lifetime;
+}
+
+double IqtFunctionModel::getExp2Lifetime() const
+{
+  return m_exp2Height;
+}
+
+double IqtFunctionModel::getExp2Height() const
+{
+  return m_exp2Lifetime;
+}
+
+double IqtFunctionModel::getStretchHeight() const
+{
+  return m_stretchHeight;
+}
+
+double IqtFunctionModel::getStretchLifetime() const
+{
+  return m_stretchLifetime;
+}
+
+double IqtFunctionModel::getStretchStretching() const
+{
+  return m_stretchStretching;
+}
+
+double IqtFunctionModel::getA0() const
+{
+  return m_A0;
 }
 
 void IqtFunctionModel::clear() {

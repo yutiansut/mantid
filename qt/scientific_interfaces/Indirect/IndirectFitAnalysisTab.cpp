@@ -40,6 +40,7 @@ WorkspaceGroup_sptr getADSGroupWorkspace(std::string const &workspaceName) {
 void updateParameters(
     IFunction_sptr function,
     std::unordered_map<std::string, ParameterValue> const &parameters) {
+  if (!function) return;
   for (auto i = 0u; i < function->nParams(); ++i) {
     auto const value = parameters.find(function->parameterName(i));
     if (value != parameters.end()) {
@@ -375,8 +376,8 @@ void IndirectFitAnalysisTab::updateParameterValues() {
 void IndirectFitAnalysisTab::updateParameterValues(
     const std::unordered_map<std::string, ParameterValue> &parameters) {
   try {
-    auto fitFunction = m_fitPropertyBrowser->getFittingFunction();
-    updateParameters(fitFunction, parameters);
+    //auto fitFunction = m_fitPropertyBrowser->getFittingFunction();
+    //updateParameters(fitFunction, parameters);
     updateFitBrowserParameterValues();
     //if (m_fittingModel->isPreviouslyFit(getSelectedDataIndex(),
     //                                    getSelectedSpectrum()))

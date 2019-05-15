@@ -213,16 +213,21 @@ void IqtTemplateBrowser::globalChanged(QtProperty *prop, const QString &name, bo
 
 void IqtTemplateBrowser::parameterChanged(QtProperty *prop)
 {
-  auto isGlobal = m_parameterManager->isGlobal(prop);
-  std::cerr << "Changed " << prop->propertyName().toStdString() << ' ' << isGlobal << std::endl;
-  if (prop == m_stretchExpStretching)
+  if (prop == m_stretchExpStretching) {
+    auto isGlobal = m_parameterManager->isGlobal(prop);
     m_presenter.setStretchingGlobal(isGlobal);
-  emit functionStructureChanged();
+    emit functionStructureChanged();
+  }
 }
 
 void IqtTemplateBrowser::updateMultiDatasetParameters(const IFunction & fun)
 {
   m_presenter.updateMultiDatasetParameters(fun);
+}
+
+void IqtTemplateBrowser::setCurrentDataset(int i)
+{
+  m_presenter.setCurrentDataset(i);
 }
 
 void IqtTemplateBrowser::createProperties()
@@ -247,7 +252,6 @@ void IqtTemplateBrowser::popupMenu(const QPoint &) {
 
 void IqtTemplateBrowser::setParameterPropertyValue(QtProperty * prop, double value)
 {
-  std::cerr << "value: " << value << std::endl;
   if (prop) m_parameterManager->setValue(prop, value);
 }
 

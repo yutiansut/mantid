@@ -273,8 +273,12 @@ void IndirectFitPropertyBrowser::updatePlotGuess(
 
 
 void IndirectFitPropertyBrowser::setWorkspaceIndex(int i) {
-  if (m_functionBrowser->getNumberOfDatasets() > 0)
+  if (m_functionBrowser->getNumberOfDatasets() == 0) return;
+  if (isFullFunctionBrowserActive()) {
     m_functionBrowser->setCurrentDataset(i);
+  } else {
+    m_templateBrowser->setCurrentDataset(i);
+  }
 }
 
 int IndirectFitPropertyBrowser::workspaceIndex() const { return m_functionBrowser->getCurrentDataset(); }

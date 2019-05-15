@@ -135,16 +135,23 @@ void IqtTemplatePresenter::updateMultiDatasetParameters(const IFunction & fun)
   updateViewParameters();
 }
 
+void IqtTemplatePresenter::setCurrentDataset(int i)
+{
+  std::cerr << "setCurrentDataset " << i << std::endl;
+  m_model.setCurrentDataset(i);
+  updateViewParameters();
+}
+
 void IqtTemplatePresenter::updateViewParameters()
 {
-  m_view->setExp1Height(m_model.m_exp1Height);
-  m_view->setExp1Lifetime(m_model.m_exp1Lifetime);
-  m_view->setExp2Height(m_model.m_exp2Height);
-  m_view->setExp2Lifetime(m_model.m_exp2Lifetime);
-  m_view->setStretchHeight(m_model.m_stretchHeight);
-  m_view->setStretchLifetime(m_model.m_stretchLifetime);
-  m_view->setStretchStretching(m_model.m_stretchStretching);
-  m_view->setA0(m_model.m_A0);
+  m_view->setExp1Height(m_model.getExp1Height());
+  m_view->setExp1Lifetime(m_model.getExp1Lifetime());
+  m_view->setExp2Height(m_model.getExp2Height());
+  m_view->setExp2Lifetime(m_model.getExp2Lifetime());
+  m_view->setStretchHeight(m_model.getStretchHeight());
+  m_view->setStretchLifetime(m_model.getStretchLifetime());
+  m_view->setStretchStretching(m_model.getStretchStretching());
+  m_view->setA0(m_model.getA0());
 }
 
 } // namespace IDA

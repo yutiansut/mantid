@@ -11,6 +11,8 @@
 #include "MantidQtWidgets/Common/FunctionModel.h"
 #include "MantidAPI/IFunction_fwd.h"
 
+#include <QMap>
+
 namespace MantidQt {
 namespace CustomInterfaces {
 namespace IDA {
@@ -37,7 +39,18 @@ public:
   QStringList getLocalParameters() const;
   void setStretchingGlobal(bool on);
   void updateMultiDatasetParameters(const IFunction & fun);
-//private:
+  void setCurrentDataset(int i);
+
+  double getExp1Height() const;
+  double getExp1Lifetime() const;
+  double getExp2Lifetime() const;
+  double getExp2Height() const;
+  double getStretchHeight() const;
+  double getStretchLifetime() const;
+  double getStretchStretching() const;
+  double getA0() const;
+
+private:
   QString buildFunctionString() const;
   void setExponentialOne(const IFunction&);
   void setExponentialTwo(const IFunction&);

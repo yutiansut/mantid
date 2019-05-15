@@ -42,6 +42,7 @@ public:
   QStringList getLocalParameters() const;
   void setStretchingGlobal(bool on);
   void updateMultiDatasetParameters(const IFunction & fun);
+  void setCurrentDataset(int i);
 
 signals:
   void functionStructureChanged();
