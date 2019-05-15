@@ -110,6 +110,46 @@ void IqtTemplateBrowser::removeBackground()
   m_A0 = nullptr;
 }
 
+void IqtTemplateBrowser::setExp1Height(double value)
+{
+  setParameterPropertyValue(m_exp1Height, value);
+}
+
+void IqtTemplateBrowser::setExp1Lifetime(double value)
+{
+  setParameterPropertyValue(m_exp1Lifetime, value);
+}
+
+void IqtTemplateBrowser::setExp2Height(double value)
+{
+  setParameterPropertyValue(m_exp2Height, value);
+}
+
+void IqtTemplateBrowser::setExp2Lifetime(double value)
+{
+  setParameterPropertyValue(m_exp2Lifetime, value);
+}
+
+void IqtTemplateBrowser::setStretchHeight(double value)
+{
+  setParameterPropertyValue(m_stretchExpHeight, value);
+}
+
+void IqtTemplateBrowser::setStretchLifetime(double value)
+{
+  setParameterPropertyValue(m_stretchExpLifetime, value);
+}
+
+void IqtTemplateBrowser::setStretchStretching(double value)
+{
+  setParameterPropertyValue(m_stretchExpStretching, value);
+}
+
+void IqtTemplateBrowser::setA0(double value)
+{
+  setParameterPropertyValue(m_A0, value);
+}
+
 void IqtTemplateBrowser::setFunction(const QString & funStr)
 {
   m_presenter.setFunction(funStr);
@@ -203,6 +243,12 @@ void IqtTemplateBrowser::createProperties()
 
 void IqtTemplateBrowser::popupMenu(const QPoint &) {
   std::cerr << "Popup" << std::endl;
+}
+
+void IqtTemplateBrowser::setParameterPropertyValue(QtProperty * prop, double value)
+{
+  std::cerr << "value: " << value << std::endl;
+  if (prop) m_parameterManager->setValue(prop, value);
 }
 
 } // namespace IDA

@@ -132,10 +132,19 @@ void IqtTemplatePresenter::setStretchingGlobal(bool on)
 void IqtTemplatePresenter::updateMultiDatasetParameters(const IFunction & fun)
 {
   m_model.updateMultiDatasetParameters(fun);
+  updateViewParameters();
 }
 
 void IqtTemplatePresenter::updateViewParameters()
 {
+  m_view->setExp1Height(m_model.m_exp1Height);
+  m_view->setExp1Lifetime(m_model.m_exp1Lifetime);
+  m_view->setExp2Height(m_model.m_exp2Height);
+  m_view->setExp2Lifetime(m_model.m_exp2Lifetime);
+  m_view->setStretchHeight(m_model.m_stretchHeight);
+  m_view->setStretchLifetime(m_model.m_stretchLifetime);
+  m_view->setStretchStretching(m_model.m_stretchStretching);
+  m_view->setA0(m_model.m_A0);
 }
 
 } // namespace IDA

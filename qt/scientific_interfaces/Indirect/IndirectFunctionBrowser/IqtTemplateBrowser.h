@@ -38,6 +38,15 @@ public:
   void addFlatBackground();
   void removeBackground();
 
+  void setExp1Height(double);
+  void setExp1Lifetime(double);
+  void setExp2Height(double);
+  void setExp2Lifetime(double);
+  void setStretchHeight(double);
+  void setStretchLifetime(double);
+  void setStretchStretching(double);
+  void setA0(double);
+
   void setFunction(const QString &funStr) override;
   IFunction_sptr getGlobalFunction() const override;
   IFunction_sptr getFunction() const override;
@@ -57,6 +66,7 @@ public:
 private:
   void createProperties() override;
   void popupMenu(const QPoint &);
+  void setParameterPropertyValue(QtProperty *prop, double value);
 
   QtProperty *m_numberOfExponentials;
   QtProperty *m_exp1Height = nullptr;

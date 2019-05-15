@@ -37,7 +37,7 @@ public:
   QStringList getLocalParameters() const;
   void setStretchingGlobal(bool on);
   void updateMultiDatasetParameters(const IFunction & fun);
-private:
+//private:
   QString buildFunctionString() const;
   void setExponentialOne(const IFunction&);
   void setExponentialTwo(const IFunction&);

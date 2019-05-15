@@ -168,7 +168,10 @@ void IqtFunctionModel::setStretchingGlobal(bool on)
 
 void IqtFunctionModel::updateMultiDatasetParameters(const IFunction & fun)
 {
-  //std::cerr << m_model.getFitFunctionString().toStdString() << std::endl;
+  m_model.updateMultiDatasetParameters(fun);
+  std::cerr << m_model.getFunctionString().toStdString() << std::endl;
+  setFunction(m_model.getFunctionString());
+  setStretchingGlobal(m_isStretchGlobal);
 }
 
 void IqtFunctionModel::clear() {
