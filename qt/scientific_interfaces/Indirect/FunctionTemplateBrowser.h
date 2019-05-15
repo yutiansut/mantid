@@ -47,6 +47,7 @@ public:
   virtual int getNumberOfDatasets() const = 0;
   virtual QStringList getGlobalParameters() const = 0;
   virtual QStringList getLocalParameters() const = 0;
+  virtual void updateMultiDatasetParameters(const IFunction & fun) = 0;
 
 signals:
   void functionStructureChanged();

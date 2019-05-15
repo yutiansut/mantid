@@ -45,6 +45,7 @@ public:
   int getNumberOfDatasets() const override;
   QStringList getGlobalParameters() const override;
   QStringList getLocalParameters() const override;
+  void updateMultiDatasetParameters(const IFunction & fun) override;
 
  protected slots:
   void intChanged(QtProperty *) override;

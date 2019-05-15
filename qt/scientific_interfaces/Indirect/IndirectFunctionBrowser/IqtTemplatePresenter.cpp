@@ -129,6 +129,11 @@ void IqtTemplatePresenter::setStretchingGlobal(bool on)
   m_model.setStretchingGlobal(on);
 }
 
+void IqtTemplatePresenter::updateMultiDatasetParameters(const IFunction & fun)
+{
+  m_model.updateMultiDatasetParameters(fun);
+}
+
 void IqtTemplatePresenter::updateViewParameters()
 {
 }

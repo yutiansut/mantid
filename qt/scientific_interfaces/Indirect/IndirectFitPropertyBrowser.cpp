@@ -203,7 +203,10 @@ void IndirectFitPropertyBrowser::updateParameters(
 }
 
 void IndirectFitPropertyBrowser::updateMultiDatasetParameters(const Mantid::API::IFunction & fun) {
-  m_functionBrowser->updateMultiDatasetParameters(fun);
+  if (isFullFunctionBrowserActive())
+    m_functionBrowser->updateMultiDatasetParameters(fun);
+  else
+    m_templateBrowser->updateMultiDatasetParameters(fun);
 }
 
 void IndirectFitPropertyBrowser::updateMultiDatasetParameters(const Mantid::API::IFunction & fun, const Mantid::API::ITableWorkspace & paramTable)

@@ -180,6 +180,11 @@ void IqtTemplateBrowser::parameterChanged(QtProperty *prop)
   emit functionStructureChanged();
 }
 
+void IqtTemplateBrowser::updateMultiDatasetParameters(const IFunction & fun)
+{
+  m_presenter.updateMultiDatasetParameters(fun);
+}
+
 void IqtTemplateBrowser::createProperties()
 {
   m_numberOfExponentials = m_intManager->addProperty("Exponentials");
