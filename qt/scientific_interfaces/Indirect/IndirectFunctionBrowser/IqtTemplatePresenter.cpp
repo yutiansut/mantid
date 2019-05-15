@@ -114,6 +114,21 @@ IFunction_sptr IqtTemplatePresenter::getFunction() const
   return m_model.getFunction();
 }
 
+QStringList IqtTemplatePresenter::getGlobalParameters() const
+{
+  return m_model.getGlobalParameters();
+}
+
+QStringList IqtTemplatePresenter::getLocalParameters() const
+{
+  return m_model.getLocalParameters();
+}
+
+void IqtTemplatePresenter::setStretchingGlobal(bool on)
+{
+  m_model.setStretchingGlobal(on);
+}
+
 void IqtTemplatePresenter::updateViewParameters()
 {
 }

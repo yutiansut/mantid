@@ -43,15 +43,20 @@ public:
   IFunction_sptr getFunction() const override;
   void setNumberOfDatasets(int) override;
   int getNumberOfDatasets() const override;
+  QStringList getGlobalParameters() const override;
+  QStringList getLocalParameters() const override;
 
  protected slots:
   void intChanged(QtProperty *) override;
   void boolChanged(QtProperty *) override;
   void enumChanged(QtProperty *) override;
+  void globalChanged(QtProperty *, const QString &, bool) override;
+  void parameterChanged(QtProperty *) override;
 
 private:
   void createProperties() override;
   void popupMenu(const QPoint &);
+
   QtProperty *m_numberOfExponentials;
   QtProperty *m_exp1Height = nullptr;
   QtProperty *m_exp1Lifetime = nullptr;

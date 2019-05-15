@@ -38,6 +38,9 @@ public:
   void setFunction(const QString &funStr);
   IFunction_sptr getGlobalFunction() const;
   IFunction_sptr getFunction() const;
+  QStringList getGlobalParameters() const;
+  QStringList getLocalParameters() const;
+  void setStretchingGlobal(bool on);
 
 signals:
   void functionStructureChanged();

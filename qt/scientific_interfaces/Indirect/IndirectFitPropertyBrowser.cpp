@@ -92,6 +92,16 @@ IFunction_sptr IndirectFitPropertyBrowser::getSingleFunction() const
   return isFullFunctionBrowserActive() ? m_functionBrowser->getFunction() : m_templateBrowser->getFunction();
 }
 
+QStringList IndirectFitPropertyBrowser::getGlobalParameters() const
+{
+  return isFullFunctionBrowserActive() ? m_functionBrowser->getGlobalParameters() : m_templateBrowser->getGlobalParameters();
+}
+
+QStringList IndirectFitPropertyBrowser::getLocalParameters() const
+{
+  return isFullFunctionBrowserActive() ? m_functionBrowser->getLocalParameters() : m_templateBrowser->getLocalParameters();
+}
+
 void IndirectFitPropertyBrowser::init() {
   initFunctionBrowser();
   initFitOptionsBrowser();
@@ -269,7 +279,7 @@ int IndirectFitPropertyBrowser::workspaceIndex() const { return m_functionBrowse
 void IndirectFitPropertyBrowser::updateFunctionBrowserData(size_t nData, const QStringList &datasetNames) {
   m_functionBrowser->setNumberOfDatasets(static_cast<int>(nData));
   m_functionBrowser->setDatasetNames(datasetNames);
-  m_templateBrowser->setNumberOfDatasets(nData);
+  m_templateBrowser->setNumberOfDatasets(static_cast<int>(nData));
 }
 
 void IndirectFitPropertyBrowser::setFitEnabled(bool enable) {

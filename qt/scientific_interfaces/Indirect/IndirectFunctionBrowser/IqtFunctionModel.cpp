@@ -142,10 +142,28 @@ IFunction_sptr IqtFunctionModel::getGlobalFunction() const
 IFunction_sptr IqtFunctionModel::getFunction() const
 {
   auto fun = m_model.getCurrentFunction();
-  if (fun) std::cerr << fun->asString() << std::endl;
-  else
-    std::cerr << "No function defined" << std::endl;
   return m_model.getCurrentFunction();
+}
+
+QStringList IqtFunctionModel::getGlobalParameters() const
+{
+  return m_model.getGlobalParameters();
+}
+
+QStringList IqtFunctionModel::getLocalParameters() const
+{
+  return m_model.getLocalParameters();
+}
+
+void IqtFunctionModel::setStretchingGlobal(bool on)
+{
+  m_isStretchGlobal = on;
+  QStringList globals;
+  if (on) {
+    globals << getStretchPrefix() + "Stretching";
+  }
+  m_model.setGlobalParameters(globals);
+  std::cerr << m_model.getFitFunctionString().toStdString() << std::endl;
 }
 
 void IqtFunctionModel::clear() {
@@ -198,6 +216,12 @@ void IqtFunctionModel::setBackground(const IFunction &fun)
 {
   m_background = QString::fromStdString(fun.name());
   m_A0 = fun.getParameter("A0");
+}
+
+QString IqtFunctionModel::getStretchPrefix() const
+{
+  if (m_numberOfExponentials == 0 && m_background.isEmpty()) return "";
+  return QString("f%1.").arg(m_numberOfExponentials);
 }
 
 } // namespace IDA

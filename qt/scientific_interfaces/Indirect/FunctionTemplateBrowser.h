@@ -45,6 +45,8 @@ public:
   virtual IFunction_sptr getFunction() const = 0;
   virtual void setNumberOfDatasets(int) = 0;
   virtual int getNumberOfDatasets() const = 0;
+  virtual QStringList getGlobalParameters() const = 0;
+  virtual QStringList getLocalParameters() const = 0;
 
 signals:
   void functionStructureChanged();
@@ -54,6 +56,8 @@ protected slots:
   virtual void boolChanged(QtProperty *) {}
   virtual void enumChanged(QtProperty *) {}
   virtual void popupMenu(const QPoint &) = 0;
+  virtual void globalChanged(QtProperty *, const QString &, bool) = 0;
+  virtual void parameterChanged(QtProperty *) = 0;
 
 private:
   void createBrowser();

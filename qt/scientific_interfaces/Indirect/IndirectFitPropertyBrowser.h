@@ -104,6 +104,8 @@ private:
   bool isFullFunctionBrowserActive() const;
   MultiDomainFunction_sptr getGlobalFunction() const;
   IFunction_sptr getSingleFunction() const;
+  QStringList getGlobalParameters() const;
+  QStringList getLocalParameters() const;
 
   QVBoxLayout *m_mainLayout;
   FunctionBrowser *m_functionBrowser;

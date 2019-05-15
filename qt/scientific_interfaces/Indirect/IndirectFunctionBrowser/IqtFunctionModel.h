@@ -21,6 +21,7 @@ using namespace MantidWidgets;
 class MANTIDQT_INDIRECT_DLL IqtFunctionModel {
 public:
   IqtFunctionModel();
+  void clear();
   void setNumberOfExponentials(int);
   int getNumberOfExponentials() const;
   void setStretchExponential(bool);
@@ -32,13 +33,16 @@ public:
   void setFunction(const QString &funStr);
   IFunction_sptr getGlobalFunction() const;
   IFunction_sptr getFunction() const;
-  void clear();
+  QStringList getGlobalParameters() const;
+  QStringList getLocalParameters() const;
+  void setStretchingGlobal(bool on);
 private:
   QString buildFunctionString() const;
   void setExponentialOne(const IFunction&);
   void setExponentialTwo(const IFunction&);
   void setStretchExponential(const IFunction&);
   void setBackground(const IFunction&);
+  QString getStretchPrefix() const;
 
   MultiDomainFunctionModel m_model;
   int m_numberOfExponentials = 0;
@@ -52,6 +56,7 @@ private:
   double m_stretchLifetime = 1.0;
   double m_stretchStretching = 1.0;
   double m_A0 = 0.0;
+  bool m_isStretchGlobal = false;
 };
 
 } // namespace IDA

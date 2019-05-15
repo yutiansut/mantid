@@ -135,6 +135,16 @@ int IqtTemplateBrowser::getNumberOfDatasets() const
   return m_presenter.getNumberOfDatasets();
 }
 
+QStringList IqtTemplateBrowser::getGlobalParameters() const
+{
+  return m_presenter.getGlobalParameters();
+}
+
+QStringList IqtTemplateBrowser::getLocalParameters() const
+{
+  return m_presenter.getLocalParameters();
+}
+
 void IqtTemplateBrowser::intChanged(QtProperty *prop) {
   if (prop == m_numberOfExponentials) {
     m_presenter.setNumberOfExponentials(m_intManager->value(prop));
@@ -154,6 +164,20 @@ void IqtTemplateBrowser::enumChanged(QtProperty *prop)
     auto background = m_enumManager->enumNames(prop)[m_enumManager->value(prop)];
     m_presenter.setBackground(background);
   }
+}
+
+void IqtTemplateBrowser::globalChanged(QtProperty *prop, const QString &name, bool on)
+{
+  std::cerr << "Global " << name.toStdString() << ' ' << on << std::endl;
+}
+
+void IqtTemplateBrowser::parameterChanged(QtProperty *prop)
+{
+  auto isGlobal = m_parameterManager->isGlobal(prop);
+  std::cerr << "Changed " << prop->propertyName().toStdString() << ' ' << isGlobal << std::endl;
+  if (prop == m_stretchExpStretching)
+    m_presenter.setStretchingGlobal(isGlobal);
+  emit functionStructureChanged();
 }
 
 void IqtTemplateBrowser::createProperties()

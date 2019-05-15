@@ -455,6 +455,8 @@ std::vector<std::string> IndirectFittingModel::getFitParameterNames() const {
 }
 
 Mantid::API::MultiDomainFunction_sptr IndirectFittingModel::getFittingFunction() const {
+  //if (m_activeFunction)
+  //  std::cerr << m_activeFunction->asString() << std::endl;
   return m_activeFunction;
 }
 
