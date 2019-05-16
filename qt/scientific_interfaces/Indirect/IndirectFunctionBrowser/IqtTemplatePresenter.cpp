@@ -144,14 +144,20 @@ void IqtTemplatePresenter::setCurrentDataset(int i)
 
 void IqtTemplatePresenter::updateViewParameters()
 {
-  m_view->setExp1Height(m_model.getExp1Height());
-  m_view->setExp1Lifetime(m_model.getExp1Lifetime());
-  m_view->setExp2Height(m_model.getExp2Height());
-  m_view->setExp2Lifetime(m_model.getExp2Lifetime());
-  m_view->setStretchHeight(m_model.getStretchHeight());
-  m_view->setStretchLifetime(m_model.getStretchLifetime());
-  m_view->setStretchStretching(m_model.getStretchStretching());
-  m_view->setA0(m_model.getA0());
+  static std::map<IqtFunctionModel::ParamNames, void (IqtTemplateBrowser::*)(double)> setters{
+  { IqtFunctionModel::ParamNames::EXP1_HEIGHT, &IqtTemplateBrowser::setExp1Height },
+  { IqtFunctionModel::ParamNames::EXP1_LIFETIME, &IqtTemplateBrowser::setExp1Lifetime },
+  { IqtFunctionModel::ParamNames::EXP2_HEIGHT, &IqtTemplateBrowser::setExp2Height },
+  { IqtFunctionModel::ParamNames::EXP2_LIFETIME, &IqtTemplateBrowser::setExp2Lifetime },
+  { IqtFunctionModel::ParamNames::STRETCH_HEIGHT, &IqtTemplateBrowser::setStretchHeight},
+  { IqtFunctionModel::ParamNames::STRETCH_LIFETIME, &IqtTemplateBrowser::setStretchLifetime },
+  { IqtFunctionModel::ParamNames::STRETCH_STRETCHING, &IqtTemplateBrowser::setStretchStretching },
+  { IqtFunctionModel::ParamNames::BG_A0, &IqtTemplateBrowser::setA0 }
+  };
+  auto values = m_model.getCurrentValues();
+  for (auto const value : values) {
+    (m_view->*setters.at(value.first))(value.second);
+  }
 }
 
 } // namespace IDA

@@ -12,6 +12,7 @@
 #include "MantidAPI/IFunction_fwd.h"
 
 #include <QMap>
+#include <boost/optional.hpp>
 
 namespace MantidQt {
 namespace CustomInterfaces {
@@ -41,14 +42,17 @@ public:
   void updateMultiDatasetParameters(const IFunction & fun);
   void setCurrentDataset(int i);
 
-  double getExp1Height() const;
-  double getExp1Lifetime() const;
-  double getExp2Lifetime() const;
-  double getExp2Height() const;
-  double getStretchHeight() const;
-  double getStretchLifetime() const;
-  double getStretchStretching() const;
-  double getA0() const;
+  enum class ParamNames {
+    EXP1_HEIGHT,
+    EXP1_LIFETIME,
+    EXP2_HEIGHT,
+    EXP2_LIFETIME,
+    STRETCH_HEIGHT,
+    STRETCH_LIFETIME,
+    STRETCH_STRETCHING,
+    BG_A0
+  };
+  std::map<ParamNames, double> getCurrentValues() const;
 
 private:
   QString buildFunctionString() const;
@@ -56,20 +60,19 @@ private:
   void setExponentialTwo(const IFunction&);
   void setStretchExponential(const IFunction&);
   void setBackground(const IFunction&);
-  QString getStretchPrefix() const;
+  boost::optional<QString> getExp1Prefix() const;
+  boost::optional<QString> getExp2Prefix() const;
+  boost::optional<QString> getStretchPrefix() const;
+  boost::optional<QString> getBackgroundPrefix() const;
+  void setParameter(ParamNames name, double value);
+  double getParameter(ParamNames name) const;
+  boost::optional<QString> getPrefix(ParamNames name) const;
+  void setCurrentValues(const std::map<ParamNames, double> &);
 
   MultiDomainFunctionModel m_model;
   int m_numberOfExponentials = 0;
   bool m_hasStretchExponential = false;
   QString m_background;
-  double m_exp1Height = 1.0;
-  double m_exp1Lifetime = 1.0;
-  double m_exp2Lifetime = 1.0;
-  double m_exp2Height = 1.0;
-  double m_stretchHeight = 1.0;
-  double m_stretchLifetime = 1.0;
-  double m_stretchStretching = 1.0;
-  double m_A0 = 0.0;
   bool m_isStretchGlobal = false;
 };
 
