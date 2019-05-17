@@ -93,11 +93,11 @@ void IqtFunctionModel::setFunction(const QString & funStr)
   if (fun->nFunctions() == 0) {
     auto const name = fun->name();
     if (name == "ExpDecay") {
-      setExponentialOne(*fun);
+      m_numberOfExponentials = 1;
     } else if (name == "StretchExp") {
-      setStretchExponential(*fun);
+      m_hasStretchExponential = true;
     } else if (name == "FlatBackground") {
-      setBackground(*fun);
+      m_background = QString::fromStdString(name);
     } else {
       throw std::runtime_error("Cannot set function " + name);
     }
@@ -115,23 +115,23 @@ void IqtFunctionModel::setFunction(const QString & funStr)
         throw std::runtime_error("Function has wrong structure.");
       }
       if (m_numberOfExponentials == 0) {
-        setExponentialOne(*f);
+        m_numberOfExponentials = 1;
       } else {
-        setExponentialTwo(*f);
+        m_numberOfExponentials = 2;
         areExponentialsSet = true;
       }
     } else if (name == "StretchExp") {
       if (isStretchSet) {
         throw std::runtime_error("Function has wrong structure.");
       }
-      setStretchExponential(*f);
+      m_hasStretchExponential = true;
       areExponentialsSet = true;
       isStretchSet = true;
     } else if (name == "FlatBackground") {
       if (isBackgroundSet) {
         throw std::runtime_error("Function has wrong structure.");
       }
-      setBackground(*f);
+      m_background = QString::fromStdString(name);
       areExponentialsSet = true;
       isStretchSet = true;
       isBackgroundSet = true;
@@ -150,7 +150,6 @@ IFunction_sptr IqtFunctionModel::getGlobalFunction() const
 IFunction_sptr IqtFunctionModel::getFunction() const
 {
   auto fun = m_model.getCurrentFunction();
-  std::cerr << ">>" << fun->asString() << std::endl;
   return m_model.getCurrentFunction();
 }
 
@@ -177,8 +176,6 @@ void IqtFunctionModel::setStretchingGlobal(bool on)
 void IqtFunctionModel::updateMultiDatasetParameters(const IFunction & fun)
 {
   m_model.updateMultiDatasetParameters(fun);
-  std::cerr << m_model.getFunctionString().toStdString() << std::endl;
-  setFunction(m_model.getFunctionString());
   setStretchingGlobal(m_isStretchGlobal);
 }
 
@@ -190,8 +187,9 @@ void IqtFunctionModel::setCurrentDataset(int i)
 void IqtFunctionModel::setParameter(ParamNames name, double value)
 {
   auto const prefix = getPrefix(name);
-  if (prefix)
+  if (prefix) {
     m_model.setParameter(*prefix + g_paramName.at(name), value);
+  }
 }
 
 double IqtFunctionModel::getParameter(ParamNames name) const
@@ -266,34 +264,6 @@ QString IqtFunctionModel::buildFunctionString() const
   return functions.join(";");
 }
 
-void IqtFunctionModel::setExponentialOne(const IFunction &fun)
-{
-  m_numberOfExponentials = 1;
-  setParameter(ParamNames::EXP1_HEIGHT, fun.getParameter("Height"));
-  setParameter(ParamNames::EXP1_LIFETIME, fun.getParameter("Lifetime"));
-}
-
-void IqtFunctionModel::setExponentialTwo(const IFunction &fun)
-{
-  m_numberOfExponentials = 2;
-  setParameter(ParamNames::EXP2_HEIGHT, fun.getParameter("Height"));
-  setParameter(ParamNames::EXP2_LIFETIME, fun.getParameter("Lifetime"));
-}
-
-void IqtFunctionModel::setStretchExponential(const IFunction &fun)
-{
-  m_hasStretchExponential = true;
-  setParameter(ParamNames::STRETCH_HEIGHT, fun.getParameter("Height"));
-  setParameter(ParamNames::STRETCH_LIFETIME, fun.getParameter("Lifetime"));
-  setParameter(ParamNames::STRETCH_STRETCHING, fun.getParameter("Stretching"));
-}
-
-void IqtFunctionModel::setBackground(const IFunction &fun)
-{
-  m_background = QString::fromStdString(fun.name());
-  setParameter(ParamNames::BG_A0, fun.getParameter("A0"));
-}
-
 boost::optional<QString> IqtFunctionModel::getExp1Prefix() const
 {
   if (m_numberOfExponentials == 0) return boost::optional<QString>();
@@ -320,7 +290,7 @@ boost::optional<QString> IqtFunctionModel::getBackgroundPrefix() const
   if (m_background.isEmpty()) return boost::optional<QString>();
   if (m_numberOfExponentials == 0 && !m_hasStretchExponential)
     return "";
-  return QString("f%1.").arg(m_numberOfExponentials + m_hasStretchExponential ? 1 : 0);
+  return QString("f%1.").arg(m_numberOfExponentials + (m_hasStretchExponential ? 1 : 0));
 }
 
 } // namespace IDA

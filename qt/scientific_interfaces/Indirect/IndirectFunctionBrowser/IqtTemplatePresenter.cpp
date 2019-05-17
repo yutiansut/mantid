@@ -137,7 +137,6 @@ void IqtTemplatePresenter::updateMultiDatasetParameters(const IFunction & fun)
 
 void IqtTemplatePresenter::setCurrentDataset(int i)
 {
-  std::cerr << "setCurrentDataset " << i << std::endl;
   m_model.setCurrentDataset(i);
   updateViewParameters();
 }

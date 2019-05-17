@@ -18,7 +18,7 @@ namespace MantidQt {
 namespace CustomInterfaces {
 namespace IDA {
 
-  using namespace Mantid::API;
+using namespace Mantid::API;
 using namespace MantidWidgets;
 
 class MANTIDQT_INDIRECT_DLL IqtFunctionModel {
@@ -56,10 +56,6 @@ public:
 
 private:
   QString buildFunctionString() const;
-  void setExponentialOne(const IFunction&);
-  void setExponentialTwo(const IFunction&);
-  void setStretchExponential(const IFunction&);
-  void setBackground(const IFunction&);
   boost::optional<QString> getExp1Prefix() const;
   boost::optional<QString> getExp2Prefix() const;
   boost::optional<QString> getStretchPrefix() const;

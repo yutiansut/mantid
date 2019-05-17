@@ -147,7 +147,11 @@ void MultiDomainFunctionModel::removeFunction(const QString &functionIndex) {
 
 void MultiDomainFunctionModel::setParameter(const QString &paramName,
                                             double value) {
-  getCurrentFunction()->setParameter(paramName.toStdString(), value);
+  auto fun = getCurrentFunction();
+  if (!fun) {
+    throw std::logic_error("Function is undefined.");
+  }
+  fun->setParameter(paramName.toStdString(), value);
 }
 
 void MultiDomainFunctionModel::setParamError(const QString &paramName,
