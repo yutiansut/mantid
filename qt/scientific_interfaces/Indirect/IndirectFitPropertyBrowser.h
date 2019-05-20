@@ -71,7 +71,7 @@ public:
 
   void updateParameters(const IFunction &fun);
   void updateMultiDatasetParameters(const IFunction &fun);
-  void updateMultiDatasetParameters(const IFunction & fun, const ITableWorkspace &params);
+  void updateMultiDatasetParameters(const ITableWorkspace &params);
   QString selectedFitType() const;
   void setConvolveMembers(bool convolveMembers);
   void setFitEnabled(bool enable);

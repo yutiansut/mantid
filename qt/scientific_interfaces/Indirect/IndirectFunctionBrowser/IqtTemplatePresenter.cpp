@@ -135,6 +135,12 @@ void IqtTemplatePresenter::updateMultiDatasetParameters(const IFunction & fun)
   updateViewParameters();
 }
 
+void IqtTemplatePresenter::updateMultiDatasetParameters(const ITableWorkspace & paramTable)
+{
+  m_model.updateMultiDatasetParameters(paramTable);
+  updateViewParameters();
+}
+
 void IqtTemplatePresenter::setCurrentDataset(int i)
 {
   m_model.setCurrentDataset(i);

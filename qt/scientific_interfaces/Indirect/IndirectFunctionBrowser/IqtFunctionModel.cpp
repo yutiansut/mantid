@@ -6,6 +6,7 @@
 // SPDX - License - Identifier: GPL - 3.0 +
 #include "IqtFunctionModel.h"
 #include "MantidAPI/IFunction.h"
+#include "MantidAPI/ITableWorkspace.h"
 #include "MantidAPI/FunctionFactory.h"
 #include <map>
 
@@ -177,6 +178,35 @@ void IqtFunctionModel::updateMultiDatasetParameters(const IFunction & fun)
 {
   m_model.updateMultiDatasetParameters(fun);
   setStretchingGlobal(m_isStretchGlobal);
+}
+
+void IqtFunctionModel::updateMultiDatasetParameters(const ITableWorkspace & paramTable)
+{
+  auto const nRows = paramTable.rowCount();
+  if (nRows == 0) return;
+
+  auto const globalParameterNames = getGlobalParameters();
+  for (auto &&name : globalParameterNames) {
+    auto valueColumn = paramTable.getColumn(name.toStdString());
+    auto errorColumn = paramTable.getColumn((name + "_Err").toStdString());
+    m_model.setParameter(name, valueColumn->toDouble(0));
+    m_model.setParamError(name, errorColumn->toDouble(0));
+  }
+
+  auto const localParameterNames = getLocalParameters();
+  for (auto &&name : localParameterNames) {
+    auto valueColumn = paramTable.getColumn(name.toStdString());
+    auto errorColumn = paramTable.getColumn((name + "_Err").toStdString());
+    if (nRows > 1) {
+      for (size_t i = 0; i < nRows; ++i) {
+        m_model.setLocalParameterValue(name, static_cast<int>(i), valueColumn->toDouble(i), errorColumn->toDouble(i));
+      }
+    }
+    else {
+      auto const i = m_model.currentDomainIndex();
+      m_model.setLocalParameterValue(name, static_cast<int>(i), valueColumn->toDouble(0), errorColumn->toDouble(0));
+    }
+  }
 }
 
 void IqtFunctionModel::setCurrentDataset(int i)

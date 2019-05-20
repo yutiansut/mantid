@@ -9,6 +9,7 @@
 
 #include "DllConfig.h"
 #include "MantidAPI/IFunction_fwd.h"
+#include "MantidAPI/ITableWorkspace_fwd.h"
 
 #include <QMap>
 #include <QWidget>
@@ -48,6 +49,7 @@ public:
   virtual QStringList getGlobalParameters() const = 0;
   virtual QStringList getLocalParameters() const = 0;
   virtual void updateMultiDatasetParameters(const IFunction & fun) = 0;
+  virtual void updateMultiDatasetParameters(const ITableWorkspace & paramTable) = 0;
   virtual void setCurrentDataset(int i) = 0;
 
 signals:

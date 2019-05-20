@@ -55,6 +55,7 @@ public:
   QStringList getGlobalParameters() const override;
   QStringList getLocalParameters() const override;
   void updateMultiDatasetParameters(const IFunction & fun) override;
+  void updateMultiDatasetParameters(const ITableWorkspace & paramTable) override;
   void setCurrentDataset(int i) override;
 
  protected slots:

@@ -10,6 +10,7 @@
 #include "MantidAPI/FuncMinimizerFactory.h"
 #include "MantidAPI/IAlgorithm.h"
 #include "MantidAPI/IFuncMinimizer.h"
+#include "MantidAPI/ITableWorkspace.h"
 #include "MantidAPI/IWorkspaceProperty.h"
 #include "MantidKernel/PropertyWithValue.h"
 
@@ -223,6 +224,11 @@ void IqtTemplateBrowser::parameterChanged(QtProperty *prop)
 void IqtTemplateBrowser::updateMultiDatasetParameters(const IFunction & fun)
 {
   m_presenter.updateMultiDatasetParameters(fun);
+}
+
+void IqtTemplateBrowser::updateMultiDatasetParameters(const ITableWorkspace & paramTable)
+{
+  m_presenter.updateMultiDatasetParameters(paramTable);
 }
 
 void IqtTemplateBrowser::setCurrentDataset(int i)

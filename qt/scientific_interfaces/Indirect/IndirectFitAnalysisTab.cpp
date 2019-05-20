@@ -392,12 +392,12 @@ void IndirectFitAnalysisTab::updateParameterValues(
 void IndirectFitAnalysisTab::updateFitBrowserParameterValues() {
   if (m_fittingAlgorithm) {
     MantidQt::API::SignalBlocker<QObject> blocker(m_fitPropertyBrowser);
-    IFunction_sptr fun = m_fittingAlgorithm->getProperty("Function");
     if (m_fittingModel->getFittingMode() == FittingMode::SEQUENTIAL) {
       auto const paramWsName = m_fittingAlgorithm->getPropertyValue("OutputParameterWorkspace");
       auto paramWs = AnalysisDataService::Instance().retrieveWS<ITableWorkspace>(paramWsName);
-      m_fitPropertyBrowser->updateMultiDatasetParameters(*fun, *paramWs);
+      m_fitPropertyBrowser->updateMultiDatasetParameters(*paramWs);
     } else {
+      IFunction_sptr fun = m_fittingAlgorithm->getProperty("Function");
       m_fitPropertyBrowser->updateMultiDatasetParameters(*fun);
     }
   }
