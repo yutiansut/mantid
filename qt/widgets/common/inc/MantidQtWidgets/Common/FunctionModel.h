@@ -52,6 +52,7 @@ public:
   virtual void setGlobalParameters(const QStringList &globals) = 0;
   virtual QStringList getLocalParameters() const = 0;
   virtual void updateMultiDatasetParameters(const IFunction &fun) = 0;
+  virtual void updateParameters(const IFunction &fun) = 0;
 };
 
 class EXPORT_OPT_MANTIDQT_COMMON MultiDomainFunctionModel
@@ -95,6 +96,7 @@ public:
   void setGlobalParameters(const QStringList &globals) override;
   QStringList getLocalParameters() const override;
   void updateMultiDatasetParameters(const IFunction &fun) override;
+  void updateParameters(const IFunction &fun) override;
 
 private:
   void checkIndex(int) const;

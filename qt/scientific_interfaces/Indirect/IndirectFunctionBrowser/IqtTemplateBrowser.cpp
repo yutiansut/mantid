@@ -39,6 +39,14 @@ namespace IDA {
 IqtTemplateBrowser::IqtTemplateBrowser(QWidget *parent)
     : FunctionTemplateBrowser(parent), m_presenter(this) {
   connect(&m_presenter, SIGNAL(functionStructureChanged()), this, SIGNAL(functionStructureChanged()));
+  m_parameterMap[m_exp1Height] = 0;
+  m_parameterMap[m_exp1Lifetime] = 1;
+  m_parameterMap[m_exp2Height] = 2;
+  m_parameterMap[m_exp2Lifetime] = 3;
+  m_parameterMap[m_stretchExpHeight] = 4;
+  m_parameterMap[m_stretchExpLifetime] = 5;
+  m_parameterMap[m_stretchExpStretching] = 6;
+  m_parameterMap[m_A0] = 7;
 }
 
 void IqtTemplateBrowser::addExponentialOne() {
@@ -221,6 +229,12 @@ void IqtTemplateBrowser::parameterChanged(QtProperty *prop)
   }
 }
 
+void IqtTemplateBrowser::parameterButtonClicked(QtProperty *prop)
+{
+  //std::cerr << "Local " << prop->propertyName().toStdString() << ' ' << m_actualParameterNames[prop].toStdString() << std::endl;
+  //emit localParameterButtonClicked(m_actualParameterNames[prop]);
+}
+
 void IqtTemplateBrowser::updateMultiDatasetParameters(const IFunction & fun)
 {
   m_presenter.updateMultiDatasetParameters(fun);
@@ -231,9 +245,23 @@ void IqtTemplateBrowser::updateMultiDatasetParameters(const ITableWorkspace & pa
   m_presenter.updateMultiDatasetParameters(paramTable);
 }
 
+void IqtTemplateBrowser::updateParameters(const IFunction & fun)
+{
+  m_presenter.updateParameters(fun);
+}
+
 void IqtTemplateBrowser::setCurrentDataset(int i)
 {
   m_presenter.setCurrentDataset(i);
+}
+
+void IqtTemplateBrowser::updateParameterNames(const QMap<int, QString>& parameterNames)
+{
+  m_actualParameterNames.clear();
+  for (auto const prop : m_parameterMap.keys()) {
+    auto const i = m_parameterMap[prop];
+    m_actualParameterNames[prop] = parameterNames[i];
+  }
 }
 
 void IqtTemplateBrowser::createProperties()

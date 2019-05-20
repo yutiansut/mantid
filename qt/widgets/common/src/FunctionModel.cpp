@@ -396,6 +396,17 @@ void MultiDomainFunctionModel::updateMultiDatasetParameters(
   }
 }
 
+void MultiDomainFunctionModel::updateParameters(const IFunction &fun) {
+  if (!hasFunction())
+    return;
+  auto currentFun = getCurrentFunction();
+  assert(currentFun->nParams() == fun.nParams());
+  for (size_t i = 0; i < fun.nParams(); ++i) {
+    currentFun->setParameter(i, fun.getParameter(i));
+    currentFun->setError(i, fun.getError(i));
+  }
+}
+
 void MultiDomainFunctionModel::updateGlobals() {
   auto const fun = getCurrentFunction();
   for (auto it = m_globalParameterNames.begin();

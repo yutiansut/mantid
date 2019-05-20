@@ -198,7 +198,10 @@ int IndirectFitPropertyBrowser::getNumberOfDatasets() const
 }
 
 void IndirectFitPropertyBrowser::updateParameters(const IFunction &fun) {
-  m_functionBrowser->updateParameters(fun);
+  if (isFullFunctionBrowserActive())
+    m_functionBrowser->updateParameters(fun);
+  else
+    m_templateBrowser->updateParameters(fun);
 }
 
 void IndirectFitPropertyBrowser::updateMultiDatasetParameters(const IFunction & fun) {

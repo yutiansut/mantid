@@ -398,7 +398,10 @@ void IndirectFitAnalysisTab::updateFitBrowserParameterValues() {
       m_fitPropertyBrowser->updateMultiDatasetParameters(*paramWs);
     } else {
       IFunction_sptr fun = m_fittingAlgorithm->getProperty("Function");
-      m_fitPropertyBrowser->updateMultiDatasetParameters(*fun);
+      if (fun->getNumberDomains() > 1)
+        m_fitPropertyBrowser->updateMultiDatasetParameters(*fun);
+      else
+        m_fitPropertyBrowser->updateParameters(*fun);
     }
   }
 }

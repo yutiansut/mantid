@@ -26,9 +26,8 @@ class FunctionMultiDomainPresenter;
 class EXPORT_OPT_MANTIDQT_COMMON EditLocalParameterDialog : public QDialog {
   Q_OBJECT
 public:
-  EditLocalParameterDialog(QWidget *parent,
-                           FunctionMultiDomainPresenter *funcBrowser,
-                           const QString &parName, const QStringList &wsNames);
+  EditLocalParameterDialog(QWidget *parent, const QString &parName, const QStringList &wsNames,
+    QList<double> values, QList<bool> fixes, QStringList ties);
   void doSetup(const QString &parName, const QStringList &wsNames);
   QString getParameterName() const { return m_parName; }
   QList<double> getValues() const;

@@ -91,6 +91,11 @@ void FunctionTemplateBrowser::createBrowser()
   connect(m_parameterManager, SIGNAL(propertyChanged(QtProperty *)), this,
     SLOT(parameterChanged(QtProperty *)));
 
+  connect(doubleDialogFactory, SIGNAL(buttonClicked(QtProperty *)), this,
+    SLOT(parameterButtonClicked(QtProperty *)));
+  connect(doubleDialogFactory, SIGNAL(closeEditor()), m_browser,
+    SLOT(closeEditor()));
+
   m_browser->setContextMenuPolicy(Qt::CustomContextMenu);
   connect(m_browser, SIGNAL(customContextMenuRequested(const QPoint &)), this,
     SLOT(popupMenu(const QPoint &)));

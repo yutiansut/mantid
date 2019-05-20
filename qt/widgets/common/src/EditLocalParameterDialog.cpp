@@ -30,22 +30,15 @@ namespace MantidWidgets {
  * @param parName :: [input] Name of parameter to edit in this dialog
  * @param wsNames :: [input] Names of workspaces being fitted
  */
-EditLocalParameterDialog::EditLocalParameterDialog(
-    QWidget *parent, FunctionMultiDomainPresenter *funcBrowser,
-    const QString &parName, const QStringList &wsNames)
-    : QDialog(parent), m_parName(parName) {
+EditLocalParameterDialog::EditLocalParameterDialog(QWidget *parent, const QString &parName, const QStringList &wsNames,
+                                                   QList<double> values, QList<bool> fixes, QStringList ties)
+    : QDialog(parent), m_parName(parName), m_values(values), m_fixes(fixes), m_ties(ties) {
+  const int n = wsNames.size();
+  assert(values.size() == n);
+  assert(fixes.size() == n);
+  assert(ties.size() == n);
   m_uiForm.setupUi(this);
   setAttribute(Qt::WA_DeleteOnClose);
-  const int n = funcBrowser->getNumberOfDatasets();
-  for (int i = 0; i < n; ++i) {
-    const double value = funcBrowser->getLocalParameterValue(parName, i);
-    m_values.push_back(value);
-    const bool fixed = funcBrowser->isLocalParameterFixed(parName, i);
-    m_fixes.push_back(fixed);
-    const auto tie = funcBrowser->getLocalParameterTie(parName, i);
-    m_ties.push_back(tie);
-  }
-
   doSetup(parName, wsNames);
 }
 

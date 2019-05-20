@@ -16,6 +16,9 @@
 class QtProperty;
 
 namespace MantidQt {
+namespace MantidWidgets {
+class EditLocalParameterDialog;
+}
 namespace CustomInterfaces {
 namespace IDA {
 
@@ -43,15 +46,29 @@ public:
   void setStretchingGlobal(bool on);
   void updateMultiDatasetParameters(const IFunction & fun);
   void updateMultiDatasetParameters(const ITableWorkspace & paramTable);
+  void updateParameters(const IFunction &fun);
   void setCurrentDataset(int i);
 
 signals:
   void functionStructureChanged();
 
+private slots:
+  void editLocalParameter(const QString &parName);
+  void editLocalParameterFinish(int result);
+
 private:
   void updateViewParameters();
+  QStringList getDatasetNames() const;
+  double getLocalParameterValue(const QString &parName, int i) const;
+  bool isLocalParameterFixed(const QString &parName, int i) const;
+  QString getLocalParameterTie(const QString &parName, int i) const;
+  void setLocalParameterValue(const QString &parName, int i, double value);
+  void setLocalParameterFixed(const QString &parName, int i, bool fixed);
+  void setLocalParameterTie(const QString &parName, int i, const QString &tie);
+  void updateViewParameterNames();
   IqtTemplateBrowser *m_view;
   IqtFunctionModel m_model;
+  EditLocalParameterDialog *m_editLocalParameterDialog;
 };
 
 } // namespace IDA

@@ -42,7 +42,15 @@ public:
   void setStretchingGlobal(bool on);
   void updateMultiDatasetParameters(const IFunction & fun);
   void updateMultiDatasetParameters(const ITableWorkspace & paramTable);
+  void updateParameters(const IFunction &fun);
   void setCurrentDataset(int i);
+  QStringList getDatasetNames() const;
+  double getLocalParameterValue(const QString &parName, int i) const;
+  bool isLocalParameterFixed(const QString &parName, int i) const;
+  QString getLocalParameterTie(const QString &parName, int i) const;
+  void setLocalParameterValue(const QString &parName, int i, double value);
+  void setLocalParameterFixed(const QString &parName, int i, bool fixed);
+  void setLocalParameterTie(const QString &parName, int i, const QString &tie);
 
   enum class ParamNames {
     EXP1_HEIGHT,
@@ -54,7 +62,8 @@ public:
     STRETCH_STRETCHING,
     BG_A0
   };
-  std::map<ParamNames, double> getCurrentValues() const;
+  QMap<ParamNames, double> getCurrentValues() const;
+  QMap<int, QString> getParameterMap() const;
 
 private:
   QString buildFunctionString() const;
@@ -64,8 +73,10 @@ private:
   boost::optional<QString> getBackgroundPrefix() const;
   void setParameter(ParamNames name, double value);
   double getParameter(ParamNames name) const;
+  QString getParameterName(ParamNames name) const;
   boost::optional<QString> getPrefix(ParamNames name) const;
-  void setCurrentValues(const std::map<ParamNames, double> &);
+  void setCurrentValues(const QMap<ParamNames, double> &);
+  void applyParameterFunction(std::function<void(ParamNames)> paramFun) const;
 
   MultiDomainFunctionModel m_model;
   int m_numberOfExponentials = 0;

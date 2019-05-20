@@ -209,9 +209,53 @@ void IqtFunctionModel::updateMultiDatasetParameters(const ITableWorkspace & para
   }
 }
 
+void IqtFunctionModel::updateParameters(const IFunction & fun)
+{
+  m_model.updateParameters(fun);
+}
+
 void IqtFunctionModel::setCurrentDataset(int i)
 {
   m_model.setCurrentDomainIndex(i);
+}
+
+QStringList IqtFunctionModel::getDatasetNames() const
+{
+  QStringList names;
+  for (int i = 0; i < getNumberOfDatasets(); ++i) {
+    names << QString::number(i);
+  }
+  return names;
+}
+
+double IqtFunctionModel::getLocalParameterValue(const QString & parName, int i) const
+{
+  return m_model.getLocalParameterValue(parName, i);
+}
+
+bool IqtFunctionModel::isLocalParameterFixed(const QString & parName, int i) const
+{
+  return m_model.isLocalParameterFixed(parName, i);
+}
+
+QString IqtFunctionModel::getLocalParameterTie(const QString & parName, int i) const
+{
+  return m_model.getLocalParameterTie(parName, i);
+}
+
+void IqtFunctionModel::setLocalParameterValue(const QString & parName, int i, double value)
+{
+  m_model.setLocalParameterValue(parName, i, value);
+}
+
+void IqtFunctionModel::setLocalParameterTie(const QString & parName, int i, const QString & tie)
+{
+  m_model.setLocalParameterTie(parName, i, tie);
+}
+
+void IqtFunctionModel::setLocalParameterFixed(const QString & parName, int i, bool fixed)
+{
+  m_model.setLocalParameterFixed(parName, i, fixed);
 }
 
 void IqtFunctionModel::setParameter(ParamNames name, double value)
@@ -224,7 +268,12 @@ void IqtFunctionModel::setParameter(ParamNames name, double value)
 
 double IqtFunctionModel::getParameter(ParamNames name) const
 {
-  return m_model.getParameter(*getPrefix(name) + g_paramName.at(name));
+  return m_model.getParameter(getParameterName(name));
+}
+
+QString IqtFunctionModel::getParameterName(ParamNames name) const
+{
+  return *getPrefix(name) + g_paramName.at(name);
 }
 
 boost::optional<QString> IqtFunctionModel::getPrefix(ParamNames name) const
@@ -240,33 +289,46 @@ boost::optional<QString> IqtFunctionModel::getPrefix(ParamNames name) const
   }
 }
 
-std::map<IqtFunctionModel::ParamNames, double> IqtFunctionModel::getCurrentValues() const
+QMap<IqtFunctionModel::ParamNames, double> IqtFunctionModel::getCurrentValues() const
 {
-  std::map<ParamNames, double> values;
+  QMap<ParamNames, double> values;
   auto store = [&values, this](ParamNames name) {values[name] = getParameter(name); };
-  if (m_numberOfExponentials > 0) {
-    store(ParamNames::EXP1_HEIGHT);
-    store(ParamNames::EXP1_LIFETIME);
-  }
-  if (m_numberOfExponentials > 1) {
-    store(ParamNames::EXP2_HEIGHT);
-    store(ParamNames::EXP2_LIFETIME);
-  }
-  if (m_hasStretchExponential) {
-    store(ParamNames::STRETCH_HEIGHT);
-    store(ParamNames::STRETCH_LIFETIME);
-    store(ParamNames::STRETCH_STRETCHING);
-  }
-  if (!m_background.isEmpty()) {
-    store(ParamNames::BG_A0);
-  }
+  applyParameterFunction(store);
   return values;
 }
 
-void IqtFunctionModel::setCurrentValues(const std::map<ParamNames, double>& values)
+QMap<int, QString> IqtFunctionModel::getParameterMap() const
 {
-  for (auto const v : values) {
-    setParameter(v.first, v.second);
+  QMap<int, QString> out;
+  auto addToMap = [&out, this](ParamNames name) {out[static_cast<int>(name)] = getParameterName(name); };
+  applyParameterFunction(addToMap);
+  return out;
+}
+
+void IqtFunctionModel::setCurrentValues(const QMap<ParamNames, double>& values)
+{
+  for (auto const name : values.keys()) {
+    setParameter(name, values[name]);
+  }
+}
+
+void IqtFunctionModel::applyParameterFunction(std::function<void(ParamNames)> paramFun) const
+{
+  if (m_numberOfExponentials > 0) {
+    paramFun(ParamNames::EXP1_HEIGHT);
+    paramFun(ParamNames::EXP1_LIFETIME);
+  }
+  if (m_numberOfExponentials > 1) {
+    paramFun(ParamNames::EXP2_HEIGHT);
+    paramFun(ParamNames::EXP2_LIFETIME);
+  }
+  if (m_hasStretchExponential) {
+    paramFun(ParamNames::STRETCH_HEIGHT);
+    paramFun(ParamNames::STRETCH_LIFETIME);
+    paramFun(ParamNames::STRETCH_STRETCHING);
+  }
+  if (!m_background.isEmpty()) {
+    paramFun(ParamNames::BG_A0);
   }
 }
 

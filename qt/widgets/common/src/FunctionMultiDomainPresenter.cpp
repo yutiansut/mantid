@@ -338,8 +338,22 @@ void FunctionMultiDomainPresenter::viewChangedParameter(
  * @param parName :: Name of parameter that button was clicked for.
  */
 void FunctionMultiDomainPresenter::editLocalParameter(const QString &parName) {
+  auto const wsNames = m_model->getDatasetNames();
+  QList<double> values;
+  QList<bool> fixes;
+  QStringList ties;
+  const int n = wsNames.size();
+  for (int i = 0; i < n; ++i) {
+    const double value = getLocalParameterValue(parName, i);
+    values.push_back(value);
+    const bool fixed = isLocalParameterFixed(parName, i);
+    fixes.push_back(fixed);
+    const auto tie = getLocalParameterTie(parName, i);
+    ties.push_back(tie);
+  }
+
   m_editLocalParameterDialog = new EditLocalParameterDialog(
-      m_view, this, parName, m_model->getDatasetNames());
+      m_view, parName, wsNames, values, fixes, ties);
   connect(m_editLocalParameterDialog, SIGNAL(finished(int)), this,
           SLOT(editLocalParameterFinish(int)));
   m_editLocalParameterDialog->open();

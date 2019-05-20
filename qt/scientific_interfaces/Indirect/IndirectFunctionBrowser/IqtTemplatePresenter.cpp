@@ -6,6 +6,7 @@
 // SPDX - License - Identifier: GPL - 3.0 +
 #include "IqtTemplatePresenter.h"
 #include "IqtTemplateBrowser.h"
+#include "MantidQtWidgets/Common/EditLocalParameterDialog.h"
 
 #include <iostream>
 
@@ -13,12 +14,15 @@ namespace MantidQt {
 namespace CustomInterfaces {
 namespace IDA {
 
+using namespace MantidWidgets;
+
 /**
  * Constructor
  * @param parent :: The parent widget.
  */
 IqtTemplatePresenter::IqtTemplatePresenter(IqtTemplateBrowser *view)
     : QObject(view), m_view(view) {
+  connect(m_view, SIGNAL(localParameterButtonClicked(const QString &)), this, SLOT(editLocalParameter(const QString &)));
 }
 
 void IqtTemplatePresenter::setNumberOfExponentials(int n) {
@@ -58,6 +62,7 @@ void IqtTemplatePresenter::setNumberOfExponentials(int n) {
   }
   assert(nCurrent == n);
   m_model.setNumberOfExponentials(n);
+  updateViewParameterNames();
   updateViewParameters();
   emit functionStructureChanged();
 }
@@ -71,6 +76,7 @@ void IqtTemplatePresenter::setStretchExponential(bool on)
     m_view->removeStretchExponential();
   }
   m_model.setStretchExponential(on);
+  updateViewParameterNames();
   emit functionStructureChanged();
 }
 
@@ -85,6 +91,7 @@ void IqtTemplatePresenter::setBackground(const QString & name)
   } else {
     throw std::logic_error("Browser doesn't support background " + name.toStdString());
   }
+  updateViewParameterNames();
   emit functionStructureChanged();
 }
 
@@ -101,6 +108,7 @@ int IqtTemplatePresenter::getNumberOfDatasets() const
 void IqtTemplatePresenter::setFunction(const QString & funStr)
 {
   m_model.setFunction(funStr);
+  updateViewParameterNames();
   emit functionStructureChanged();
 }
 
@@ -141,6 +149,12 @@ void IqtTemplatePresenter::updateMultiDatasetParameters(const ITableWorkspace & 
   updateViewParameters();
 }
 
+void IqtTemplatePresenter::updateParameters(const IFunction & fun)
+{
+  m_model.updateParameters(fun);
+  updateViewParameters();
+}
+
 void IqtTemplatePresenter::setCurrentDataset(int i)
 {
   m_model.setCurrentDataset(i);
@@ -160,9 +174,95 @@ void IqtTemplatePresenter::updateViewParameters()
   { IqtFunctionModel::ParamNames::BG_A0, &IqtTemplateBrowser::setA0 }
   };
   auto values = m_model.getCurrentValues();
-  for (auto const value : values) {
-    (m_view->*setters.at(value.first))(value.second);
+  for (auto const name : values.keys()) {
+    (m_view->*setters.at(name))(values[name]);
   }
+}
+
+QStringList IqtTemplatePresenter::getDatasetNames() const
+{
+  return m_model.getDatasetNames();
+}
+
+double IqtTemplatePresenter::getLocalParameterValue(const QString & parName, int i) const
+{
+  return m_model.getLocalParameterValue(parName, i);
+}
+
+bool IqtTemplatePresenter::isLocalParameterFixed(const QString & parName, int i) const
+{
+  return m_model.isLocalParameterFixed(parName, i);
+}
+
+QString IqtTemplatePresenter::getLocalParameterTie(const QString & parName, int i) const
+{
+  return m_model.getLocalParameterTie(parName, i);
+}
+
+void IqtTemplatePresenter::setLocalParameterValue(const QString & parName, int i, double value)
+{
+  m_model.setLocalParameterValue(parName, i, value);
+}
+
+void IqtTemplatePresenter::setLocalParameterTie(const QString & parName, int i, const QString & tie)
+{
+  m_model.setLocalParameterTie(parName, i, tie);
+}
+
+void IqtTemplatePresenter::updateViewParameterNames()
+{
+  m_view->updateParameterNames(m_model.getParameterMap());
+}
+
+void IqtTemplatePresenter::setLocalParameterFixed(const QString & parName, int i, bool fixed)
+{
+  m_model.setLocalParameterFixed(parName, i, fixed);
+}
+
+void IqtTemplatePresenter::editLocalParameter(const QString &parName) {
+  std::cerr << "Edit " << parName.toStdString() << std::endl;
+  auto const wsNames = getDatasetNames();
+  QList<double> values;
+  QList<bool> fixes;
+  QStringList ties;
+  const int n = wsNames.size();
+  for (int i = 0; i < n; ++i) {
+    const double value = getLocalParameterValue(parName, i);
+    values.push_back(value);
+    const bool fixed = isLocalParameterFixed(parName, i);
+    fixes.push_back(fixed);
+    const auto tie = getLocalParameterTie(parName, i);
+    ties.push_back(tie);
+  }
+
+  m_editLocalParameterDialog = new EditLocalParameterDialog(
+    m_view, parName, wsNames, values, fixes, ties);
+  connect(m_editLocalParameterDialog, SIGNAL(finished(int)), this,
+    SLOT(editLocalParameterFinish(int)));
+  m_editLocalParameterDialog->open();
+}
+
+void IqtTemplatePresenter::editLocalParameterFinish(int result) {
+  if (result == QDialog::Accepted) {
+    auto parName = m_editLocalParameterDialog->getParameterName();
+    auto values = m_editLocalParameterDialog->getValues();
+    auto fixes = m_editLocalParameterDialog->getFixes();
+    auto ties = m_editLocalParameterDialog->getTies();
+    assert(values.size() == getNumberOfDatasets());
+    for (int i = 0; i < values.size(); ++i) {
+      setLocalParameterValue(parName, i, values[i]);
+      if (!ties[i].isEmpty()) {
+        setLocalParameterTie(parName, i, ties[i]);
+      }
+      else if (fixes[i]) {
+        setLocalParameterFixed(parName, i, fixes[i]);
+      }
+      else {
+        setLocalParameterTie(parName, i, "");
+      }
+    }
+  }
+  m_editLocalParameterDialog = nullptr;
 }
 
 } // namespace IDA

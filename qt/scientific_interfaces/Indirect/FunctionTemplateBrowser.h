@@ -50,10 +50,13 @@ public:
   virtual QStringList getLocalParameters() const = 0;
   virtual void updateMultiDatasetParameters(const IFunction & fun) = 0;
   virtual void updateMultiDatasetParameters(const ITableWorkspace & paramTable) = 0;
+  virtual void updateParameters(const IFunction &fun) = 0;
   virtual void setCurrentDataset(int i) = 0;
+  virtual void updateParameterNames(const QMap<int, QString> &parameterNames) = 0;
 
 signals:
   void functionStructureChanged();
+  void localParameterButtonClicked(const QString &paramName);
 
 protected slots:
   virtual void intChanged(QtProperty *) {}
@@ -62,6 +65,7 @@ protected slots:
   virtual void popupMenu(const QPoint &) = 0;
   virtual void globalChanged(QtProperty *, const QString &, bool) = 0;
   virtual void parameterChanged(QtProperty *) = 0;
+  virtual void parameterButtonClicked(QtProperty *) = 0;
 
 private:
   void createBrowser();

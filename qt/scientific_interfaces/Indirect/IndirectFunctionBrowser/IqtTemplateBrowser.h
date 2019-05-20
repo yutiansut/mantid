@@ -56,7 +56,9 @@ public:
   QStringList getLocalParameters() const override;
   void updateMultiDatasetParameters(const IFunction & fun) override;
   void updateMultiDatasetParameters(const ITableWorkspace & paramTable) override;
+  void updateParameters(const IFunction &fun) override;
   void setCurrentDataset(int i) override;
+  void updateParameterNames(const QMap<int, QString> &parameterNames) override;
 
  protected slots:
   void intChanged(QtProperty *) override;
@@ -64,6 +66,7 @@ public:
   void enumChanged(QtProperty *) override;
   void globalChanged(QtProperty *, const QString &, bool) override;
   void parameterChanged(QtProperty *) override;
+  void parameterButtonClicked(QtProperty *) override;
 
 private:
   void createProperties() override;
@@ -81,6 +84,8 @@ private:
   QtProperty *m_stretchExpStretching = nullptr;
   QtProperty *m_background;
   QtProperty *m_A0 = nullptr;
+  QMap<QtProperty*, int> m_parameterMap;
+  QMap<QtProperty*, QString> m_actualParameterNames;
 
 private:
   IqtTemplatePresenter m_presenter;
