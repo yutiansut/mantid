@@ -164,6 +164,14 @@ QStringList IqtFunctionModel::getLocalParameters() const
   return m_model.getLocalParameters();
 }
 
+bool IqtFunctionModel::isGlobal(const QString &parName) const
+{
+  if (parName == getParameterName(ParamNames::STRETCH_STRETCHING)) {
+    return m_isStretchGlobal;
+  }
+  return false;
+}
+
 void IqtFunctionModel::setStretchingGlobal(bool on)
 {
   m_isStretchGlobal = on;
@@ -219,13 +227,19 @@ void IqtFunctionModel::setCurrentDataset(int i)
   m_model.setCurrentDomainIndex(i);
 }
 
+int IqtFunctionModel::getCurrentDataset() const
+{
+  return m_model.currentDomainIndex();
+}
+
+void IqtFunctionModel::setDatasetNames(const QStringList & names)
+{
+  m_model.setDatasetNames(names);
+}
+
 QStringList IqtFunctionModel::getDatasetNames() const
 {
-  QStringList names;
-  for (int i = 0; i < getNumberOfDatasets(); ++i) {
-    names << QString::number(i);
-  }
-  return names;
+  return m_model.getDatasetNames();
 }
 
 double IqtFunctionModel::getLocalParameterValue(const QString & parName, int i) const

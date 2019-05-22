@@ -46,6 +46,7 @@ public:
   virtual IFunction_sptr getFunction() const = 0;
   virtual void setNumberOfDatasets(int) = 0;
   virtual int getNumberOfDatasets() const = 0;
+  virtual void setDatasetNames(const QStringList &names) = 0;
   virtual QStringList getGlobalParameters() const = 0;
   virtual QStringList getLocalParameters() const = 0;
   virtual void updateMultiDatasetParameters(const IFunction & fun) = 0;
@@ -57,6 +58,7 @@ public:
 signals:
   void functionStructureChanged();
   void localParameterButtonClicked(const QString &paramName);
+  void parameterValueChanged(const QString &paramName, double value);
 
 protected slots:
   virtual void intChanged(QtProperty *) {}

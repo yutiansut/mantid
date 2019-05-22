@@ -39,11 +39,14 @@ public:
   IFunction_sptr getFunction() const;
   QStringList getGlobalParameters() const;
   QStringList getLocalParameters() const;
+  bool isGlobal(const QString &parName) const;
   void setStretchingGlobal(bool on);
   void updateMultiDatasetParameters(const IFunction & fun);
   void updateMultiDatasetParameters(const ITableWorkspace & paramTable);
   void updateParameters(const IFunction &fun);
   void setCurrentDataset(int i);
+  int getCurrentDataset() const;
+  void setDatasetNames(const QStringList &names);
   QStringList getDatasetNames() const;
   double getLocalParameterValue(const QString &parName, int i) const;
   bool isLocalParameterFixed(const QString &parName, int i) const;

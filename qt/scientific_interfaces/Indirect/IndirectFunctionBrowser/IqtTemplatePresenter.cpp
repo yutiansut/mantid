@@ -23,6 +23,7 @@ using namespace MantidWidgets;
 IqtTemplatePresenter::IqtTemplatePresenter(IqtTemplateBrowser *view)
     : QObject(view), m_view(view) {
   connect(m_view, SIGNAL(localParameterButtonClicked(const QString &)), this, SLOT(editLocalParameter(const QString &)));
+  connect(m_view, SIGNAL(parameterValueChanged(const QString &, double)), this, SLOT(viewChangedParameterValue(const QString &, double)));
 }
 
 void IqtTemplatePresenter::setNumberOfExponentials(int n) {
@@ -161,6 +162,11 @@ void IqtTemplatePresenter::setCurrentDataset(int i)
   updateViewParameters();
 }
 
+void IqtTemplatePresenter::setDatasetNames(const QStringList & names)
+{
+  m_model.setDatasetNames(names);
+}
+
 void IqtTemplatePresenter::updateViewParameters()
 {
   static std::map<IqtFunctionModel::ParamNames, void (IqtTemplateBrowser::*)(double)> setters{
@@ -220,7 +226,6 @@ void IqtTemplatePresenter::setLocalParameterFixed(const QString & parName, int i
 }
 
 void IqtTemplatePresenter::editLocalParameter(const QString &parName) {
-  std::cerr << "Edit " << parName.toStdString() << std::endl;
   auto const wsNames = getDatasetNames();
   QList<double> values;
   QList<bool> fixes;
@@ -263,6 +268,21 @@ void IqtTemplatePresenter::editLocalParameterFinish(int result) {
     }
   }
   m_editLocalParameterDialog = nullptr;
+  updateViewParameters();
+  emit functionStructureChanged();
+}
+
+void IqtTemplatePresenter::viewChangedParameterValue(const QString & parName, double value)
+{
+  if (m_model.isGlobal(parName)) {
+    auto const n = getNumberOfDatasets();
+    for (int i = 0; i < n; ++i) {
+      setLocalParameterValue(parName, i, value);
+    }
+  } else {
+    setLocalParameterValue(parName, m_model.getCurrentDataset(), value);
+  }
+  emit functionStructureChanged();
 }
 
 } // namespace IDA

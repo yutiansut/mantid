@@ -218,35 +218,82 @@ boost::optional<Spectra> IndirectDataTablePresenter::getSpectra(int start,
 boost::optional<int>
 IndirectDataTablePresenter::getRowIndex(std::size_t dataIndex,
                                         int spectrumIndex) const {
-  const auto position = m_dataPositions[dataIndex] + spectrumIndex;
-  if (getNextPosition(dataIndex) > position)
-    return position;
+  if (!m_dataPositions.empty()) {
+    const auto position = m_dataPositions[dataIndex] + spectrumIndex;
+    if (getNextPosition(dataIndex) > position)
+      return position;
+  }
   return boost::none;
 }
 
 void IndirectDataTablePresenter::setStartX(double startX, std::size_t dataIndex,
                                            int spectrumIndex) {
+  auto const row = getRowIndex(dataIndex, spectrumIndex);
+  if (FittingMode::SEQUENTIAL == m_model->getFittingMode() || !row)
+    setStartX(startX);
+  else if (row)
+    setStartX(startX, *row);
+}
+
+void IndirectDataTablePresenter::setStartX(double startX, int index) {
+  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
   if (FittingMode::SEQUENTIAL == m_model->getFittingMode())
     setStartX(startX);
-  else if (auto row = getRowIndex(dataIndex, spectrumIndex))
-    setStartX(startX, *row);
+  else
+    m_dataTable->item(index, startXColumn())->setText(makeNumber(startX));
+}
+
+void IndirectDataTablePresenter::setStartX(double startX) {
+  setColumnValues(startXColumn(), makeNumber(startX));
 }
 
 void IndirectDataTablePresenter::setEndX(double endX, std::size_t dataIndex,
                                          int spectrumIndex) {
+  auto const row = getRowIndex(dataIndex, spectrumIndex);
+  if (FittingMode::SEQUENTIAL == m_model->getFittingMode() || !row)
+    setEndX(endX);
+  else if (row)
+    setEndX(endX, *row);
+}
+
+void IndirectDataTablePresenter::setEndX(double endX, int index) {
+  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
   if (FittingMode::SEQUENTIAL == m_model->getFittingMode())
     setEndX(endX);
-  else if (auto row = getRowIndex(dataIndex, spectrumIndex))
-    setEndX(endX, *row);
+  else
+    m_dataTable->item(index, endXColumn())->setText(makeNumber(endX));
+}
+
+void IndirectDataTablePresenter::setEndX(double endX) {
+  setColumnValues(endXColumn(), makeNumber(endX));
 }
 
 void IndirectDataTablePresenter::setExclude(const std::string &exclude,
                                             std::size_t dataIndex,
                                             int spectrumIndex) {
+  auto const row = getRowIndex(dataIndex, spectrumIndex);
+  if (FittingMode::SEQUENTIAL == m_model->getFittingMode() || !row)
+    setExcludeRegion(exclude);
+  else if (row)
+    setExcludeRegion(exclude, *row);
+}
+
+void IndirectDataTablePresenter::setExcludeRegion(const std::string &exclude,
+  int index) {
+  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
   if (FittingMode::SEQUENTIAL == m_model->getFittingMode())
     setExcludeRegion(exclude);
-  else if (auto row = getRowIndex(dataIndex, spectrumIndex))
-    setExcludeRegion(exclude, *row);
+  else
+    m_dataTable->item(index, excludeColumn())
+    ->setText(QString::fromStdString(exclude));
+}
+
+void IndirectDataTablePresenter::setExcludeRegion(const std::string &exclude) {
+  setExcludeRegion(QString::fromStdString(exclude));
+}
+
+void IndirectDataTablePresenter::setExcludeRegion(const QString &exclude) {
+  setColumnValues(excludeColumn(), exclude);
 }
 
 void IndirectDataTablePresenter::addData(std::size_t index) {
@@ -444,48 +491,6 @@ void IndirectDataTablePresenter::disableTable() {
 void IndirectDataTablePresenter::clearTable() {
   m_dataTable->setRowCount(0);
   m_dataPositions.clear();
-}
-
-void IndirectDataTablePresenter::setStartX(double startX, int index) {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
-  if (FittingMode::SEQUENTIAL == m_model->getFittingMode())
-    setStartX(startX);
-  else
-    m_dataTable->item(index, startXColumn())->setText(makeNumber(startX));
-}
-
-void IndirectDataTablePresenter::setEndX(double endX, int index) {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
-  if (FittingMode::SEQUENTIAL == m_model->getFittingMode())
-    setEndX(endX);
-  else
-    m_dataTable->item(index, endXColumn())->setText(makeNumber(endX));
-}
-
-void IndirectDataTablePresenter::setExcludeRegion(const std::string &exclude,
-                                                  int index) {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
-  if (FittingMode::SEQUENTIAL == m_model->getFittingMode())
-    setExcludeRegion(exclude);
-  else
-    m_dataTable->item(index, excludeColumn())
-        ->setText(QString::fromStdString(exclude));
-}
-
-void IndirectDataTablePresenter::setStartX(double startX) {
-  setColumnValues(startXColumn(), makeNumber(startX));
-}
-
-void IndirectDataTablePresenter::setEndX(double endX) {
-  setColumnValues(endXColumn(), makeNumber(endX));
-}
-
-void IndirectDataTablePresenter::setExcludeRegion(const std::string &exclude) {
-  setExcludeRegion(QString::fromStdString(exclude));
-}
-
-void IndirectDataTablePresenter::setExcludeRegion(const QString &exclude) {
-  setColumnValues(excludeColumn(), exclude);
 }
 
 void IndirectDataTablePresenter::setColumnValues(int column,

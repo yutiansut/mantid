@@ -39,6 +39,29 @@ namespace IDA {
 IqtTemplateBrowser::IqtTemplateBrowser(QWidget *parent)
     : FunctionTemplateBrowser(parent), m_presenter(this) {
   connect(&m_presenter, SIGNAL(functionStructureChanged()), this, SIGNAL(functionStructureChanged()));
+}
+
+void IqtTemplateBrowser::createProperties()
+{
+  m_parameterManager->blockSignals(true);
+  m_exp1Height = m_parameterManager->addProperty("f0.Height");
+  m_parameterManager->setDecimals(m_exp1Height, 6);
+  m_exp1Lifetime = m_parameterManager->addProperty("f0.Lifetime");
+  m_parameterManager->setDecimals(m_exp1Lifetime, 6);
+  m_exp2Height = m_parameterManager->addProperty("f1.Height");
+  m_parameterManager->setDecimals(m_exp2Height, 6);
+  m_exp2Lifetime = m_parameterManager->addProperty("f1.Lifetime");
+  m_parameterManager->setDecimals(m_exp2Lifetime, 6);
+  m_stretchExpHeight = m_parameterManager->addProperty("Height");
+  m_parameterManager->setDecimals(m_stretchExpHeight, 6);
+  m_stretchExpLifetime = m_parameterManager->addProperty("Lifetime");
+  m_parameterManager->setDecimals(m_stretchExpLifetime, 6);
+  m_stretchExpStretching = m_parameterManager->addProperty("Stretching");
+  m_parameterManager->setDecimals(m_stretchExpStretching, 6);
+  m_A0 = m_parameterManager->addProperty("A0");
+  m_parameterManager->setDecimals(m_A0, 6);
+  m_parameterManager->blockSignals(false);
+
   m_parameterMap[m_exp1Height] = 0;
   m_parameterMap[m_exp1Lifetime] = 1;
   m_parameterMap[m_exp2Height] = 2;
@@ -47,13 +70,22 @@ IqtTemplateBrowser::IqtTemplateBrowser(QWidget *parent)
   m_parameterMap[m_stretchExpLifetime] = 5;
   m_parameterMap[m_stretchExpStretching] = 6;
   m_parameterMap[m_A0] = 7;
+
+  m_numberOfExponentials = m_intManager->addProperty("Exponentials");
+  m_intManager->setMinimum(m_numberOfExponentials, 0);
+  m_intManager->setMaximum(m_numberOfExponentials, 2);
+  m_browser->addProperty(m_numberOfExponentials);
+
+  m_stretchExponential = m_boolManager->addProperty("Stretch Exponential");
+  m_browser->addProperty(m_stretchExponential);
+
+  m_background = m_enumManager->addProperty("Background");
+  QStringList backgrounds; backgrounds << "None" << "FlatBackground";
+  m_enumManager->setEnumNames(m_background, backgrounds);
+  m_browser->addProperty(m_background);
 }
 
 void IqtTemplateBrowser::addExponentialOne() {
-  m_exp1Height = m_parameterManager->addProperty("f0.Height");
-  m_parameterManager->setDecimals(m_exp1Height, 6);
-  m_exp1Lifetime = m_parameterManager->addProperty("f0.Lifetime");
-  m_parameterManager->setDecimals(m_exp1Lifetime, 6);
   m_numberOfExponentials->addSubProperty(m_exp1Height);
   m_numberOfExponentials->addSubProperty(m_exp1Lifetime);
 }
@@ -61,15 +93,10 @@ void IqtTemplateBrowser::addExponentialOne() {
 void IqtTemplateBrowser::removeExponentialOne() {
   m_numberOfExponentials->removeSubProperty(m_exp1Height);
   m_numberOfExponentials->removeSubProperty(m_exp1Lifetime);
-  m_exp1Height = m_exp1Lifetime = nullptr;
 }
 
 void IqtTemplateBrowser::addExponentialTwo()
 {
-  m_exp2Height = m_parameterManager->addProperty("f1.Height");
-  m_parameterManager->setDecimals(m_exp2Height, 6);
-  m_exp2Lifetime = m_parameterManager->addProperty("f1.Lifetime");
-  m_parameterManager->setDecimals(m_exp2Lifetime, 6);
   m_numberOfExponentials->addSubProperty(m_exp2Height);
   m_numberOfExponentials->addSubProperty(m_exp2Lifetime);
 }
@@ -78,18 +105,10 @@ void IqtTemplateBrowser::removeExponentialTwo()
 {
   m_numberOfExponentials->removeSubProperty(m_exp2Height);
   m_numberOfExponentials->removeSubProperty(m_exp2Lifetime);
-  m_exp2Height = m_exp2Lifetime = nullptr;
 }
 
 void IqtTemplateBrowser::addStretchExponential()
 {
-  if (m_stretchExpHeight) return;
-  m_stretchExpHeight = m_parameterManager->addProperty("Height");
-  m_parameterManager->setDecimals(m_stretchExpHeight, 6);
-  m_stretchExpLifetime = m_parameterManager->addProperty("Lifetime");
-  m_parameterManager->setDecimals(m_stretchExpLifetime, 6);
-  m_stretchExpStretching = m_parameterManager->addProperty("Stretching");
-  m_parameterManager->setDecimals(m_stretchExpStretching, 6);
   m_stretchExponential->addSubProperty(m_stretchExpHeight);
   m_stretchExponential->addSubProperty(m_stretchExpLifetime);
   m_stretchExponential->addSubProperty(m_stretchExpStretching);
@@ -97,26 +116,19 @@ void IqtTemplateBrowser::addStretchExponential()
 
 void IqtTemplateBrowser::removeStretchExponential()
 {
-  if (!m_stretchExpHeight) return;
   m_stretchExponential->removeSubProperty(m_stretchExpHeight);
   m_stretchExponential->removeSubProperty(m_stretchExpLifetime);
   m_stretchExponential->removeSubProperty(m_stretchExpStretching);
-  m_stretchExpHeight = m_stretchExpLifetime = m_stretchExpStretching = nullptr;
 }
 
 void IqtTemplateBrowser::addFlatBackground()
 {
-  if (m_A0) return;
-  m_A0 = m_parameterManager->addProperty("A0");
-  m_parameterManager->setDecimals(m_A0, 6);
   m_background->addSubProperty(m_A0);
 }
 
 void IqtTemplateBrowser::removeBackground()
 {
-  if (!m_A0) return;
   m_background->removeSubProperty(m_A0);
-  m_A0 = nullptr;
 }
 
 void IqtTemplateBrowser::setExp1Height(double value)
@@ -184,6 +196,11 @@ int IqtTemplateBrowser::getNumberOfDatasets() const
   return m_presenter.getNumberOfDatasets();
 }
 
+void IqtTemplateBrowser::setDatasetNames(const QStringList & names)
+{
+  m_presenter.setDatasetNames(names);
+}
+
 QStringList IqtTemplateBrowser::getGlobalParameters() const
 {
   return m_presenter.getGlobalParameters();
@@ -227,12 +244,12 @@ void IqtTemplateBrowser::parameterChanged(QtProperty *prop)
     m_presenter.setStretchingGlobal(isGlobal);
     emit functionStructureChanged();
   }
+  emit parameterValueChanged(m_actualParameterNames[prop], m_parameterManager->value(prop));
 }
 
 void IqtTemplateBrowser::parameterButtonClicked(QtProperty *prop)
 {
-  //std::cerr << "Local " << prop->propertyName().toStdString() << ' ' << m_actualParameterNames[prop].toStdString() << std::endl;
-  //emit localParameterButtonClicked(m_actualParameterNames[prop]);
+  emit localParameterButtonClicked(m_actualParameterNames[prop]);
 }
 
 void IqtTemplateBrowser::updateMultiDatasetParameters(const IFunction & fun)
@@ -262,22 +279,6 @@ void IqtTemplateBrowser::updateParameterNames(const QMap<int, QString>& paramete
     auto const i = m_parameterMap[prop];
     m_actualParameterNames[prop] = parameterNames[i];
   }
-}
-
-void IqtTemplateBrowser::createProperties()
-{
-  m_numberOfExponentials = m_intManager->addProperty("Exponentials");
-  m_intManager->setMinimum(m_numberOfExponentials, 0);
-  m_intManager->setMaximum(m_numberOfExponentials, 2);
-  m_browser->addProperty(m_numberOfExponentials);
-
-  m_stretchExponential = m_boolManager->addProperty("Stretch Exponential");
-  m_browser->addProperty(m_stretchExponential);
-
-  m_background = m_enumManager->addProperty("Background");
-  QStringList backgrounds; backgrounds << "None" << "FlatBackground";
-  m_enumManager->setEnumNames(m_background, backgrounds);
-  m_browser->addProperty(m_background);
 }
 
 void IqtTemplateBrowser::popupMenu(const QPoint &) {

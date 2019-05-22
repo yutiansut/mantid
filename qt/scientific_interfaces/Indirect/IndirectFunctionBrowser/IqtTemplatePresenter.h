@@ -48,6 +48,7 @@ public:
   void updateMultiDatasetParameters(const ITableWorkspace & paramTable);
   void updateParameters(const IFunction &fun);
   void setCurrentDataset(int i);
+  void setDatasetNames(const QStringList &names);
 
 signals:
   void functionStructureChanged();
@@ -55,6 +56,7 @@ signals:
 private slots:
   void editLocalParameter(const QString &parName);
   void editLocalParameterFinish(int result);
+  void viewChangedParameterValue(const QString &parName, double value);
 
 private:
   void updateViewParameters();

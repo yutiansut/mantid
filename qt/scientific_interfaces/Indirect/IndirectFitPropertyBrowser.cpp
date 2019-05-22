@@ -269,6 +269,7 @@ void IndirectFitPropertyBrowser::updateFunctionBrowserData(size_t nData, const Q
   m_functionBrowser->setNumberOfDatasets(static_cast<int>(nData));
   m_functionBrowser->setDatasetNames(datasetNames);
   m_templateBrowser->setNumberOfDatasets(static_cast<int>(nData));
+  m_templateBrowser->setDatasetNames(datasetNames);
 }
 
 void IndirectFitPropertyBrowser::setFitEnabled(bool enable) {
