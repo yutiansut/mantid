@@ -89,13 +89,13 @@ private:
   VALUE_TYPE m_type;
 
   // This is where the actual value is stored
-  union {
+  
     bool m_bool;
     double m_num;
     std::unique_ptr<std::string> mp_string;
     std::unique_ptr<JSONArray> mp_array;
     std::unique_ptr<JSONObject> mp_object;
-  };
+  
 };
 
 class DLLExport JSONException : public std::exception {
