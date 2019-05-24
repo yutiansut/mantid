@@ -356,13 +356,13 @@ QString IqtFunctionModel::buildFunctionString() const
 {
   QStringList functions;
   if (m_numberOfExponentials > 0) {
-    functions << "name=ExpDecay,Height=1,Lifetime=1";
+    functions << "name=ExpDecay,Height=1,Lifetime=1,constraints = (Height > 0, Lifetime > 0)";
   }
   if (m_numberOfExponentials > 1) {
-    functions << "name=ExpDecay,Height=1,Lifetime=1";
+    functions << "name=ExpDecay,Height=1,Lifetime=1,constraints=(Height>0,Lifetime>0)";
   }
   if (m_hasStretchExponential) {
-    functions << "name=StretchExp,Height=1,Lifetime=1,Stretching=1";
+    functions << "name=StretchExp,Height=1,Lifetime=1,Stretching=1,constraints=(Height>0,Lifetime>0,0<Stretching<=1.1)";
   }
   if (!m_background.isEmpty()) {
     functions << "name=FlatBackground,A0=0";
