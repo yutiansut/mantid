@@ -97,7 +97,7 @@ public:
   /// Update the function parameter value
   void setParameter(const QString &paramName, double value) override;
   /// Update the function parameter error
-  void setParamError(const QString &paramName, double error) override;
+  void setParameterError(const QString &paramName, double error) override;
   /// Get a value of a parameter
   double getParameter(const QString &paramName) const override;
   /// Set error display on/off

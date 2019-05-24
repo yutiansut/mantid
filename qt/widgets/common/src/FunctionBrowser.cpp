@@ -108,8 +108,8 @@ void FunctionBrowser::setParameter(const QString &paramName, double value) {
  * @param paramName :: Fully qualified parameter name (includes function index)
  * @param error :: New error
  */
-void FunctionBrowser::setParamError(const QString &paramName, double error) {
-  m_presenter->setParamError(paramName, error);
+void FunctionBrowser::setParameterError(const QString &paramName, double error) {
+  m_presenter->setParameterError(paramName, error);
 }
 
 /**
@@ -263,7 +263,7 @@ void FunctionBrowser::updateMultiDatasetParameters(const ITableWorkspace & param
     auto valueColumn = paramTable.getColumn(name.toStdString());
     auto errorColumn = paramTable.getColumn((name + "_Err").toStdString());
     setParameter(name, valueColumn->toDouble(0));
-    setParamError(name, errorColumn->toDouble(0));
+    setParameterError(name, errorColumn->toDouble(0));
   }
 
   auto const localParameterNames = getLocalParameters();

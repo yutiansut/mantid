@@ -40,7 +40,7 @@ public:
   QString getFitFunctionString() const;
   bool hasFunction() const;
   void setParameter(const QString &paramName, double value);
-  void setParamError(const QString &paramName, double value);
+  void setParameterError(const QString &paramName, double value);
   double getParameter(const QString &paramName);
   bool isParameterFixed(const QString &parName) const;
   QString getParameterTie(const QString &parName) const;

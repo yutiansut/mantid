@@ -41,8 +41,9 @@ ParameterPropertyManager::description(const QtProperty *property) const {
   // Cast for searching purposes
   auto prop = const_cast<QtProperty *>(property);
 
-  if (!m_descriptions.contains(prop))
+  if (!m_descriptions.contains(prop)) {
     throw std::runtime_error("Parameter doesn't have description set");
+  }
 
   return m_descriptions[prop];
 }

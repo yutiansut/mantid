@@ -68,7 +68,7 @@ public:
   /// Update the function parameter value
   void setParameter(const QString &paramName, double value);
   /// Update the function parameter error
-  void setParamError(const QString &paramName, double error);
+  void setParameterError(const QString &paramName, double error);
   /// Get a value of a parameter
   double getParameter(const QString &paramName) const;
   /// Update parameter values in the browser to match those of a function.

@@ -38,14 +38,14 @@ public:
   void addFlatBackground();
   void removeBackground();
 
-  void setExp1Height(double);
-  void setExp1Lifetime(double);
-  void setExp2Height(double);
-  void setExp2Lifetime(double);
-  void setStretchHeight(double);
-  void setStretchLifetime(double);
-  void setStretchStretching(double);
-  void setA0(double);
+  void setExp1Height(double, double);
+  void setExp1Lifetime(double, double);
+  void setExp2Height(double, double);
+  void setExp2Lifetime(double, double);
+  void setStretchHeight(double, double);
+  void setStretchLifetime(double, double);
+  void setStretchStretching(double, double);
+  void setA0(double, double);
 
   void setFunction(const QString &funStr) override;
   IFunction_sptr getGlobalFunction() const override;
@@ -60,6 +60,7 @@ public:
   void updateParameters(const IFunction &fun) override;
   void setCurrentDataset(int i) override;
   void updateParameterNames(const QMap<int, QString> &parameterNames) override;
+  void updateParameterDescriptions(const QMap<int, std::string> &parameterNames) override;
 
  protected slots:
   void intChanged(QtProperty *) override;
@@ -72,7 +73,7 @@ public:
 private:
   void createProperties() override;
   void popupMenu(const QPoint &);
-  void setParameterPropertyValue(QtProperty *prop, double value);
+  void setParameterPropertyValue(QtProperty *prop, double value, double error);
 
   QtProperty *m_numberOfExponentials;
   QtProperty *m_exp1Height = nullptr;
@@ -87,6 +88,7 @@ private:
   QtProperty *m_A0 = nullptr;
   QMap<QtProperty*, int> m_parameterMap;
   QMap<QtProperty*, QString> m_actualParameterNames;
+  QMap<QtProperty*, std::string> m_parameterDescriptions;
 
 private:
   IqtTemplatePresenter m_presenter;

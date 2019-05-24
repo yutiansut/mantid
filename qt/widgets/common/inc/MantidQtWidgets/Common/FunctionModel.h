@@ -32,9 +32,10 @@ public:
   virtual void addFunction(const QString &prefix, const QString &funStr) = 0;
   virtual void removeFunction(const QString &functionIndex) = 0;
   virtual void setParameter(const QString &paramName, double value) = 0;
-  virtual void setParamError(const QString &paramName, double value) = 0;
+  virtual void setParameterError(const QString &paramName, double value) = 0;
   virtual double getParameter(const QString &paramName) const = 0;
-  virtual double getParamError(const QString &paramName) const = 0;
+  virtual double getParameterError(const QString &paramName) const = 0;
+  virtual QString getParameterDescription(const QString &paramName) const = 0;
   virtual QStringList getParameterNames() const = 0;
   virtual IFunction_sptr getSingleFunction(int index) const = 0;
   virtual IFunction_sptr getCurrentFunction() const = 0;
@@ -64,9 +65,10 @@ public:
   void addFunction(const QString &prefix, const QString &funStr) override;
   void removeFunction(const QString &functionIndex) override;
   void setParameter(const QString &paramName, double value) override;
-  void setParamError(const QString &paramName, double value) override;
+  void setParameterError(const QString &paramName, double value) override;
   double getParameter(const QString &paramName) const override;
-  double getParamError(const QString &paramName) const override;
+  double getParameterError(const QString &paramName) const override;
+  QString getParameterDescription(const QString &paramName) const override;
   bool isParameterFixed(const QString &parName) const;
   QString getParameterTie(const QString &parName) const;
   void setParameterFixed(const QString &parName, bool fixed);

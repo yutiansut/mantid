@@ -49,6 +49,7 @@ public:
   void updateParameters(const IFunction &fun);
   void setCurrentDataset(int i);
   void setDatasetNames(const QStringList &names);
+  void setViewParameterDescriptions();
 
 signals:
   void functionStructureChanged();

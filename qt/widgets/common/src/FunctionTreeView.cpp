@@ -1372,7 +1372,7 @@ void FunctionTreeView::setParameter(const QString &paramName, double value) {
  * @param paramName :: Parameter name
  * @param error :: New error
  */
-void FunctionTreeView::setParamError(const QString &paramName, double error) {
+void FunctionTreeView::setParameterError(const QString &paramName, double error) {
   QString index, name;
   std::tie(index, name) = splitParameterName(paramName);
   if (auto prop = getFunctionProperty(index)) {

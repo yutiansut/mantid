@@ -154,7 +154,7 @@ void MultiDomainFunctionModel::setParameter(const QString &paramName,
   fun->setParameter(paramName.toStdString(), value);
 }
 
-void MultiDomainFunctionModel::setParamError(const QString &paramName,
+void MultiDomainFunctionModel::setParameterError(const QString &paramName,
                                              double value) {
   auto fun = getCurrentFunction();
   auto const index = fun->parameterIndex(paramName.toStdString());
@@ -165,10 +165,16 @@ double MultiDomainFunctionModel::getParameter(const QString &paramName) const {
   return getCurrentFunction()->getParameter(paramName.toStdString());
 }
 
-double MultiDomainFunctionModel::getParamError(const QString &paramName) const {
+double MultiDomainFunctionModel::getParameterError(const QString &paramName) const {
   auto fun = getCurrentFunction();
   auto const index = fun->parameterIndex(paramName.toStdString());
   return fun->getError(index);
+}
+
+QString MultiDomainFunctionModel::getParameterDescription(const QString &paramName) const {
+  auto fun = getCurrentFunction();
+  auto const index = fun->parameterIndex(paramName.toStdString());
+  return QString::fromStdString(fun->parameterDescription(index));
 }
 
 bool MultiDomainFunctionModel::isParameterFixed(const QString &parName) const {

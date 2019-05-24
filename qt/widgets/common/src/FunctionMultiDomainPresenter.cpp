@@ -85,10 +85,10 @@ void FunctionMultiDomainPresenter::setParameter(const QString &paramName,
   m_view->setParameter(paramName, value);
 }
 
-void FunctionMultiDomainPresenter::setParamError(const QString &paramName,
+void FunctionMultiDomainPresenter::setParameterError(const QString &paramName,
                                                  double value) {
-  m_model->setParamError(paramName, value);
-  m_view->setParamError(paramName, value);
+  m_model->setParameterError(paramName, value);
+  m_view->setParameterError(paramName, value);
 }
 
 double FunctionMultiDomainPresenter::getParameter(const QString &paramName) {
@@ -111,7 +111,7 @@ void FunctionMultiDomainPresenter::updateParameters(const IFunction &fun) {
     const QString qName = QString::fromStdString(parameter);
     setParameter(qName, fun.getParameter(parameter));
     const size_t index = fun.parameterIndex(parameter);
-    setParamError(qName, fun.getError(index));
+    setParameterError(qName, fun.getError(index));
   }
 }
 
@@ -124,7 +124,7 @@ void FunctionMultiDomainPresenter::updateMultiDatasetParameters(
     const QString qName = QString::fromStdString(parameter);
     m_view->setParameter(qName, currentFun->getParameter(parameter));
     const size_t index = currentFun->parameterIndex(parameter);
-    m_view->setParamError(qName, currentFun->getError(index));
+    m_view->setParameterError(qName, currentFun->getError(index));
   }
 }
 
@@ -162,7 +162,7 @@ void FunctionMultiDomainPresenter::setCurrentDataset(int index) {
   for (auto const name : m_model->getParameterNames()) {
     auto const value = m_model->getParameter(name);
     m_view->setParameter(name, value);
-    m_view->setParamError(name, m_model->getParamError(name));
+    m_view->setParameterError(name, m_model->getParameterError(name));
     if (m_model->isLocalParameterFixed(name, index)) {
       m_view->setParameterTie(name, QString::number(value));
     } else {
@@ -217,7 +217,7 @@ void FunctionMultiDomainPresenter::setLocalParameterValue(
   m_model->setLocalParameterValue(parName, i, value, error);
   if (m_model->currentDomainIndex() == i) {
     m_view->setParameter(parName, value);
-    m_view->setParamError(parName, error);
+    m_view->setParameterError(parName, error);
   }
 }
 

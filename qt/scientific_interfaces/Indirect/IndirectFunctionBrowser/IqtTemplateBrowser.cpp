@@ -60,7 +60,6 @@ void IqtTemplateBrowser::createProperties()
   m_parameterManager->setDecimals(m_stretchExpStretching, 6);
   m_A0 = m_parameterManager->addProperty("A0");
   m_parameterManager->setDecimals(m_A0, 6);
-  m_parameterManager->blockSignals(false);
 
   m_parameterMap[m_exp1Height] = 0;
   m_parameterMap[m_exp1Lifetime] = 1;
@@ -70,6 +69,18 @@ void IqtTemplateBrowser::createProperties()
   m_parameterMap[m_stretchExpLifetime] = 5;
   m_parameterMap[m_stretchExpStretching] = 6;
   m_parameterMap[m_A0] = 7;
+
+  m_presenter.setViewParameterDescriptions();
+
+  m_parameterManager->setDescription(m_exp1Height, m_parameterDescriptions[m_exp1Height]);
+  m_parameterManager->setDescription(m_exp1Lifetime, m_parameterDescriptions[m_exp1Lifetime]);
+  m_parameterManager->setDescription(m_exp2Height, m_parameterDescriptions[m_exp2Height]);
+  m_parameterManager->setDescription(m_exp2Lifetime, m_parameterDescriptions[m_exp2Lifetime]);
+  m_parameterManager->setDescription(m_stretchExpHeight, m_parameterDescriptions[m_stretchExpHeight]);
+  m_parameterManager->setDescription(m_stretchExpLifetime, m_parameterDescriptions[m_stretchExpLifetime]);
+  m_parameterManager->setDescription(m_stretchExpStretching, m_parameterDescriptions[m_stretchExpStretching]);
+  m_parameterManager->setDescription(m_A0, m_parameterDescriptions[m_A0]);
+  m_parameterManager->blockSignals(false);
 
   m_numberOfExponentials = m_intManager->addProperty("Exponentials");
   m_intManager->setMinimum(m_numberOfExponentials, 0);
@@ -131,44 +142,44 @@ void IqtTemplateBrowser::removeBackground()
   m_background->removeSubProperty(m_A0);
 }
 
-void IqtTemplateBrowser::setExp1Height(double value)
+void IqtTemplateBrowser::setExp1Height(double value, double error)
 {
-  setParameterPropertyValue(m_exp1Height, value);
+  setParameterPropertyValue(m_exp1Height, value, error);
 }
 
-void IqtTemplateBrowser::setExp1Lifetime(double value)
+void IqtTemplateBrowser::setExp1Lifetime(double value, double error)
 {
-  setParameterPropertyValue(m_exp1Lifetime, value);
+  setParameterPropertyValue(m_exp1Lifetime, value, error);
 }
 
-void IqtTemplateBrowser::setExp2Height(double value)
+void IqtTemplateBrowser::setExp2Height(double value, double error)
 {
-  setParameterPropertyValue(m_exp2Height, value);
+  setParameterPropertyValue(m_exp2Height, value, error);
 }
 
-void IqtTemplateBrowser::setExp2Lifetime(double value)
+void IqtTemplateBrowser::setExp2Lifetime(double value, double error)
 {
-  setParameterPropertyValue(m_exp2Lifetime, value);
+  setParameterPropertyValue(m_exp2Lifetime, value, error);
 }
 
-void IqtTemplateBrowser::setStretchHeight(double value)
+void IqtTemplateBrowser::setStretchHeight(double value, double error)
 {
-  setParameterPropertyValue(m_stretchExpHeight, value);
+  setParameterPropertyValue(m_stretchExpHeight, value, error);
 }
 
-void IqtTemplateBrowser::setStretchLifetime(double value)
+void IqtTemplateBrowser::setStretchLifetime(double value, double error)
 {
-  setParameterPropertyValue(m_stretchExpLifetime, value);
+  setParameterPropertyValue(m_stretchExpLifetime, value, error);
 }
 
-void IqtTemplateBrowser::setStretchStretching(double value)
+void IqtTemplateBrowser::setStretchStretching(double value, double error)
 {
-  setParameterPropertyValue(m_stretchExpStretching, value);
+  setParameterPropertyValue(m_stretchExpStretching, value, error);
 }
 
-void IqtTemplateBrowser::setA0(double value)
+void IqtTemplateBrowser::setA0(double value, double error)
 {
-  setParameterPropertyValue(m_A0, value);
+  setParameterPropertyValue(m_A0, value, error);
 }
 
 void IqtTemplateBrowser::setFunction(const QString & funStr)
@@ -281,13 +292,25 @@ void IqtTemplateBrowser::updateParameterNames(const QMap<int, QString>& paramete
   }
 }
 
+void IqtTemplateBrowser::updateParameterDescriptions(const QMap<int, std::string>& parameterDescriptions)
+{
+  m_parameterDescriptions.clear();
+  for (auto const prop : m_parameterMap.keys()) {
+    auto const i = m_parameterMap[prop];
+    m_parameterDescriptions[prop] = parameterDescriptions[i];
+  }
+}
+
 void IqtTemplateBrowser::popupMenu(const QPoint &) {
   std::cerr << "Popup" << std::endl;
 }
 
-void IqtTemplateBrowser::setParameterPropertyValue(QtProperty * prop, double value)
+void IqtTemplateBrowser::setParameterPropertyValue(QtProperty * prop, double value, double error)
 {
-  if (prop) m_parameterManager->setValue(prop, value);
+  if (prop) {
+    m_parameterManager->setValue(prop, value);
+    m_parameterManager->setError(prop, error);
+  }
 }
 
 } // namespace IDA

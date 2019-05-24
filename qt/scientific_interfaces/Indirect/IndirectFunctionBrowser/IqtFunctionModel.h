@@ -66,7 +66,9 @@ public:
     BG_A0
   };
   QMap<ParamNames, double> getCurrentValues() const;
-  QMap<int, QString> getParameterMap() const;
+  QMap<ParamNames, double> getCurrentErrors() const;
+  QMap<int, QString> getParameterNameMap() const;
+  QMap<int, std::string> getParameterDescriptionMap() const;
 
 private:
   QString buildFunctionString() const;
@@ -75,11 +77,16 @@ private:
   boost::optional<QString> getStretchPrefix() const;
   boost::optional<QString> getBackgroundPrefix() const;
   void setParameter(ParamNames name, double value);
-  double getParameter(ParamNames name) const;
-  QString getParameterName(ParamNames name) const;
+  boost::optional<double> getParameter(ParamNames name) const;
+  boost::optional<double> getParameterError(ParamNames name) const;
+  boost::optional<QString> getParameterName(ParamNames name) const;
+  boost::optional<QString> getParameterDescription(ParamNames name) const;
   boost::optional<QString> getPrefix(ParamNames name) const;
   void setCurrentValues(const QMap<ParamNames, double> &);
   void applyParameterFunction(std::function<void(ParamNames)> paramFun) const;
+  std::string buildExpDecayFunctionString() const;
+  std::string buildStretchExpFunctionString() const;
+  std::string buildBackgroundFunctionString() const;
 
   MultiDomainFunctionModel m_model;
   int m_numberOfExponentials = 0;

@@ -32,7 +32,7 @@ public:
   virtual void setFunction(IFunction_sptr fun) = 0;
   virtual bool hasFunction() const = 0;
   virtual void setParameter(const QString &paramName, double value) = 0;
-  virtual void setParamError(const QString &paramName, double error) = 0;
+  virtual void setParameterError(const QString &paramName, double error) = 0;
   virtual double getParameter(const QString &paramName) const = 0;
   virtual void setErrorsEnabled(bool enabled) = 0;
   virtual void clearErrors() = 0;

@@ -64,6 +64,7 @@ void FunctionTemplateBrowser::createBrowser()
   m_enumManager = new QtEnumPropertyManager(this);
   m_groupManager = new QtGroupPropertyManager(this);
   m_parameterManager = new ParameterPropertyManager(this, true);
+  m_parameterManager->setErrorsEnabled(true);
 
   // create editor factories
   QtSpinBoxFactory *spinBoxFactory = new QtSpinBoxFactory(this);

@@ -167,9 +167,14 @@ void IqtTemplatePresenter::setDatasetNames(const QStringList & names)
   m_model.setDatasetNames(names);
 }
 
+void IqtTemplatePresenter::setViewParameterDescriptions()
+{
+  m_view->updateParameterDescriptions(m_model.getParameterDescriptionMap());
+}
+
 void IqtTemplatePresenter::updateViewParameters()
 {
-  static std::map<IqtFunctionModel::ParamNames, void (IqtTemplateBrowser::*)(double)> setters{
+  static std::map<IqtFunctionModel::ParamNames, void (IqtTemplateBrowser::*)(double, double)> setters{
   { IqtFunctionModel::ParamNames::EXP1_HEIGHT, &IqtTemplateBrowser::setExp1Height },
   { IqtFunctionModel::ParamNames::EXP1_LIFETIME, &IqtTemplateBrowser::setExp1Lifetime },
   { IqtFunctionModel::ParamNames::EXP2_HEIGHT, &IqtTemplateBrowser::setExp2Height },
@@ -180,8 +185,9 @@ void IqtTemplatePresenter::updateViewParameters()
   { IqtFunctionModel::ParamNames::BG_A0, &IqtTemplateBrowser::setA0 }
   };
   auto values = m_model.getCurrentValues();
+  auto errors = m_model.getCurrentErrors();
   for (auto const name : values.keys()) {
-    (m_view->*setters.at(name))(values[name]);
+    (m_view->*setters.at(name))(values[name], errors[name]);
   }
 }
 
@@ -217,7 +223,7 @@ void IqtTemplatePresenter::setLocalParameterTie(const QString & parName, int i, 
 
 void IqtTemplatePresenter::updateViewParameterNames()
 {
-  m_view->updateParameterNames(m_model.getParameterMap());
+  m_view->updateParameterNames(m_model.getParameterNameMap());
 }
 
 void IqtTemplatePresenter::setLocalParameterFixed(const QString & parName, int i, bool fixed)
