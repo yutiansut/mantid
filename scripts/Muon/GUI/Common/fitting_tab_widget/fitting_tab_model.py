@@ -12,8 +12,8 @@ from mantid.simpleapi import RenameWorkspace
 
 
 class FittingTabModel(object):
-    def __init__(self):
-        pass
+    def __init__(self, context):
+        self.context = context
 
     def do_single_fit(self, parameter_dict):
         output_workspace, fitting_parameters_table, function_string = self.do_single_fit_and_return_workspace_parameters_and_fit_function(
@@ -25,7 +25,8 @@ class FittingTabModel(object):
                                                                  parameter_dict['Function'])
 
         self.add_workspace_to_ADS(output_workspace, workspace_name, directory)
-        self.add_workspace_to_ADS(fitting_parameters_table, table_name, directory)
+        wrapped_parameter_workspace = self.add_workspace_to_ADS(fitting_parameters_table, table_name, directory)
+        self.add_fit_to_context(wrapped_parameter_workspace, parameter_dict['Function'], parameter_dict['InputWorkspace'])
 
         return function_string
 
@@ -36,6 +37,7 @@ class FittingTabModel(object):
     def add_workspace_to_ADS(self, workspace, name, directory):
         workspace_wrapper = MuonWorkspaceWrapper(workspace, directory + name)
         workspace_wrapper.show()
+        return workspace_wrapper
 
     def create_fitted_workspace_name(self, input_workspace_name, function_name):
         directory = get_fit_workspace_base_directory()
@@ -65,7 +67,9 @@ class FittingTabModel(object):
 
         self.add_workspace_to_ADS(output_workspace, workspace_name, directory)
         self.rename_members_of_fitted_workspace_group(output_workspace, parameter_dict['InputWorkspace'], parameter_dict['Function'])
-        self.add_workspace_to_ADS(fitting_parameters_table, table_name, directory)
+        wrapped_parameter_workspace = self.add_workspace_to_ADS(fitting_parameters_table, table_name, directory)
+        self.add_fit_to_context(wrapped_parameter_workspace, parameter_dict['Function'],
+                                parameter_dict['InputWorkspace'])
 
     def do_simultaneous_fit_and_return_workspace_parameters_and_fit_function(self, parameters_dict):
         alg = mantid.AlgorithmManager.create("Fit")
@@ -93,3 +97,6 @@ class FittingTabModel(object):
             return function.getFunction(0).name()
         else:
             return function.name()
+
+    def add_fit_to_context(self, parameter_workspace, function, input_workspace):
+        self.context.fitting_context.add_fit_from_values(parameter_workspace, self.get_function_name(function), input_workspace)
