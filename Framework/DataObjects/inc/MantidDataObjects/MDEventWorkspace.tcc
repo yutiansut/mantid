@@ -850,19 +850,18 @@ Setter for the masking region.
 @param maskingRegion : Implicit function defining mask region.
 */
 TMDE(void MDEventWorkspace)::setMDMasking(
-    Mantid::Geometry::MDImplicitFunction *maskingRegion) {
+    std::unique_ptr<Mantid::Geometry::MDImplicitFunction> maskingRegion) {
   if (maskingRegion) {
     std::vector<API::IMDNode *> toMaskBoxes;
 
     // Apply new masks
-    this->data->getBoxes(toMaskBoxes, 10000, true, maskingRegion);
+    this->data->getBoxes(toMaskBoxes, 10000, true, maskingRegion.get());
     for (const auto box : toMaskBoxes) {
       box->clear();
       box->clearFileBacked(false);
       box->mask();
     }
 
-    delete maskingRegion;
   }
 }
 

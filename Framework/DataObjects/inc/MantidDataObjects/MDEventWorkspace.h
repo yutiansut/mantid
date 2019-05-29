@@ -193,7 +193,7 @@ public:
 
   /// Apply masking
   void
-  setMDMasking(Mantid::Geometry::MDImplicitFunction *maskingRegion) override;
+  setMDMasking(std::unique_ptr<Mantid::Geometry::MDImplicitFunction> maskingRegion) override;
 
   /// Clear masking
   void clearMDMasking() override;
