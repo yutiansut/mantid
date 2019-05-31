@@ -253,6 +253,12 @@ void IndirectFitPropertyBrowser::updatePlotGuess(
   //  setPeakToolOn(false);
 }
 
+void IndirectFitPropertyBrowser::setErrorsEnabled(bool enabled)
+{
+  m_functionBrowser->setErrorsEnabled(enabled);
+  m_templateBrowser->setErrorsEnabled(enabled);
+}
+
 
 void IndirectFitPropertyBrowser::setWorkspaceIndex(int i) {
   if (m_functionBrowser->getNumberOfDatasets() == 0) return;

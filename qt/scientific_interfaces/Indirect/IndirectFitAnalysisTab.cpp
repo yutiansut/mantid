@@ -329,6 +329,7 @@ void IndirectFitAnalysisTab::fitAlgorithmComplete(bool error) {
   m_plotPresenter->setFitSingleSpectrumIsFitting(false);
   enableFitButtons(true);
   enableOutputOptions(!error);
+  m_fitPropertyBrowser->setErrorsEnabled(!error);
   updateParameterValues();
   m_spectrumPresenter->enableView();
   m_plotPresenter->updatePlots();

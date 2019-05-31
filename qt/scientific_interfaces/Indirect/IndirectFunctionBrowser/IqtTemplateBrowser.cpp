@@ -32,6 +32,16 @@ namespace MantidQt {
 namespace CustomInterfaces {
 namespace IDA {
 
+namespace {
+  class ScopedFalse {
+    bool &m_ref;
+    bool m_oldValue;
+  public:
+    ScopedFalse(bool &variable) : m_ref(variable), m_oldValue(variable) { m_ref = false; }
+    ~ScopedFalse() { m_ref = m_oldValue; }
+  };
+} // namespace
+
 /**
  * Constructor
  * @param parent :: The parent widget.
@@ -255,7 +265,9 @@ void IqtTemplateBrowser::parameterChanged(QtProperty *prop)
     m_presenter.setStretchingGlobal(isGlobal);
     emit functionStructureChanged();
   }
-  emit parameterValueChanged(m_actualParameterNames[prop], m_parameterManager->value(prop));
+  if (m_emitParameterValueChange) {
+    emit parameterValueChanged(m_actualParameterNames[prop], m_parameterManager->value(prop));
+  }
 }
 
 void IqtTemplateBrowser::parameterButtonClicked(QtProperty *prop)
@@ -286,6 +298,7 @@ void IqtTemplateBrowser::setCurrentDataset(int i)
 void IqtTemplateBrowser::updateParameterNames(const QMap<int, QString>& parameterNames)
 {
   m_actualParameterNames.clear();
+  ScopedFalse _(m_emitParameterValueChange);
   for (auto const prop : m_parameterMap.keys()) {
     auto const i = m_parameterMap[prop];
     auto const name = parameterNames[i];
@@ -305,6 +318,12 @@ void IqtTemplateBrowser::updateParameterDescriptions(const QMap<int, std::string
   }
 }
 
+void IqtTemplateBrowser::setErrorsEnabled(bool enabled)
+{
+  ScopedFalse _(m_emitParameterValueChange);
+  m_parameterManager->setErrorsEnabled(enabled);
+}
+
 void IqtTemplateBrowser::popupMenu(const QPoint &) {
   std::cerr << "Popup" << std::endl;
 }
@@ -312,6 +331,7 @@ void IqtTemplateBrowser::popupMenu(const QPoint &) {
 void IqtTemplateBrowser::setParameterPropertyValue(QtProperty * prop, double value, double error)
 {
   if (prop) {
+    ScopedFalse _(m_emitParameterValueChange);
     m_parameterManager->setValue(prop, value);
     m_parameterManager->setError(prop, error);
   }

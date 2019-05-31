@@ -50,6 +50,8 @@ public:
   void setCurrentDataset(int i);
   void setDatasetNames(const QStringList &names);
   void setViewParameterDescriptions();
+  void setErrorsEnabled(bool enebaled);
+
 
 signals:
   void functionStructureChanged();

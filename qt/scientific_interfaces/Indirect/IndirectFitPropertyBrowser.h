@@ -79,6 +79,7 @@ public:
   int workspaceIndex() const;
   void updateFunctionBrowserData(size_t nData, const QStringList &datasetNames);
   void updatePlotGuess(MatrixWorkspace_const_sptr sampleWorkspace);
+  void setErrorsEnabled(bool enabled);
 
 public slots:
   void fit();

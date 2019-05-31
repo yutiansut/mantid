@@ -61,6 +61,7 @@ public:
   void setCurrentDataset(int i) override;
   void updateParameterNames(const QMap<int, QString> &parameterNames) override;
   void updateParameterDescriptions(const QMap<int, std::string> &parameterNames) override;
+  void setErrorsEnabled(bool enabled) override;
 
  protected slots:
   void intChanged(QtProperty *) override;
@@ -92,6 +93,7 @@ private:
 
 private:
   IqtTemplatePresenter m_presenter;
+  bool m_emitParameterValueChange = true;
 };
 
 } // namespace IDA
