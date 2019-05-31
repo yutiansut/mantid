@@ -288,7 +288,11 @@ void IqtTemplateBrowser::updateParameterNames(const QMap<int, QString>& paramete
   m_actualParameterNames.clear();
   for (auto const prop : m_parameterMap.keys()) {
     auto const i = m_parameterMap[prop];
-    m_actualParameterNames[prop] = parameterNames[i];
+    auto const name = parameterNames[i];
+    m_actualParameterNames[prop] = name;
+    if (!name.isEmpty()) {
+      prop->setPropertyName(name);
+    }
   }
 }
 
