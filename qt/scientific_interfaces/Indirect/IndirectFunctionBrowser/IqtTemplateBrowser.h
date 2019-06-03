@@ -62,6 +62,7 @@ public:
   void updateParameterNames(const QMap<int, QString> &parameterNames) override;
   void updateParameterDescriptions(const QMap<int, std::string> &parameterNames) override;
   void setErrorsEnabled(bool enabled) override;
+  void clear() override;
 
  protected slots:
   void intChanged(QtProperty *) override;

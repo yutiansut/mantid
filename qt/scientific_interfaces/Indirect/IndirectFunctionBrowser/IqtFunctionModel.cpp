@@ -33,6 +33,13 @@ namespace {
 IqtFunctionModel::IqtFunctionModel() {
 }
 
+void IqtFunctionModel::clear() {
+  m_numberOfExponentials = 0;
+  m_hasStretchExponential = false;
+  m_background.clear();
+  m_model.clear();
+}
+
 void IqtFunctionModel::setNumberOfExponentials(int n) {
   auto oldValues = getCurrentValues();
   m_numberOfExponentials = n;
@@ -72,6 +79,11 @@ void IqtFunctionModel::removeBackground()
   m_background.clear();
   m_model.setFunctionString(buildFunctionString());
   setCurrentValues(oldValues);
+}
+
+bool IqtFunctionModel::hasBackground() const
+{
+  return !m_background.isEmpty();
 }
 
 void IqtFunctionModel::setNumberOfDatasets(int n)
@@ -138,6 +150,7 @@ void IqtFunctionModel::setFunction(const QString & funStr)
       isStretchSet = true;
       isBackgroundSet = true;
     } else {
+      clear();
       throw std::runtime_error("Function has wrong structure.");
     }
   }
@@ -400,12 +413,6 @@ std::string IqtFunctionModel::buildStretchExpFunctionString() const
 std::string IqtFunctionModel::buildBackgroundFunctionString() const
 {
   return "name=FlatBackground,A0=0";
-}
-
-void IqtFunctionModel::clear() {
-  setNumberOfExponentials(0);
-  setStretchExponential(false);
-  removeBackground();
 }
 
 QString IqtFunctionModel::buildFunctionString() const

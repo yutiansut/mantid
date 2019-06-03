@@ -114,6 +114,11 @@ void FunctionTemplateBrowser::init()
   layout->setContentsMargins(0, 0, 0, 0);
 }
 
+void FunctionTemplateBrowser::clear()
+{
+  m_browser->clear();
+}
+
 } // namespace IDA
 } // namespace CustomInterfaces
 } // namespace MantidQt

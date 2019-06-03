@@ -112,10 +112,10 @@ void IndirectFitPropertyBrowser::init() {
   m_functionWidget = new QStackedWidget(this);
   if (m_templateBrowser) {
     m_functionWidget->insertWidget(0, m_templateBrowser);
-    auto browserSwitcher = new QCheckBox("See full function");
-    browserSwitcher->setObjectName("browserSwitcher");
-    connect(browserSwitcher, SIGNAL(clicked(bool)), this, SLOT(showFullFunctionBrowser(bool)));
-    m_mainLayout->insertWidget(0, browserSwitcher);
+    m_browserSwitcher = new QCheckBox("See full function");
+    m_browserSwitcher->setObjectName("browserSwitcher");
+    connect(m_browserSwitcher, SIGNAL(clicked(bool)), this, SLOT(showFullFunctionBrowser(bool)));
+    m_mainLayout->insertWidget(0, m_browserSwitcher);
   }
   m_functionWidget->addWidget(m_functionBrowser);
   auto splitter = new QSplitter(Qt::Vertical);
@@ -314,6 +314,28 @@ void IndirectFitPropertyBrowser::updateFitType() {
 }
 
 void IndirectFitPropertyBrowser::showFullFunctionBrowser(bool on){
+  if (on) {
+    auto const fun = m_templateBrowser->getFunction();
+    m_functionBrowser->setFunction(fun);
+    if (fun) {
+      m_functionBrowser->updateMultiDatasetParameters(*m_templateBrowser->getGlobalFunction());
+    }
+  } else {
+    try {
+      auto const funStr = m_functionBrowser->getFunctionString();
+      m_templateBrowser->setFunction(funStr);
+      if (auto const fun = m_functionBrowser->getGlobalFunction()) {
+        m_templateBrowser->updateMultiDatasetParameters(*fun);
+      }
+    } catch (const std::runtime_error&) {
+      // Function doesn't match the template.
+      // Stay with generic function browser.
+      on = true;
+      m_browserSwitcher->blockSignals(true);
+      m_browserSwitcher->setChecked(true);
+      m_browserSwitcher->blockSignals(false);
+    }
+  }
   auto const index = on ? 1 : 0;
   m_functionWidget->setCurrentIndex(index);
 }

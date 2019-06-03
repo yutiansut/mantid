@@ -17,6 +17,7 @@
 #include <boost/optional.hpp>
 #include <unordered_map>
 
+class QCheckBox;
 class QVBoxLayout;
 class QStackedWidget;
 
@@ -113,6 +114,7 @@ private:
   FitOptionsBrowser *m_fitOptionsBrowser;
   FunctionTemplateBrowser *m_templateBrowser;
   QStackedWidget *m_functionWidget;
+  QCheckBox *m_browserSwitcher;
 
 };
 

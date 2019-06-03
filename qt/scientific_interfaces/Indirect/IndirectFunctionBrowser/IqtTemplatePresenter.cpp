@@ -114,7 +114,21 @@ int IqtTemplatePresenter::getNumberOfDatasets() const
 void IqtTemplatePresenter::setFunction(const QString & funStr)
 {
   m_model.setFunction(funStr);
+  m_view->clear();
   setErrorsEnabled(false);
+  if (m_model.hasBackground()) {
+    m_view->addFlatBackground();
+  }
+  if (m_model.hasStretchExponential()) {
+    m_view->addStretchExponential();
+  }
+  auto const nExp = m_model.getNumberOfExponentials();
+  if (nExp > 0) {
+    m_view->addExponentialOne();
+  }
+  if (nExp > 1) {
+    m_view->addExponentialTwo();
+  }
   updateViewParameterNames();
   updateViewParameters();
   emit functionStructureChanged();

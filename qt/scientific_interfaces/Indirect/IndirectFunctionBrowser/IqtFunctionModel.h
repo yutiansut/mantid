@@ -32,6 +32,7 @@ public:
   bool hasStretchExponential() const;
   void setBackground(const QString &name);
   void removeBackground();
+  bool hasBackground() const;
   void setNumberOfDatasets(int);
   int getNumberOfDatasets() const;
   void setFunction(const QString &funStr);

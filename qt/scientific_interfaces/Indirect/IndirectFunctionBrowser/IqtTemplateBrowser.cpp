@@ -324,6 +324,14 @@ void IqtTemplateBrowser::setErrorsEnabled(bool enabled)
   m_parameterManager->setErrorsEnabled(enabled);
 }
 
+void IqtTemplateBrowser::clear()
+{
+  removeBackground();
+  removeStretchExponential();
+  removeExponentialTwo();
+  removeExponentialOne();
+}
+
 void IqtTemplateBrowser::popupMenu(const QPoint &) {
   std::cerr << "Popup" << std::endl;
 }

@@ -268,7 +268,9 @@ void FunctionTreeView::clear() {
  */
 void FunctionTreeView::setFunction(Mantid::API::IFunction_sptr fun) {
   clear();
-  addFunction(nullptr, fun);
+  if (fun) {
+    addFunction(nullptr, fun);
+  }
 }
 
 /**
