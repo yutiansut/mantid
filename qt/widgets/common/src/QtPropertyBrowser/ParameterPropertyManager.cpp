@@ -15,7 +15,8 @@ const QString ParameterPropertyManager::ERROR_TOOLTIP(" (Error)");
 ParameterPropertyManager::ParameterPropertyManager(QObject *parent,
                                                    bool hasGlobalOption)
     : QtDoublePropertyManager(parent), m_errors(), m_errorsEnabled(false),
-      m_hasGlobalOption(hasGlobalOption) {}
+      m_hasGlobalOption(hasGlobalOption) {
+}
 
 /**
  * Throws if property error is not set
@@ -118,7 +119,7 @@ void ParameterPropertyManager::clearErrors() {
  */
 void ParameterPropertyManager::setErrorsEnabled(bool enabled) {
   m_errorsEnabled = enabled;
-
+  cleanUpErrors();
   foreach (QtProperty *prop, m_errors.keys()) {
     emit propertyChanged(prop);
     updateTooltip(prop);
@@ -168,6 +169,17 @@ QString ParameterPropertyManager::valueText(const QtProperty *property) const {
     originalValueText += " [" + gText + "]";
   }
   return originalValueText;
+}
+
+void ParameterPropertyManager::cleanUpErrors()
+{
+  for (auto it = m_errors.begin(); it != m_errors.end();) {
+    if (!hasProperty(it.key())) {
+      it = m_errors.erase(it);
+    } else {
+      ++it;
+    }
+  }
 }
 
 /**
