@@ -50,7 +50,7 @@ public:
   void setCurrentDataset(int i);
   void setDatasetNames(const QStringList &names);
   void setViewParameterDescriptions();
-  void setErrorsEnabled(bool enebaled);
+  void setErrorsEnabled(bool enabled);
 
 
 signals:

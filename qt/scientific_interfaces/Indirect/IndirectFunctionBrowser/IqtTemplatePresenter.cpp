@@ -63,6 +63,7 @@ void IqtTemplatePresenter::setNumberOfExponentials(int n) {
   }
   assert(nCurrent == n);
   m_model.setNumberOfExponentials(n);
+  setErrorsEnabled(false);
   updateViewParameterNames();
   updateViewParameters();
   emit functionStructureChanged();
@@ -77,6 +78,7 @@ void IqtTemplatePresenter::setStretchExponential(bool on)
     m_view->removeStretchExponential();
   }
   m_model.setStretchExponential(on);
+  setErrorsEnabled(false);
   updateViewParameterNames();
   updateViewParameters();
   emit functionStructureChanged();
@@ -93,6 +95,7 @@ void IqtTemplatePresenter::setBackground(const QString & name)
   } else {
     throw std::logic_error("Browser doesn't support background " + name.toStdString());
   }
+  setErrorsEnabled(false);
   updateViewParameterNames();
   updateViewParameters();
   emit functionStructureChanged();
@@ -111,6 +114,7 @@ int IqtTemplatePresenter::getNumberOfDatasets() const
 void IqtTemplatePresenter::setFunction(const QString & funStr)
 {
   m_model.setFunction(funStr);
+  setErrorsEnabled(false);
   updateViewParameterNames();
   updateViewParameters();
   emit functionStructureChanged();
@@ -175,9 +179,9 @@ void IqtTemplatePresenter::setViewParameterDescriptions()
   m_view->updateParameterDescriptions(m_model.getParameterDescriptionMap());
 }
 
-void IqtTemplatePresenter::setErrorsEnabled(bool enebaled)
+void IqtTemplatePresenter::setErrorsEnabled(bool enabled)
 {
-  m_view->setErrorsEnabled(true);
+  m_view->setErrorsEnabled(enabled);
 }
 
 void IqtTemplatePresenter::updateViewParameters()
@@ -298,7 +302,7 @@ void IqtTemplatePresenter::viewChangedParameterValue(const QString & parName, do
     auto const i = m_model.getCurrentDataset();
     auto const oldValue = m_model.getLocalParameterValue(parName, i);
     if (fabs(value - oldValue) > 1e-6) {
-      m_view->setErrorsEnabled(false);
+      setErrorsEnabled(false);
     }
     setLocalParameterValue(parName, i, value);
   }
