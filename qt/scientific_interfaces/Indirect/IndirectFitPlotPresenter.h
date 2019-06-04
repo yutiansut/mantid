@@ -27,6 +27,7 @@ public:
   std::size_t getSelectedDataIndex() const;
   std::size_t getSelectedSpectrum() const;
   int getSelectedSpectrumIndex() const;
+  int getSelectedDomainIndex() const;
   bool isCurrentlySelected(std::size_t dataIndex, std::size_t spectrum) const;
 
   void setFitSingleSpectrumIsFitting(bool fitting);

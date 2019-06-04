@@ -260,10 +260,6 @@ void IndirectFitAnalysisTab::setDataTableExclude(const std::string &exclude) {
                               m_plotPresenter->getSelectedSpectrumIndex());
 }
 
-void IndirectFitAnalysisTab::setBrowserWorkspaceIndex(std::size_t spectrum) {
-  m_fitPropertyBrowser->setWorkspaceIndex(boost::numeric_cast<int>(spectrum));
-}
-
 void IndirectFitAnalysisTab::tableStartXChanged(double startX,
                                                 std::size_t dataIndex,
                                                 std::size_t spectrum) {
@@ -347,19 +343,19 @@ void IndirectFitAnalysisTab::fitAlgorithmComplete(bool error) {
  * @param function        The function containing the attributes
  * @param attributeNames  The names of the attributes to update
  */
-std::unordered_map<std::string, IFunction::Attribute>
-IndirectFitAnalysisTab::getAttributes(
-    IFunction_sptr const &function,
-    std::vector<std::string> const &attributeNames) {
-  std::unordered_map<std::string, IFunction::Attribute> attributes;
-  for (auto const &name : attributeNames)
-    if (function->hasAttribute(name))
-      attributes[name] =
-          name == "WorkspaceIndex"
-              ? IFunction::Attribute(m_fitPropertyBrowser->workspaceIndex())
-              : function->getAttribute(name);
-  return attributes;
-}
+//std::unordered_map<std::string, IFunction::Attribute>
+//IndirectFitAnalysisTab::getAttributes(
+//    IFunction_sptr const &function,
+//    std::vector<std::string> const &attributeNames) {
+//  std::unordered_map<std::string, IFunction::Attribute> attributes;
+//  for (auto const &name : attributeNames)
+//    if (function->hasAttribute(name))
+//      attributes[name] =
+//          name == "WorkspaceIndex"
+//              ? IFunction::Attribute(m_fitPropertyBrowser->currentDataset())
+//              : function->getAttribute(name);
+//  return attributes;
+//}
 
 /**
  * Updates the parameter values and errors in the fit property browser.
@@ -704,11 +700,13 @@ void IndirectFitAnalysisTab::respondToMultipleDataViewSelected()
 
 void IndirectFitAnalysisTab::respondToDataAdded()
 {
+  updateDataReferences();
   m_plotPresenter->appendLastDataToSelection();
 }
 
 void IndirectFitAnalysisTab::respondToDataRemoved()
 {
+  updateDataReferences();
   m_plotPresenter->updateDataSelection();
 }
 
@@ -725,7 +723,8 @@ void IndirectFitAnalysisTab::respondToNoFitDataSelected()
 
 void IndirectFitAnalysisTab::respondToPlotSpectrumChanged(std::size_t i)
 {
-  setBrowserWorkspaceIndex(i);
+  auto const index = m_plotPresenter->getSelectedDomainIndex();
+  m_fitPropertyBrowser->setCurrentDataset(index);
 }
 
 void IndirectFitAnalysisTab::respondToFwhmChanged(double)

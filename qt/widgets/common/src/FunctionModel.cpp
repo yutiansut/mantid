@@ -395,7 +395,8 @@ void MultiDomainFunctionModel::updateMultiDatasetParameters(
     const IFunction &fun) {
   if (!hasFunction())
     return;
-  assert(m_function->nParams() == fun.nParams());
+  if (m_function->nParams() != fun.nParams())
+    return;
   for (size_t i = 0; i < fun.nParams(); ++i) {
     m_function->setParameter(i, fun.getParameter(i));
     m_function->setError(i, fun.getError(i));
@@ -406,7 +407,8 @@ void MultiDomainFunctionModel::updateParameters(const IFunction &fun) {
   if (!hasFunction())
     return;
   auto currentFun = getCurrentFunction();
-  assert(currentFun->nParams() == fun.nParams());
+  if (currentFun->nParams() == fun.nParams())
+    return;
   for (size_t i = 0; i < fun.nParams(); ++i) {
     currentFun->setParameter(i, fun.getParameter(i));
     currentFun->setError(i, fun.getError(i));

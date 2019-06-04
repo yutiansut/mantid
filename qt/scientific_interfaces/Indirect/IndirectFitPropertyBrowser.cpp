@@ -260,7 +260,7 @@ void IndirectFitPropertyBrowser::setErrorsEnabled(bool enabled)
 }
 
 
-void IndirectFitPropertyBrowser::setWorkspaceIndex(int i) {
+void IndirectFitPropertyBrowser::setCurrentDataset(int i) {
   if (m_functionBrowser->getNumberOfDatasets() == 0) return;
   if (isFullFunctionBrowserActive()) {
     m_functionBrowser->setCurrentDataset(i);
@@ -269,7 +269,7 @@ void IndirectFitPropertyBrowser::setWorkspaceIndex(int i) {
   }
 }
 
-int IndirectFitPropertyBrowser::workspaceIndex() const { return m_functionBrowser->getCurrentDataset(); }
+int IndirectFitPropertyBrowser::currentDataset() const { return m_functionBrowser->getCurrentDataset(); }
 
 void IndirectFitPropertyBrowser::updateFunctionBrowserData(size_t nData, const QStringList &datasetNames) {
   m_functionBrowser->setNumberOfDatasets(static_cast<int>(nData));

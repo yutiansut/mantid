@@ -39,45 +39,30 @@ class MANTIDQT_INDIRECT_DLL IndirectFitPropertyBrowser
   Q_OBJECT
 
 public:
-  /// Constructor.
   IndirectFitPropertyBrowser(QWidget *parent = nullptr);
-  /// Initialise the layout.
   void init();
-  /// Set the browser for the function template
   void setFunctionTemplateBrowser(FunctionTemplateBrowser *templateBrowser);
 
-  /// Set the function to the browser
   Q_INVOKABLE void setFunction(const QString &funStr);
-  /// Get the number of datasets to fit to
   Q_INVOKABLE int getNumberOfDatasets() const;
-  /// Get the string for a single-domain function currently displayed in the function browser
   Q_INVOKABLE QString getSingleFunctionStr() const;
 
-  /// Get the global multi-domain function. Even if there is only 1 dataset.
   MultiDomainFunction_sptr getFittingFunction() const;
-  /// Get the minimizer
   std::string minimizer(bool withProperties = false) const;
-  /// Get the max number of iterations
   int maxIterations() const;
-  /// Get the peak radius for peak functions
   int getPeakRadius() const;
-  /// Get the cost function
   std::string costFunction() const;
-  /// Get the "ConvolveMembers" option
   bool convolveMembers() const;
-  /// Get "HistogramFit" option
   bool isHistogramFit() const;
-  /// Get the ignore invalid data option
   bool ignoreInvalidData() const;
-
   void updateParameters(const IFunction &fun);
   void updateMultiDatasetParameters(const IFunction &fun);
   void updateMultiDatasetParameters(const ITableWorkspace &params);
   QString selectedFitType() const;
   void setConvolveMembers(bool convolveMembers);
   void setFitEnabled(bool enable);
-  void setWorkspaceIndex(int i);
-  int workspaceIndex() const;
+  void setCurrentDataset(int i);
+  int currentDataset() const;
   void updateFunctionBrowserData(size_t nData, const QStringList &datasetNames);
   void updatePlotGuess(MatrixWorkspace_const_sptr sampleWorkspace);
   void setErrorsEnabled(bool enabled);

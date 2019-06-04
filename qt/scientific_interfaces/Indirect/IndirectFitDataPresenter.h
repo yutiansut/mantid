@@ -90,7 +90,6 @@ private:
   virtual std::unique_ptr<IAddWorkspaceDialog>
   getAddWorkspaceDialog(QWidget *parent) const;
   void updateDataInTable(std::size_t dataIndex);
-
   void selectReplacedWorkspace(const QString &workspaceName);
 
   std::unique_ptr<IAddWorkspaceDialog> m_addWorkspaceDialog;

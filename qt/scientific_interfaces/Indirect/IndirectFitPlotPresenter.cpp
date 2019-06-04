@@ -126,6 +126,11 @@ int IndirectFitPlotPresenter::getSelectedSpectrumIndex() const {
   return m_view->getSelectedSpectrumIndex();
 }
 
+int IndirectFitPlotPresenter::getSelectedDomainIndex() const
+{
+  return static_cast<int>(m_model->getActiveDomainIndex());
+}
+
 bool IndirectFitPlotPresenter::isCurrentlySelected(std::size_t dataIndex,
                                                    std::size_t spectrum) const {
   return getSelectedDataIndex() == dataIndex &&

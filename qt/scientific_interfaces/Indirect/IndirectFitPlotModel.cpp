@@ -189,6 +189,25 @@ std::size_t IndirectFitPlotModel::numberOfWorkspaces() const {
   return m_fittingModel->numberOfWorkspaces();
 }
 
+std::size_t IndirectFitPlotModel::getActiveDomainIndex() const
+{
+  std::size_t index = 0;
+  for (size_t iws = 0; iws < numberOfWorkspaces(); ++iws) {
+    if (iws < m_activeIndex) {
+      index += m_fittingModel->getNumberOfSpectra(iws);
+    } else {
+      auto const spectra = m_fittingModel->getSpectra(iws);
+      try {
+        index += spectra.indexOf(m_activeSpectrum);
+      } catch (const std::runtime_error &) {
+        if (m_activeSpectrum != 0) throw;
+      }
+      break;
+    }
+  }
+  return index;
+}
+
 std::string IndirectFitPlotModel::getFitDataName(std::size_t index) const {
   if (m_fittingModel->getWorkspace(index))
     return m_fittingModel->createDisplayName("%1% (%2%)", "-", index);

@@ -36,6 +36,7 @@ public:
   std::size_t getActiveDataIndex() const;
   std::size_t getActiveSpectrum() const;
   std::size_t numberOfWorkspaces() const;
+  std::size_t getActiveDomainIndex() const;
   std::string getFitDataName(std::size_t index) const;
   std::string getFitDataName() const;
   std::string getLastFitDataName() const;

@@ -94,6 +94,13 @@ public:
     return this->getString() == spec.getString();
   }
   bool isContinuous() const { return m_isContinuous; }
+  size_t indexOf(size_t i) const {
+    auto const it = std::find(begin(), end(), i);
+    if (it == end()) {
+      throw std::runtime_error("Spectrum index " + std::to_string(i) + " not found.");
+    }
+    return static_cast<size_t>(std::distance(begin(), it));
+  }
 
 private:
   std::vector<size_t> m_vec;
