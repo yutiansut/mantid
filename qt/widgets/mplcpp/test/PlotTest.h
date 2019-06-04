@@ -134,9 +134,23 @@ public:
                                   false))
   }
 
-  void testPcolormesh() {
+  void test_pcolormesh() {
     QStringList workspaces = {m_testws_name};
     TS_ASSERT_THROWS_NOTHING(pcolormesh(workspaces));
+  }
+
+  void test_subplots_no_projection() {
+    auto figure = subplots(2, 2);
+    auto axes = figure.pyobj().attr("axes");
+    TS_ASSERT_EQUALS(4, Python::Len(axes));
+  }
+
+  void test_subplots_with_projection() {
+    auto figure = subplots(2, 2, "polar");
+    auto axes = Python::Object(figure.pyobj().attr("axes"));
+    TS_ASSERT_EQUALS(4, Python::Len(axes));
+    TS_ASSERT_EQUALS(1, PyObject_HasAttrString(Python::Object(axes[0]).ptr(),
+                                               "get_thetamax"));
   }
 
 private:

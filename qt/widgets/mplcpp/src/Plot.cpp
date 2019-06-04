@@ -152,6 +152,19 @@ Python::Object pcolormesh(const QStringList &workspaces,
   }
 }
 
+Figure subplots(const int nrows, const int ncols, const QString projection) {
+  GlobalInterpreterLock lock;
+  auto pyplot = Python::NewRef(PyImport_ImportModule("matplotlib.pyplot"));
+  auto args = Python::NewRef(Py_BuildValue("(ii)", nrows, ncols));
+  Python::Dict kwargs;
+  if (!projection.isEmpty()) {
+    Python::Dict subplotKwargs;
+    subplotKwargs["projection"] = projection.toLatin1().constData();
+    kwargs["subplot_kw"] = subplotKwargs;
+  }
+  return Figure(Python::Object(pyplot.attr("subplots")(*args, **kwargs)[0]));
+}
+
 } // namespace MplCpp
 } // namespace Widgets
 } // namespace MantidQt

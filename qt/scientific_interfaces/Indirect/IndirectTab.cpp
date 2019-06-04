@@ -628,7 +628,7 @@ void IndirectTab::plotTiled(std::string const &workspaceName,
   Q_UNUSED(workspaceName);
   Q_UNUSED(fromIndex);
   Q_UNUSED(toIndex);
-  throw std::runtime_error("plotTiled is not implemented for >= Qt 5.");
+  g_log.warning("plotTiled is not implemented for >= Qt 5");
 #endif
 }
 

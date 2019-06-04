@@ -9,6 +9,7 @@
 
 #include "MantidQtWidgets/Common/Python/Object.h"
 #include "MantidQtWidgets/MplCpp/DllConfig.h"
+#include "MantidQtWidgets/MplCpp/Figure.h"
 
 #include <QHash>
 #include <QString>
@@ -110,6 +111,14 @@ MANTID_MPLCPP_DLL Common::Python::Object
 pcolormesh(const QStringList &workspaces,
            boost::optional<Common::Python::Object> fig = boost::none);
 
+/**
+ * Makes a call to plt.subplots
+ * @param nrows The number of rows of axes
+ * @param ncols The number of columns of axes
+ * @return Returns the figure that was created
+ */
+MANTID_MPLCPP_DLL Figure subplots(const int nrows, const int ncols,
+                                  const QString projection = "");
 
 } // namespace MplCpp
 } // namespace Widgets
