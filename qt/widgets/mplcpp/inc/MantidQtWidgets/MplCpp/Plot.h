@@ -22,6 +22,14 @@ namespace MantidQt {
 namespace Widgets {
 namespace MplCpp {
 
+/// C++ counterpart to MantidAxType in mantid.plots.utility
+/// This does duplicate the information above but exposing the
+/// Python type to C++ and allowing it to be passed through the
+/// plot functions below is not trivial. It was not considered
+/// worthwhile for its limited use.
+/// Any changes here will require changes in the above module.
+enum class MantidAxType : int { Bin = 0, Spectrum = 1 };
+
 /**
  * Makes a call to mantidqt.plotting.plot.
  *
