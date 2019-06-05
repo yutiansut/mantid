@@ -45,15 +45,15 @@ using std::size_t;
 using namespace Mantid::Kernel;
 
 EventWorkspace::EventWorkspace(const Parallel::StorageMode storageMode)
-    : IEventWorkspace(storageMode), mru(new EventWorkspaceMRU) {}
+    : IEventWorkspace(storageMode), mru(std::make_unique<EventWorkspaceMRU>()) {}
 
 EventWorkspace::EventWorkspace(const EventWorkspace &other)
-    : IEventWorkspace(other), mru(new EventWorkspaceMRU) {
+    : IEventWorkspace(other), mru(std::make_unique<EventWorkspaceMRU>()) {
   for (const auto &el : other.data) {
     // Create a new event list, copying over the events
     auto newel = new EventList(*el);
     // Make sure to update the MRU to point to THIS event workspace.
-    newel->setMRU(this->mru);
+    newel->setMRU(this->mru.get());
     this->data.push_back(newel);
   }
 }
@@ -61,7 +61,6 @@ EventWorkspace::EventWorkspace(const EventWorkspace &other)
 EventWorkspace::~EventWorkspace() {
   for (auto &eventList : data)
     delete eventList;
-  delete mru;
 }
 
 /** Returns true if the EventWorkspace is safe for multithreaded operations.
@@ -106,7 +105,7 @@ void EventWorkspace::init(const std::size_t &NVectors,
   el.setHistogram(edges);
   for (size_t i = 0; i < NVectors; i++) {
     data[i] = new EventList(el);
-    data[i]->setMRU(mru);
+    data[i]->setMRU(mru.get());
     data[i]->setSpectrumNo(specnum_t(i));
   }
 
@@ -130,7 +129,7 @@ void EventWorkspace::init(const HistogramData::Histogram &histogram) {
   el.setHistogram(histogram);
   for (size_t i = 0; i < data.size(); i++) {
     data[i] = new EventList(el);
-    data[i]->setMRU(mru);
+    data[i]->setMRU(mru.get());
     data[i]->setSpectrumNo(specnum_t(i));
   }
 

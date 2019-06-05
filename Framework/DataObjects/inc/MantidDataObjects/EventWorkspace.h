@@ -172,7 +172,7 @@ private:
   std::vector<EventList *> data;
 
   /// Container for the MRU lists of the event lists contained.
-  mutable EventWorkspaceMRU *mru;
+  mutable std::unique_ptr<EventWorkspaceMRU> mru;
 };
 
 /// shared pointer to the EventWorkspace class
