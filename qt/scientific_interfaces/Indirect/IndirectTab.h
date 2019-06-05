@@ -131,8 +131,8 @@ protected:
                    const std::vector<int> &wsIndices);
 
   /// Plot multiple spectra in a tiled plot
-  void plotTiled(std::string const &workspaceName, std::size_t const &fromIndex,
-                 std::size_t const &toIndex);
+  void plotTiled(std::string const &workspaceName, const int fromIndex,
+                 const int toIndex);
 
   /// Plot a time bin plot given a list of workspace names
   void plotTimeBin(const QStringList &workspaceNames, int binIndex = 0);

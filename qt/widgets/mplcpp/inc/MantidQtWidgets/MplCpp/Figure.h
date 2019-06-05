@@ -37,9 +37,10 @@ public:
    * @param index The index of the axes to return
    * @return The axes instance
    */
-  inline Axes axes(size_t index) const {
+  template<typename AxesType=Axes>
+  inline AxesType axes(size_t index) const {
     Mantid::PythonInterface::GlobalInterpreterLock lock;
-    return Axes{pyobj().attr("axes")[index]};
+    return AxesType{pyobj().attr("axes")[index]};
   }
 
   QColor faceColor() const;

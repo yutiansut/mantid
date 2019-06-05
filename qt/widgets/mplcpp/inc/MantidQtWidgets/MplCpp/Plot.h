@@ -115,10 +115,13 @@ pcolormesh(const QStringList &workspaces,
  * Makes a call to plt.subplots
  * @param nrows The number of rows of axes
  * @param ncols The number of columns of axes
+ * @param windowTitle An optional title for the window
+ * @param projection An optional projection for the created Axes
  * @return Returns the figure that was created
  */
 MANTID_MPLCPP_DLL Figure subplots(const int nrows, const int ncols,
-                                  const QString projection = "");
+                                  const QString projection = "",
+                                  const QString windowTitle = "");
 
 } // namespace MplCpp
 } // namespace Widgets

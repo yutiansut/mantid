@@ -152,7 +152,8 @@ Python::Object pcolormesh(const QStringList &workspaces,
   }
 }
 
-Figure subplots(const int nrows, const int ncols, const QString projection) {
+Figure subplots(const int nrows, const int ncols, const QString projection,
+                const QString windowTitle) {
   GlobalInterpreterLock lock;
   auto pyplot = Python::NewRef(PyImport_ImportModule("matplotlib.pyplot"));
   auto args = Python::NewRef(Py_BuildValue("(ii)", nrows, ncols));
@@ -161,6 +162,9 @@ Figure subplots(const int nrows, const int ncols, const QString projection) {
     Python::Dict subplotKwargs;
     subplotKwargs["projection"] = projection.toLatin1().constData();
     kwargs["subplot_kw"] = subplotKwargs;
+  }
+  if (!windowTitle.isEmpty()) {
+    kwargs["window_title"] = windowTitle.toLatin1().constData();
   }
   return Figure(Python::Object(pyplot.attr("subplots")(*args, **kwargs)[0]));
 }

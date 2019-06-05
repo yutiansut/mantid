@@ -19,6 +19,7 @@
 #include "MantidQtWidgets/Plotting/RangeSelector.h"
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+#include "MantidQtWidgets/MplCpp/MantidAxes.h"
 #include "MantidQtWidgets/MplCpp/Plot.h"
 #endif
 
@@ -606,29 +607,55 @@ void IndirectTab::plotSpectra(const QString &workspaceName,
 }
 
 void IndirectTab::plotTiled(std::string const &workspaceName,
-                            std::size_t const &fromIndex,
-                            std::size_t const &toIndex) {
+                            const int fromIndex, const int toIndex) {
+  const auto numberOfPlots = toIndex - fromIndex + 1;
+  if (numberOfPlots == 0)
+    return;
 #if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
-  auto const numberOfPlots = toIndex - fromIndex + 1;
-  if (numberOfPlots != 0) {
-    QString pyInput = "from mantidplot import newTiledWindow\n";
-    pyInput += "newTiledWindow(sources=[";
-    for (auto index = fromIndex; index <= toIndex; ++index) {
-      if (index > fromIndex)
-        pyInput += ",";
+  QString pyInput = "from mantidplot import newTiledWindow\n";
+  pyInput += "newTiledWindow(sources=[";
+  for (auto index = fromIndex; index <= toIndex; ++index) {
+    if (index > fromIndex)
+      pyInput += ",";
 
-      std::string const pyInStr =
-          "(['" + workspaceName + "'], " + std::to_string(index) + ")";
-      pyInput += QString::fromStdString(pyInStr);
-    }
-    pyInput += QString::fromStdString("])\n");
-    m_pythonRunner.runPythonCode(pyInput);
+    std::string const pyInStr =
+        "(['" + workspaceName + "'], " + std::to_string(index) + ")";
+    pyInput += QString::fromStdString(pyInStr);
   }
+  pyInput += QString::fromStdString("])\n");
+  m_pythonRunner.runPythonCode(pyInput);
 #else
-  Q_UNUSED(workspaceName);
-  Q_UNUSED(fromIndex);
-  Q_UNUSED(toIndex);
-  g_log.warning("plotTiled is not implemented for >= Qt 5");
+  using Mantid::PythonInterface::GlobalInterpreterLock;
+  using Widgets::MplCpp::MantidAxes;
+  using Widgets::MplCpp::subplots;
+  // compute the dimensions of the subplot
+  const auto squareSideLen =
+      static_cast<int>(std::ceil(std::sqrt(numberOfPlots)));
+  int nrows{squareSideLen}, ncols{squareSideLen};
+  if (squareSideLen * squareSideLen != static_cast<int>(numberOfPlots)) {
+    // not a square number - square_side_len x square_side_len
+    // will be large enough but we could end up with an empty
+    // row so chop that off
+    if (static_cast<int>(numberOfPlots) <= (nrows - 1) * ncols)
+      nrows -= 1;
+  }
+
+  auto &ads = AnalysisDataService::Instance();
+  const QString empty;
+  GlobalInterpreterLock lock;
+  constexpr auto projection{"mantid"};
+  auto fig = subplots(nrows, ncols, projection);
+  for (int i = 0; i < numberOfPlots; ++i) {
+    auto axes = fig.axes<MantidAxes>(i);
+    axes.plot(ads.retrieveWS<MatrixWorkspace>(workspaceName), fromIndex + i,
+              empty, empty);
+  }
+  // disable any empty axes
+  for(int i = numberOfPlots; i < nrows*ncols; ++i) {
+    fig.axes(i).pyobj().attr("axis")("off");
+  }
+
+  fig.pyobj().attr("show")();
 #endif
 }
 

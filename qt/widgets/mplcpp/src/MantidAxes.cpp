@@ -37,8 +37,10 @@ Line2D MantidAxes::plot(const Mantid::API::MatrixWorkspace_sptr &workspace,
   const auto args = Python::NewRef(Py_BuildValue("(O)", wksp.ptr()));
   Python::Dict kwargs;
   kwargs["wkspIndex"] = wkspIndex;
-  kwargs["color"] = lineColour.toLatin1().constData();
-  kwargs["label"] = label.toLatin1().constData();
+  if (!lineColour.isEmpty())
+    kwargs["color"] = lineColour.toLatin1().constData();
+  if (!label.isEmpty())
+    kwargs["label"] = label.toLatin1().constData();
   return Line2D{pyobj().attr("plot")(*args, **kwargs)[0]};
 }
 
@@ -59,8 +61,10 @@ MantidAxes::errorbar(const Mantid::API::MatrixWorkspace_sptr &workspace,
   const auto args = Python::NewRef(Py_BuildValue("(O)", wksp.ptr()));
   Python::Dict kwargs;
   kwargs["wkspIndex"] = wkspIndex;
-  kwargs["color"] = lineColour.toLatin1().constData();
-  kwargs["label"] = label.toLatin1().constData();
+  if (!lineColour.isEmpty())
+    kwargs["color"] = lineColour.toLatin1().constData();
+  if (!label.isEmpty())
+    kwargs["label"] = label.toLatin1().constData();
   return ErrorbarContainer{pyobj().attr("errorbar")(*args, **kwargs)};
 }
 
