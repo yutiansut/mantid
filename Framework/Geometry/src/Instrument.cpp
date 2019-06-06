@@ -47,16 +47,16 @@ void raiseDuplicateDetectorError(const size_t detectorId) {
 /// Default constructor
 Instrument::Instrument()
     : CompAssembly(), m_detectorCache(), m_sourceCache(nullptr),
-      m_chopperPoints(new std::vector<const ObjComponent *>),
+      m_chopperPoints(std::make_unique<std::vector<const ObjComponent *>>()),
       m_sampleCache(nullptr), m_defaultView("3D"), m_defaultViewAxis("Z+"),
-      m_referenceFrame(new ReferenceFrame) {}
+      m_referenceFrame(boost::make_shared<ReferenceFrame>()) {}
 
 /// Constructor with name
 Instrument::Instrument(const std::string &name)
     : CompAssembly(name), m_detectorCache(), m_sourceCache(nullptr),
-      m_chopperPoints(new std::vector<const ObjComponent *>),
+      m_chopperPoints(std::make_unique<std::vector<const ObjComponent *>>()),
       m_sampleCache(nullptr), m_defaultView("3D"), m_defaultViewAxis("Z+"),
-      m_referenceFrame(new ReferenceFrame) {}
+      m_referenceFrame(boost::make_shared<ReferenceFrame>()) {}
 
 /** Constructor to create a parametrized instrument
  *  @param instr :: instrument for parameter inclusion
@@ -65,11 +65,12 @@ Instrument::Instrument(const std::string &name)
 Instrument::Instrument(const boost::shared_ptr<const Instrument> instr,
                        boost::shared_ptr<ParameterMap> map)
     : CompAssembly(instr.get(), map.get()), m_sourceCache(instr->m_sourceCache),
-      m_chopperPoints(instr->m_chopperPoints),
+      m_chopperPoints(std::make_unique<std::vector<const ObjComponent *>>(
+          instr->CloneChopperPoints())),
       m_sampleCache(instr->m_sampleCache), m_defaultView(instr->m_defaultView),
       m_defaultViewAxis(instr->m_defaultViewAxis), m_instr(instr),
       m_map_nonconst(map), m_ValidFrom(instr->m_ValidFrom),
-      m_ValidTo(instr->m_ValidTo), m_referenceFrame(new ReferenceFrame) {
+      m_ValidTo(instr->m_ValidTo), m_referenceFrame(boost::make_shared<ReferenceFrame>()) {
   // Note that we do not copy m_detectorInfo and m_componentInfo into the
   // parametrized instrument since the ParameterMap will make a copy, if
   // applicable.
@@ -82,7 +83,7 @@ Instrument::Instrument(const boost::shared_ptr<const Instrument> instr,
  */
 Instrument::Instrument(const Instrument &instr)
     : CompAssembly(instr), m_sourceCache(nullptr),
-      m_chopperPoints(new std::vector<const ObjComponent *>),
+      m_chopperPoints(std::make_unique<std::vector<const ObjComponent *>>()),
       m_sampleCache(nullptr), /* Should only be temporarily null */
       m_logfileCache(instr.m_logfileCache), m_logfileUnit(instr.m_logfileUnit),
       m_defaultView(instr.m_defaultView),
@@ -142,7 +143,6 @@ Instrument::Instrument(const Instrument &instr)
 Instrument::~Instrument() {
   if (!m_map) {
     m_chopperPoints->clear(); // CompAssembly will delete them
-    delete m_chopperPoints;
   }
 }
 
@@ -393,6 +393,16 @@ IObjComponent_const_sptr Instrument::getChopperPoint(const size_t index) const {
  */
 size_t Instrument::getNumberOfChopperPoints() const {
   return m_chopperPoints->size();
+}
+
+std::vector<const ObjComponent *> Instrument::CloneChopperPoints() const {
+  std::vector<const ObjComponent *> cloneVector;
+  cloneVector.resize(m_chopperPoints->size());
+  for (size_t i = 0; i < m_chopperPoints->size(); ++i) {
+    auto temp = dynamic_cast<ObjComponent *>((*m_chopperPoints)[i]->clone());
+    cloneVector[i] = temp;
+  }
+  return cloneVector;
 }
 
 //------------------------------------------------------------------------------------------

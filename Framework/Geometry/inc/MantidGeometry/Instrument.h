@@ -61,6 +61,7 @@ public:
 
   IComponent_const_sptr getSource() const;
   IObjComponent_const_sptr getChopperPoint(const size_t index = 0) const;
+  std::vector<const ObjComponent *> CloneChopperPoints() const;
   size_t getNumberOfChopperPoints() const;
   IComponent_const_sptr getSample() const;
   Kernel::V3D getBeamDirection() const;
@@ -262,7 +263,7 @@ private:
 
   /// Hold a list of places where a chopper can be situated
   /// A pointer so that parameterized instruments are still fast to create.
-  std::vector<const ObjComponent *> *m_chopperPoints;
+  std::unique_ptr<std::vector<const ObjComponent *>> m_chopperPoints;
 
   /// Purpose to hold copy of samplePos component. For now assumed to be just
   /// one component
