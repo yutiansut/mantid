@@ -40,7 +40,7 @@ public:
   /// Return the number of elements in the assembly
   virtual int nelements() const = 0;
   /// Add a component to the assembly
-  virtual int add(IComponent *) = 0;
+  virtual int add(boost::shared_ptr<IComponent>) = 0;
   /// Add a copy (clone) of a component
   virtual int addCopy(IComponent *) = 0;
   /// Add a copy (clone) of a component and rename it

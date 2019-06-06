@@ -56,7 +56,7 @@ ObjCompAssembly::ObjCompAssembly(const std::string &n, IComponent *reference)
   if (reference) {
     ICompAssembly *test = dynamic_cast<ICompAssembly *>(reference);
     if (test)
-      test->add(this);
+      test->add(boost::shared_ptr<ICompAssembly>(this));
   }
 }
 
@@ -74,7 +74,7 @@ ObjCompAssembly::ObjCompAssembly(const ObjCompAssembly &ass)
       throw Kernel::Exception::InstrumentDefinitionError(
           "ObjCompAssembly cannot contain components of non-ObjComponent type");
     }
-    *it = c;
+    *it = boost::shared_ptr<ObjComponent>(c);
     // Move copied component object's parent from old to new ObjCompAssembly
     (*it)->setParent(this);
   }
@@ -85,9 +85,6 @@ ObjCompAssembly::ObjCompAssembly(const ObjCompAssembly &ass)
 ObjCompAssembly::~ObjCompAssembly() {
   // Iterate over pointers in group, deleting them
   // std::vector<IComponent*>::iterator it;
-  for (auto &component : group) {
-    delete component;
-  }
   group.clear();
 }
 
@@ -105,13 +102,13 @@ IComponent *ObjCompAssembly::clone() const {
  *
  * This becomes the new parent of comp.
  */
-int ObjCompAssembly::add(IComponent *comp) {
+int ObjCompAssembly::add(boost::shared_ptr<IComponent> comp) {
   if (m_map)
     throw std::runtime_error(
         "ObjCompAssembly::add() called on a Parametrized object.");
 
   if (comp) {
-    ObjComponent *c = dynamic_cast<ObjComponent *>(comp);
+    auto c =boost::dynamic_pointer_cast<ObjComponent>(comp);
     if (!c) {
       throw Kernel::Exception::InstrumentDefinitionError(
           "ObjCompAssembly cannot contain components of non-ObjComponent type");
@@ -137,7 +134,7 @@ int ObjCompAssembly::addCopy(IComponent *comp) {
 
   if (comp) {
     IComponent *newcomp = comp->clone();
-    ObjComponent *c = dynamic_cast<ObjComponent *>(newcomp);
+    auto c = boost::shared_ptr<ObjComponent>(newcomp);
     if (!c) {
       throw Kernel::Exception::InstrumentDefinitionError(
           "ObjCompAssembly cannot contain components of non-ObjComponent type");
@@ -164,7 +161,7 @@ int ObjCompAssembly::addCopy(IComponent *comp, const std::string &n) {
 
   if (comp) {
     IComponent *newcomp = comp->clone();
-    ObjComponent *c = dynamic_cast<ObjComponent *>(newcomp);
+    auto c = boost::shared_ptr<ObjComponent>(newcomp);
     if (!c) {
       throw Kernel::Exception::InstrumentDefinitionError(
           "ObjCompAssembly cannot contain components of non-ObjComponent type");
@@ -214,7 +211,7 @@ boost::shared_ptr<IComponent> ObjCompAssembly::operator[](int i) const {
     return ParComponentFactory::create(child_base->operator[](i), m_map);
   } else {
     // Unparamterized - return the normal one
-    return boost::shared_ptr<IComponent>(group[i], NoDeleting());
+    return group[i];
   }
 }
 

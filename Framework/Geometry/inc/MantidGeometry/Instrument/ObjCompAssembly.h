@@ -30,9 +30,10 @@ namespace Geometry {
 */
 class MANTID_GEOMETRY_DLL ObjCompAssembly : public virtual ICompAssembly,
                                             public virtual ObjComponent {
-  using comp_it = std::vector<ObjComponent *>::iterator; ///< Iterator type
-  using const_comp_it =
-      std::vector<ObjComponent *>::const_iterator; ///< Const iterator type
+  using comp_it =
+      std::vector<boost::shared_ptr<ObjComponent>>::iterator; ///< Iterator type
+  using const_comp_it = std::vector<
+      boost::shared_ptr<ObjComponent>>::const_iterator; ///< Const iterator type
 public:
   /// String description of the type of component
   std::string type() const override { return "ObjCompAssembly"; }
@@ -51,7 +52,7 @@ public:
   //! Return the number of elements in the assembly
   int nelements() const override;
   //! Add a component to the assembly
-  int add(IComponent *) override;
+  int add(boost::shared_ptr<IComponent>) override;
   //! Add a copy (clone) of a component
   int addCopy(IComponent *) override;
   //! Add a copy (clone) of a component and rename it
@@ -95,7 +96,7 @@ private:
   ObjCompAssembly &operator=(const ICompAssembly &);
 
   /// the group of child components
-  std::vector<ObjComponent *> group;
+  std::vector<boost::shared_ptr<ObjComponent>> group;
 };
 
 /// Shared pointer to ObjCompAssembly
