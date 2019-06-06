@@ -78,16 +78,18 @@ void LoadInstrumentFromRaw::exec() {
   // The L2 and 2-theta values from Raw file assumed to be relative to sample
   // position
 
-  Geometry::ObjComponent *samplepos =
-      new Geometry::ObjComponent("Sample", instrument.get());
-  instrument->add(samplepos);
-  instrument->markAsSamplePos(samplepos);
+  auto samplepos =
+      std::make_unique<Geometry::ObjComponent>("Sample", instrument.get());
+  auto posRaw = samplepos.get();
+  instrument->add(std::move(samplepos));
+  instrument->markAsSamplePos(posRaw);
   samplepos->setPos(0.0, 0.0, 0.0);
 
-  Geometry::ObjComponent *source =
-      new Geometry::ObjComponent("Source", instrument.get());
-  instrument->add(source);
-  instrument->markAsSource(source);
+  auto source =
+      std::make_unique<Geometry::ObjComponent>("Source", instrument.get());
+  auto sourceRaw = source.get();
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
 
   progress(0.5);
   // If user has provided an L1, use that
@@ -121,8 +123,9 @@ void LoadInstrumentFromRaw::exec() {
     //    g_log.error() << " ## " << detID[i];
     // Create a new detector. Instrument will take ownership of pointer so no
     // need to delete.
-    Geometry::Detector *detector =
-        new Geometry::Detector("det", detID[i], samplepos);
+    auto detector =
+        std::make_unique<Geometry::Detector>("det", detID[i], posRaw);
+    auto detRaw = detector.get();
     Kernel::V3D pos;
 
     if (phiPresent)
@@ -133,19 +136,19 @@ void LoadInstrumentFromRaw::exec() {
     detector->setPos(pos);
 
     // add to instrument
-    instrument->add(detector);
+    instrument->add(std::move(detector));
 
     // Check monitor list to see if this is a monitor that should be marked as
     // such
     if (std::find(monIndex, monIndex + numMonitors, i + 1) !=
         monIndex + numMonitors) {
-      instrument->markAsMonitor(detector);
+      instrument->markAsMonitor(detRaw);
       g_log.information() << "Detector with ID " << detID[i]
                           << " marked as a monitor.\n";
     }
     // otherwise mark as a detector
     else {
-      instrument->markAsDetector(detector);
+      instrument->markAsDetector(detRaw);
     }
 
     prog += (0.5 / numDetector);

@@ -48,7 +48,7 @@ CompAssembly::CompAssembly(const std::string &n, IComponent *reference)
   if (reference) {
     ICompAssembly *test = dynamic_cast<ICompAssembly *>(reference);
     if (test) {
-      test->add(this);
+      test->add(std::unique_ptr<IComponent>(this));
     }
   }
 }
@@ -57,14 +57,14 @@ CompAssembly::CompAssembly(const std::string &n, IComponent *reference)
  *  @param assem :: assembly to copy
  */
 CompAssembly::CompAssembly(const CompAssembly &assem)
-    : ICompAssembly(assem), Component(assem), m_children(assem.m_children),
+    : ICompAssembly(assem), Component(assem), 
       m_cachedBoundingBox(assem.m_cachedBoundingBox) {
   // Need to do a deep copy
-  comp_it it;
-  for (it = m_children.begin(); it != m_children.end(); ++it) {
-    *it = (*it)->clone();
+  for (size_t i=0 ;i<assem.m_children.size(); ++i) {
+    auto temp = dynamic_cast<CompAssembly *>((assem.m_children[i])->clone());
+    m_children[i] = std::unique_ptr<CompAssembly>(temp);
     // Move copied component object's parent from old to new CompAssembly
-    (*it)->setParent(this);
+    (m_children[i])->setParent(this);
   }
 }
 
@@ -74,9 +74,6 @@ CompAssembly::~CompAssembly() {
   if (m_cachedBoundingBox)
     delete m_cachedBoundingBox;
   // Iterate over pointers in m_children, deleting them
-  for (auto &child : m_children) {
-    delete child;
-  }
   m_children.clear();
 }
 
@@ -92,14 +89,14 @@ IComponent *CompAssembly::clone() const { return new CompAssembly(*this); }
  *
  * This becomes the new parent of comp.
  */
-int CompAssembly::add(IComponent *comp) {
+int CompAssembly::add(std::unique_ptr<IComponent> comp) {
   if (m_map)
     throw std::runtime_error(
         "CompAssembly::add() called for a parametrized CompAssembly.");
 
   if (comp) {
     comp->setParent(this);
-    m_children.push_back(comp);
+    m_children.push_back(std::move(comp));
   }
   return static_cast<int>(m_children.size());
 }
@@ -118,9 +115,9 @@ int CompAssembly::addCopy(IComponent *comp) {
         "CompAssembly::addCopy() called for a parametrized CompAssembly.");
 
   if (comp) {
-    IComponent *newcomp = comp->clone();
+    auto newcomp = std::unique_ptr<IComponent>(comp->clone());
     newcomp->setParent(this);
-    m_children.push_back(newcomp);
+    m_children.push_back(std::move(newcomp));
   }
   return static_cast<int>(m_children.size());
 }
@@ -140,10 +137,10 @@ int CompAssembly::addCopy(IComponent *comp, const std::string &n) {
         "CompAssembly::addCopy() called for a parametrized CompAssembly.");
 
   if (comp) {
-    IComponent *newcomp = comp->clone();
+    auto newcomp = std::unique_ptr<IComponent>(comp->clone());
     newcomp->setParent(this);
     newcomp->setName(n);
-    m_children.push_back(newcomp);
+    m_children.push_back(std::move(newcomp));
   }
   return static_cast<int>(m_children.size());
 }
@@ -159,11 +156,10 @@ int CompAssembly::remove(IComponent *comp) {
         "CompAssembly::remove() called for a parameterized CompAssembly.");
 
   // Look for the passed in component in the list of children
-  auto it = std::find(m_children.begin(), m_children.end(), comp);
+  auto it = std::find(m_children.begin(), m_children.end(), std::unique_ptr<IComponent>(comp));
   if (it != m_children.end()) {
     // If it's found, remove it from the list and then delete it
     m_children.erase(it);
-    delete comp;
   } else {
     throw std::runtime_error("Component " + comp->getName() +
                              " is not a child of this assembly.");
@@ -210,7 +206,7 @@ boost::shared_ptr<IComponent> CompAssembly::getChild(const int i) const {
     if (i < 0 || i > static_cast<int>(m_children.size() - 1)) {
       throw std::runtime_error("CompAssembly::getChild() range not valid");
     }
-    return boost::shared_ptr<IComponent>(m_children[i], NoDeleting());
+    return boost::shared_ptr<IComponent>(m_children[i].get(), NoDeleting());
   }
 }
 
@@ -385,7 +381,7 @@ void CompAssembly::getBoundingBox(BoundingBox &assemblyBox) const {
     if (!m_cachedBoundingBox) {
       m_cachedBoundingBox = new BoundingBox();
       // Loop over the children and define a box large enough for all of them
-      for (auto child : m_children) {
+      for (auto &child : m_children) {
         BoundingBox compBox;
         if (child) {
           child->getBoundingBox(compBox);

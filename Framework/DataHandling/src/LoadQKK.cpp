@@ -111,18 +111,20 @@ void LoadQKK::exec() {
   // Add dummy source and samplepos to instrument
 
   // Create an instrument component wich will represent the sample position.
-  Geometry::ObjComponent *samplepos =
-      new Geometry::ObjComponent("Sample", instrument.get());
-  instrument->add(samplepos);
-  instrument->markAsSamplePos(samplepos);
+  auto samplepos =
+      std::make_unique<Geometry::ObjComponent>("Sample", instrument.get());
+  auto posRaw = samplepos.get();
+  instrument->add(std::move(samplepos));
+  instrument->markAsSamplePos(posRaw);
   // Put the sample in the centre of the coordinate system
   samplepos->setPos(0.0, 0.0, 0.0);
 
   // Create a component to represent the source
-  Geometry::ObjComponent *source =
-      new Geometry::ObjComponent("Source", instrument.get());
-  instrument->add(source);
-  instrument->markAsSource(source);
+  auto source =
+      std::make_unique<Geometry::ObjComponent>("Source", instrument.get());
+  auto sourceRaw = source.get();
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
 
   // Read in the L1 value and place the source at (0,0,-L1)
   double l1 = static_cast<double>(entry.getFloat("instrument/parameters/L1"));

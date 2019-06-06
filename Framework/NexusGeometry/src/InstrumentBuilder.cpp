@@ -44,10 +44,12 @@ InstrumentBuilder::InstrumentBuilder(const std::string &instrumentName)
 Geometry::IComponent *
 InstrumentBuilder::addComponent(const std::string &compName,
                                 const Eigen::Vector3d &position) {
-  Geometry::IComponent *component(new Geometry::ObjCompAssembly(compName));
+  std::unique_ptr<Geometry::IComponent> component =
+      std::make_unique<Geometry::ObjCompAssembly>(compName);
   component->setPos(position(0), position(1), position(2));
-  m_instrument->add(component);
-  return component;
+  auto componentRaw = component.get();
+  m_instrument->add(std::move(component));
+  return componentRaw;
 }
 
 /** Add a set of tubes to the last registered bank
@@ -70,21 +72,22 @@ void InstrumentBuilder::addTubes(
 void InstrumentBuilder::doAddTube(
     const std::string &compName, const detail::TubeBuilder &tube,
     boost::shared_ptr<const Mantid::Geometry::IObject> pixelShape) {
-  auto *objComp(new Geometry::ObjCompAssembly(compName));
+  auto objComp =std::make_unique<Geometry::ObjCompAssembly>(compName);
   const auto &pos = tube.tubePosition();
   objComp->setPos(pos(0), pos(1), pos(2));
   objComp->setOutline(tube.shape());
   auto baseName = compName + "_";
   for (size_t i = 0; i < tube.detPositions().size(); ++i) {
-    auto *detector = new Geometry::Detector(baseName + std::to_string(i),
-                                            tube.detIDs()[i], objComp);
+    auto detector = std::make_unique<Geometry::Detector>(
+        baseName + std::to_string(i), tube.detIDs()[i], objComp.get());
+    auto detRaw = detector.get();
     detector->translate(
         Mantid::Kernel::toV3D(tube.detPositions()[i] - tube.tubePosition()));
     detector->setShape(pixelShape);
-    objComp->add(detector);
-    m_instrument->markAsDetectorIncomplete(detector);
+    objComp->add(std::move(detector));
+    m_instrument->markAsDetectorIncomplete(detRaw);
   }
-  m_lastBank->add(objComp);
+  m_lastBank->add(std::move(objComp));
 }
 
 void InstrumentBuilder::addDetectorToLastBank(
@@ -93,44 +96,47 @@ void InstrumentBuilder::addDetectorToLastBank(
     boost::shared_ptr<const Geometry::IObject> shape) {
   if (!m_lastBank)
     throw std::runtime_error("No bank to add the detector to");
-  auto *detector = new Geometry::Detector(
+  auto detector = std::make_unique<Geometry::Detector>(
       detName, detId,
       const_cast<Geometry::IComponent *>(m_lastBank->getBaseComponent()));
+  auto detRaw = detector.get();
   detector->translate(Mantid::Kernel::toV3D(relativeOffset));
   // No rotation set for detector pixels of a bank. This is not possible in the
   // Nexus Geometry specification.
   detector->setShape(shape);
-  m_lastBank->add(detector);
-  m_instrument->markAsDetectorIncomplete(detector);
+  m_lastBank->add(std::move(detector));
+  m_instrument->markAsDetectorIncomplete(detRaw);
 }
 
 /// Adds detector to instrument
 void InstrumentBuilder::addDetectorToInstrument(
     const std::string &detName, detid_t detId, const Eigen::Vector3d &position,
     boost::shared_ptr<const Geometry::IObject> &shape) {
-  auto *detector(new Geometry::Detector(
+  auto detector(std::make_unique<Geometry::Detector>(
       detName, detId,
       const_cast<Geometry::IComponent *>(m_instrument->getBaseComponent())));
+  auto detRaw = detector.get();
   detector->setPos(position(0), position(1), position(2));
 
   detector->setShape(shape);
 
-  m_instrument->add(detector);
-  m_instrument->markAsDetectorIncomplete(detector);
+  m_instrument->add(std::move(detector));
+  m_instrument->markAsDetectorIncomplete(detRaw);
 }
 
 void InstrumentBuilder::addMonitor(
     const std::string &detName, detid_t detId, const Eigen::Vector3d &position,
     boost::shared_ptr<const Geometry::IObject> &shape) {
-  auto *detector(new Geometry::Detector(
+  auto detector = std::make_unique<Geometry::Detector>(
       detName, detId,
-      const_cast<Geometry::IComponent *>(m_instrument->getBaseComponent())));
+      const_cast<Geometry::IComponent *>(m_instrument->getBaseComponent()));
+  auto detRaw= detector.get();
   detector->setPos(position(0), position(1), position(2));
 
   detector->setShape(shape);
 
-  m_instrument->add(detector);
-  m_instrument->markAsMonitor(detector);
+  m_instrument->add(std::move(detector));
+  m_instrument->markAsMonitor(detRaw);
 }
 
 /// Sorts detectors
@@ -154,13 +160,13 @@ void InstrumentBuilder::addSource(const std::string &sourceName,
 void InstrumentBuilder::addBank(const std::string &localName,
                                 const Eigen::Vector3d &position,
                                 const Eigen::Quaterniond &rotation) {
-  auto *assembly =
-      new Geometry::CompAssembly(m_instrument->getBaseComponent(), nullptr);
+  auto assembly = std::make_unique<Geometry::CompAssembly>(
+      m_instrument->getBaseComponent(), nullptr);
   assembly->setName(localName);
   assembly->setPos(position[0], position[1], position[2]);
   assembly->setRot(Kernel::toQuat(rotation));
-  m_lastBank = assembly;
-  m_instrument->add(assembly);
+  m_lastBank = assembly.get();
+  m_instrument->add(std::move(assembly));
 }
 
 std::unique_ptr<const Geometry::Instrument>

@@ -514,16 +514,18 @@ void LoadGSS::createInstrumentGeometry(
       new Geometry::Instrument(instrumentname));
 
   // Add dummy source and samplepos to instrument
-  Geometry::ObjComponent *samplepos =
-      new Geometry::ObjComponent("Sample", instrument.get());
-  instrument->add(samplepos);
-  instrument->markAsSamplePos(samplepos);
+  auto samplepos =
+      std::make_unique<Geometry::ObjComponent>("Sample", instrument.get());
+  auto posRaw = samplepos.get();
+  instrument->add(std::move(samplepos));
+  instrument->markAsSamplePos(posRaw);
   samplepos->setPos(0.0, 0.0, 0.0);
 
-  Geometry::ObjComponent *source =
-      new Geometry::ObjComponent("Source", instrument.get());
-  instrument->add(source);
-  instrument->markAsSource(source);
+  auto source =
+      std::make_unique<Geometry::ObjComponent>("Source", instrument.get());
+  auto sourceRaw = source.get();
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
 
   double l1 = primaryflightpath;
   source->setPos(0.0, 0.0, -1.0 * l1);
@@ -541,10 +543,10 @@ void LoadGSS::createInstrumentGeometry(
   for (int i = 0; i < numDetector; ++i) {
     // a) Create a new detector. Instrument will take ownership of pointer so no
     // need to delete.
-    Geometry::Detector *detector =
-        new Geometry::Detector("det", detectorids[i], samplepos);
+    auto detector =
+        std::make_unique<Geometry::Detector>("det", detectorids[i], posRaw);
     Kernel::V3D pos;
-
+    auto detRaw = detector.get();
     // r is L2
     double r = totalflightpaths[i] - l1;
     pos.spherical(r, twothetas[i], 0.0);
@@ -555,8 +557,8 @@ void LoadGSS::createInstrumentGeometry(
     auto &spec = workspace->getSpectrum(i);
     spec.clearDetectorIDs();
     spec.addDetectorID(detectorids[i]);
-    instrument->add(detector);
-    instrument->markAsDetector(detector);
+    instrument->add(std::move(detector));
+    instrument->markAsDetector(detRaw);
 
   } // ENDFOR (i: spectrum)
   workspace->setInstrument(instrument);

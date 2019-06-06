@@ -515,14 +515,14 @@ Instrument_sptr CreateSampleWorkspace::createTestInstrumentRectangular(
     std::ostringstream bankname;
     bankname << "bank" << banknum;
 
-    RectangularDetector *bank = new RectangularDetector(bankname.str());
+    auto bank = std::make_unique<RectangularDetector>(bankname.str());
     bank->initialize(pixelShape, pixels, 0.0, pixelSpacing, pixels, 0.0,
                      pixelSpacing, banknum * pixels * pixels, true, pixels);
 
     // Mark them all as detectors
     for (int x = 0; x < pixels; x++) {
       for (int y = 0; y < pixels; y++) {
-        boost::shared_ptr<Detector> detector = bank->getAtXY(x, y);
+        auto = bank->getAtXY(x, y);
         if (detector) {
           // Mark it as a detector (add to the instrument cache)
           testInst->markAsDetector(detector.get());
@@ -530,10 +530,9 @@ Instrument_sptr CreateSampleWorkspace::createTestInstrumentRectangular(
       }
     }
 
-    testInst->add(bank);
     // Set the bank along the z-axis of the instrument. (beam direction).
     bank->setPos(V3D(0.0, 0.0, bankDistanceFromSample * banknum));
-
+    testInst->add(std::move(bank));
     progress.report();
   }
 
@@ -549,7 +548,7 @@ Instrument_sptr CreateSampleWorkspace::createTestInstrumentRectangular(
     std::ostringstream monitorName;
     monitorName << "monitor" << monitorNumber - monitorsStart + 1;
 
-    RectangularDetector *bank = new RectangularDetector(monitorName.str());
+    auto bank = std::make_unique<RectangularDetector>(monitorName.str());
     bank->initialize(monitorShape, 1, 0.0, pixelSpacing, 1, 0.0, pixelSpacing,
                      monitorNumber, true, 1);
 
@@ -559,7 +558,7 @@ Instrument_sptr CreateSampleWorkspace::createTestInstrumentRectangular(
       testInst->markAsMonitor(detector.get());
     }
 
-    testInst->add(bank);
+    testInst->add(std::move(bank));
     // Set the bank along the z-axis of the instrument, between the detectors.
     bank->setPos(
         V3D(0.0, 0.0,
@@ -567,25 +566,27 @@ Instrument_sptr CreateSampleWorkspace::createTestInstrumentRectangular(
   }
 
   // Define a source component
-  ObjComponent *source = new ObjComponent(
+  auto source = std::make_unique<ObjComponent>(
       "moderator", IObject_sptr(new CSGObject), testInst.get());
+  auto sourceRaw = source.get();
   source->setPos(V3D(0.0, 0.0, -sourceSampleDistance));
-  testInst->add(source);
-  testInst->markAsSource(source);
+  testInst->add(std::move(source));
+  testInst->markAsSource(sourceRaw);
 
   // Add chopper
-  ObjComponent *chopper = new ObjComponent(
+  auto chopper = std::make_unique<ObjComponent>(
       "chopper-position", IObject_sptr(new CSGObject), testInst.get());
   chopper->setPos(V3D(0.0, 0.0, -0.25 * sourceSampleDistance));
-  testInst->add(chopper);
+  auto testRaw = testInst.get();
+  testInst->add(std::move(chopper));
 
   // Define a sample as a simple sphere
   auto sampleSphere = createSphere(0.001, V3D(0.0, 0.0, 0.0), "sample-shape");
-  ObjComponent *sample =
-      new ObjComponent("sample", sampleSphere, testInst.get());
+  auto sample = std::make_unique<ObjComponent>("sample", sampleSphere, testRaw);
+  auto sampleRaw = sample.get();
   testInst->setPos(0.0, 0.0, 0.0);
-  testInst->add(sample);
-  testInst->markAsSamplePos(sample);
+  testInst->add(std::move(sample));
+  testInst->markAsSamplePos(sampleRaw);
 
   return testInst;
 }

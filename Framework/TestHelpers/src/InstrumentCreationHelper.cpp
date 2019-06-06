@@ -37,61 +37,66 @@ void addFullInstrumentToWorkspace(MatrixWorkspace &workspace,
   for (int i = 0; i < ndets; ++i) {
     std::ostringstream lexer;
     lexer << "pixel-" << i << ")";
-    Detector *physicalPixel =
-        new Detector(lexer.str(), workspace.getAxis(1)->spectraNo(i),
-                     pixelShape, instrument.get());
+    auto physicalPixel = std::make_unique<Detector>(
+        lexer.str(), workspace.getAxis(1)->spectraNo(i), pixelShape,
+        instrument.get());
+    auto pixelRaw = physicalPixel.get();
     int ycount(i);
     if (startYNegative)
       ycount -= 1;
     const double ypos = ycount * 2.0 * pixelRadius;
     physicalPixel->setPos(0.0, ypos, detZPos);
-    instrument->add(physicalPixel);
-    instrument->markAsDetector(physicalPixel);
-    workspace.getSpectrum(i).setDetectorID(physicalPixel->getID());
+    instrument->add(std::move(physicalPixel));
+    instrument->markAsDetector(pixelRaw);
+    workspace.getSpectrum(i).setDetectorID(pixelRaw->getID());
   }
 
   // Monitors last
   if (includeMonitors) // These occupy the last 2 spectra
   {
-    Detector *monitor1 =
-        new Detector("mon1", workspace.getAxis(1)->spectraNo(ndets),
-                     IObject_sptr(), instrument.get());
+    auto monitor1 = std::make_unique<Detector>(
+        "mon1", workspace.getAxis(1)->spectraNo(ndets), IObject_sptr(),
+        instrument.get());
+    auto monitor1Raw = monitor1.get();
     monitor1->setPos(0.0, 0.0, -9.0);
-    instrument->add(monitor1);
-    instrument->markAsMonitor(monitor1);
+    instrument->add(std::move(monitor1));
+    instrument->markAsMonitor(monitor1Raw);
     workspace.getSpectrum(ndets).setDetectorID(ndets + 1);
 
-    Detector *monitor2 =
-        new Detector("mon2", workspace.getAxis(1)->spectraNo(ndets) + 1,
-                     IObject_sptr(), instrument.get());
+    auto monitor2 = std::make_unique<Detector>(
+        "mon2", workspace.getAxis(1)->spectraNo(ndets) + 1, IObject_sptr(),
+        instrument.get());
+    auto monitor2Raw = monitor2.get();
     monitor2->setPos(0.0, 0.0, -2.0);
-    instrument->add(monitor2);
-    instrument->markAsMonitor(monitor2);
+    instrument->add(std::move(monitor2));
+    instrument->markAsMonitor(monitor2Raw);
     workspace.getSpectrum(ndets + 1).setDetectorID(ndets + 2);
   }
 
   // Define a source and sample position
   // Define a source component
-  ObjComponent *source = new ObjComponent(
+  auto source = std::make_unique<ObjComponent>(
       "moderator",
       ComponentCreationHelper::createSphere(0.1, V3D(0, 0, 0), "1"),
       instrument.get());
+  auto sourceRaw = source.get();
   source->setPos(V3D(0.0, 0.0, -20.0));
-  instrument->add(source);
-  instrument->markAsSource(source);
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
 
   // Define a sample as a simple sphere
-  ObjComponent *sample = new ObjComponent(
+  auto sample = std::make_unique<ObjComponent>(
       "samplePos",
       ComponentCreationHelper::createSphere(0.1, V3D(0, 0, 0), "1"),
       instrument.get());
+  auto sampleRaw = sample.get();
   instrument->setPos(0.0, 0.0, 0.0);
-  instrument->add(sample);
-  instrument->markAsSamplePos(sample);
+  instrument->add(std::move(sample));
+  instrument->markAsSamplePos(sampleRaw);
   // chopper position
-  Component *chop_pos = new Component("chopper-position",
-                                      Kernel::V3D(0, 0, -10), instrument.get());
-  instrument->add(chop_pos);
+  auto chop_pos = std::make_unique<Component>(
+      "chopper-position", Kernel::V3D(0, 0, -10), instrument.get());
+  instrument->add(std::move(chop_pos));
   workspace.setInstrument(instrument);
 }
 
@@ -105,10 +110,11 @@ void addFullInstrumentToWorkspace(MatrixWorkspace &workspace,
 ObjComponent *addComponent(Mantid::Geometry::Instrument_sptr &instrument,
                            const Mantid::Kernel::V3D &position,
                            const std::string &name) {
-  ObjComponent *component = new ObjComponent(name);
+  auto component = std::make_unique<ObjComponent>(name);
+  auto compRaw = component.get();
   component->setPos(position);
-  instrument->add(component);
-  return component;
+  instrument->add(std::move(component));
+  return compRaw;
 }
 
 /** Adds a sample to an instrument
@@ -145,10 +151,11 @@ void addSource(Mantid::Geometry::Instrument_sptr &instrument,
 void addMonitor(Mantid::Geometry::Instrument_sptr &instrument,
                 const Mantid::Kernel::V3D &position, const int ID,
                 const std::string &name) {
-  Detector *monitor = new Detector(name, ID, nullptr);
+  auto monitor = std::make_unique<Detector>(name, ID, nullptr);
+  auto monitorRaw = monitor.get();
   monitor->setPos(position);
-  instrument->add(monitor);
-  instrument->markAsMonitor(monitor);
+  instrument->add(std::move(monitor));
+  instrument->markAsMonitor(monitorRaw);
 }
 
 /** Adds a detector to an instrument
@@ -162,11 +169,12 @@ void addDetector(Mantid::Geometry::Instrument_sptr &instrument,
                  const Mantid::Kernel::V3D &position, const int ID,
                  const std::string &name) {
   // Where 0.01 is half detector width etc.
-  Detector *detector = new Detector(
+  auto detector = std::make_unique<Detector>(
       name, ID, ComponentCreationHelper::createCuboid(0.01, 0.02, 0.03),
       nullptr);
+  auto detRaw = detector.get();
   detector->setPos(position);
-  instrument->add(detector);
-  instrument->markAsDetector(detector);
+  instrument->add(std::move(detector));
+  instrument->markAsDetector(detRaw);
 }
 } // namespace InstrumentCreationHelper

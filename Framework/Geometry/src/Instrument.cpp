@@ -868,7 +868,7 @@ void Instrument::getBoundingBox(BoundingBox &assemblyBox) const {
       m_cachedBoundingBox = new BoundingBox();
       ComponentID sourceID = getSource()->getComponentID();
       // Loop over the children and define a box large enough for all of them
-      for (auto component : m_children) {
+      for (auto &component : m_children) {
         BoundingBox compBox;
         if (component && component->getComponentID() != sourceID) {
           component->getBoundingBox(compBox);
@@ -1261,9 +1261,9 @@ bool Instrument::isMonitorViaIndex(const size_t index) const {
 
 bool Instrument::isEmptyInstrument() const { return this->nelements() == 0; }
 
-int Instrument::add(IComponent *component) {
+int Instrument::add(std::unique_ptr<IComponent> component) {
   // invalidate cache
-  return CompAssembly::add(component);
+  return CompAssembly::add(std::move(component));
 }
 
 /// Returns the index for a detector ID. Used for accessing DetectorInfo.

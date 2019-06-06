@@ -275,13 +275,15 @@ void LoadNXSPE::exec() {
   Geometry::Instrument_sptr instrument(new Geometry::Instrument(
       instrument_name.empty() ? "NXSPE" : instrument_name));
 
-  Geometry::ObjComponent *source = new Geometry::ObjComponent("source");
+  auto source = std::make_unique<Geometry::ObjComponent>("source");
+  auto sourceRaw = source.get();
   source->setPos(0.0, 0.0, -10.);
-  instrument->add(source);
-  instrument->markAsSource(source);
-  Geometry::ObjComponent *sample = new Geometry::ObjComponent("sample");
-  instrument->add(sample);
-  instrument->markAsSamplePos(sample);
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
+  auto sample = std::make_unique<Geometry::ObjComponent>("sample");
+  auto sampleRaw = sample.get();
+  instrument->add(std::move(sample));
+  instrument->markAsSamplePos(sampleRaw);
 
   boost::shared_ptr<const Geometry::CSGObject> cuboid(
       createCuboid(0.1, 0.1, 0.1)); // FIXME: memory hog on rendering. Also,
@@ -295,12 +297,13 @@ void LoadNXSPE::exec() {
     Kernel::V3D pos;
     pos.spherical(r, polar.at(i), azimuthal.at(i));
 
-    Geometry::Detector *det =
-        new Geometry::Detector("pixel", static_cast<int>(i + 1), sample);
+    auto det = std::make_unique<Geometry::Detector>(
+        "pixel", static_cast<int>(i + 1), sampleRaw);
+    auto detRaw = det.get();
     det->setPos(pos);
     det->setShape(cuboid);
-    instrument->add(det);
-    instrument->markAsDetector(det);
+    instrument->add(std::move(det));
+    instrument->markAsDetector(detRaw);
   }
   outputWS->setInstrument(instrument);
 

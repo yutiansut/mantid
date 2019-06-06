@@ -293,16 +293,18 @@ void EditInstrumentGeometry::exec() {
   }
 
   // Set up source and sample information
-  Geometry::ObjComponent *samplepos =
-      new Geometry::ObjComponent("Sample", instrument.get());
-  instrument->add(samplepos);
-  instrument->markAsSamplePos(samplepos);
+  auto samplepos =
+      std::make_unique<Geometry::ObjComponent>("Sample", instrument.get());
+  auto posRaw = samplepos.get();
+  instrument->add(std::move(samplepos));
+  instrument->markAsSamplePos(posRaw);
   samplepos->setPos(0.0, 0.0, 0.0);
 
-  Geometry::ObjComponent *source =
-      new Geometry::ObjComponent("Source", instrument.get());
-  instrument->add(source);
-  instrument->markAsSource(source);
+  auto source =
+      std::make_unique<Geometry::ObjComponent>("Source", instrument.get());
+  auto sourceRaw = source.get();
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
   source->setPos(0.0, 0.0, -1.0 * l1);
 
   // Add/copy detector information
@@ -314,9 +316,9 @@ void EditInstrumentGeometry::exec() {
       newdetid = storDetIDs[i];
     else
       newdetid = detid_t(i) + 100;
-    Geometry::Detector *detector =
-        new Geometry::Detector("det", newdetid, samplepos);
-
+    auto detector =
+        std::make_unique<Geometry::Detector>("det", newdetid, posRaw);
+    auto detRaw = detector.get();
     // Set up new detector parameters related to new instrument
     double l2 = storL2s[i];
     double tth = stor2Thetas[i];
@@ -334,8 +336,8 @@ void EditInstrumentGeometry::exec() {
 
     spectrum.clearDetectorIDs();
     spectrum.addDetectorID(newdetid);
-    instrument->add(detector);
-    instrument->markAsDetector(detector);
+    instrument->add(std::move(detector));
+    instrument->markAsDetector(detRaw);
 
   } // ENDFOR workspace index
 

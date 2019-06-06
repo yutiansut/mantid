@@ -1320,28 +1320,29 @@ void InstrumentDefinitionParser::createDetectorOrMonitor(
   std::string typeName = pCompElem->getAttribute("type");
 
   // Create detector and increment id. Finally add the detector to the parent
-  Geometry::Detector *detector = new Geometry::Detector(
+  auto detector = std::make_unique<Geometry::Detector>(
       name, idList.vec[idList.counted], mapTypeNameToShape[typeName], parent);
+  auto detRaw = detector.get();
   idList.counted++;
-  parent->add(detector);
+  parent->add(std::move(detector));
 
   // set location for this newly added comp and set facing if specified in
   // instrument def. file. Also
   // check if any logfiles are referred to through the <parameter> element.
-  setLocation(detector, pLocElem, m_angleConvertConst, m_deltaOffsets);
-  setFacing(detector, pLocElem);
+  setLocation(detRaw, pLocElem, m_angleConvertConst, m_deltaOffsets);
+  setFacing(detRaw, pLocElem);
   setLogfile(
-      detector, pCompElem,
+      detRaw, pCompElem,
       m_instrument->getLogfileCache()); // params specified within <component>
   setLogfile(
-      detector, pLocElem,
+      detRaw, pLocElem,
       m_instrument
           ->getLogfileCache()); // params specified within specific <location>
 
   // If enabled, check for a 'neutronic position' tag and add to cache
   // (null pointer added INTENTIONALLY if not found)
   if (m_indirectPositions) {
-    m_neutronicPos[detector] = pLocElem->getChildElement("neutronic");
+    m_neutronicPos[detRaw] = pLocElem->getChildElement("neutronic");
   }
 
   // mark-as is a depricated attribute used before is="monitor" was introduced
@@ -1355,16 +1356,16 @@ void InstrumentDefinitionParser::createDetectorOrMonitor(
 
   try {
     if (category == "Monitor" || category == "monitor")
-      m_instrument->markAsMonitor(detector);
+      m_instrument->markAsMonitor(detRaw);
     else {
       // for backwards compatebility look for mark-as="monitor"
       if ((pCompElem->hasAttribute("mark-as") &&
            pCompElem->getAttribute("mark-as") == "monitor") ||
           (pLocElem->hasAttribute("mark-as") &&
            pLocElem->getAttribute("mark-as") == "monitor")) {
-        m_instrument->markAsMonitor(detector);
+        m_instrument->markAsMonitor(detRaw);
       } else
-        m_instrument->markAsDetectorIncomplete(detector);
+        m_instrument->markAsDetectorIncomplete(detRaw);
     }
 
   } catch (Kernel::Exception::ExistsError &) {
@@ -1379,7 +1380,7 @@ void InstrumentDefinitionParser::createDetectorOrMonitor(
   // Add all monitors and detectors to 'facing component' container. This is
   // only used if the
   // "facing" elements are defined in the instrument definition file
-  m_facingComponent.push_back(detector);
+  m_facingComponent.push_back(detRaw);
 }
 
 void InstrumentDefinitionParser::createGridDetector(
@@ -1818,31 +1819,32 @@ void InstrumentDefinitionParser::appendLeaf(Geometry::ICompAssembly *parent,
     std::string name = InstrumentDefinitionParser::getNameOfLocationElement(
         pLocElem, pCompElem);
 
-    auto comp =
-        new Geometry::ObjComponent(name, mapTypeNameToShape[typeName], parent);
-    parent->add(comp);
+    auto comp = std::make_unique<Geometry::ObjComponent>(
+        name, mapTypeNameToShape[typeName], parent);
+    auto compRaw = comp.get();
+    parent->add(std::move(comp));
 
     // check if special Source or SamplePos Component
     if (category == "Source" || category == "source") {
-      m_instrument->markAsSource(comp);
+      m_instrument->markAsSource(compRaw);
     }
     if (category == "SamplePos" || category == "samplePos") {
-      m_instrument->markAsSamplePos(comp);
+      m_instrument->markAsSamplePos(compRaw);
     }
     if (category == "ChopperPos" || category == "chopperPos") {
-      m_instrument->markAsChopperPoint(comp);
+      m_instrument->markAsChopperPoint(compRaw);
     }
 
     // set location for this newly added comp and set facing if specified in
     // instrument def. file. Also
     // check if any logfiles are referred to through the <parameter> element.
 
-    setLocation(comp, pLocElem, m_angleConvertConst, m_deltaOffsets);
-    setFacing(comp, pLocElem);
+    setLocation(compRaw, pLocElem, m_angleConvertConst, m_deltaOffsets);
+    setFacing(compRaw, pLocElem);
     setLogfile(
-        comp, pCompElem,
+        compRaw, pCompElem,
         m_instrument->getLogfileCache()); // params specified within <component>
-    setLogfile(comp, pLocElem,
+    setLogfile(compRaw, pLocElem,
                m_instrument->getLogfileCache()); // params specified within
                                                  // specific <location>
   }
@@ -2939,8 +2941,9 @@ std::string InstrumentDefinitionParser::translateRotateXMLcuboid(
 /// @return absolute position
 V3D InstrumentDefinitionParser::getAbsolutPositionInCompCoorSys(
     ICompAssembly *comp, V3D pos) {
-  Component *dummyComp = new Component("dummy", comp);
-  comp->add(dummyComp);
+  auto dummyCompSmart = std::make_unique<Component>("dummy", comp);
+  auto dummyComp = dummyCompSmart.get();
+  comp->add(std::move(dummyCompSmart));
 
   dummyComp->setPos(pos); // set pos relative to comp coord. sys.
 

@@ -70,16 +70,18 @@ void LoadInstrumentFromNexus::exec() {
   // The L2 and 2-theta values from nexus file assumed to be relative to sample
   // position
 
-  Geometry::ObjComponent *samplepos =
-      new Geometry::ObjComponent("Unknown", instrument.get());
-  instrument->add(samplepos);
-  instrument->markAsSamplePos(samplepos);
+  auto samplepos =
+      std::make_unique<Geometry::ObjComponent>("Unknown", instrument.get());
+  auto posRaw = samplepos.get();
+  instrument->add(std::move(samplepos));
+  instrument->markAsSamplePos(posRaw);
   samplepos->setPos(0.0, 0.0, 0.0);
 
-  Geometry::ObjComponent *source =
-      new Geometry::ObjComponent("Unknown", instrument.get());
-  instrument->add(source);
-  instrument->markAsSource(source);
+  auto source =
+      std::make_unique<Geometry::ObjComponent>("Unknown", instrument.get());
+  auto sourceRaw = source.get();
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
   // If user has provided an L1, use that
   auto l1ConfigVal =
       Kernel::ConfigService::Instance().getValue<double>("instrument.L1");

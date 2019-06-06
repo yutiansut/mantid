@@ -490,9 +490,9 @@ void GridDetector::createLayer(const std::string &name, CompAssembly *parent,
       }
       // Create the detector from the given id & shape and with xColumn as the
       // parent.
-      auto *detector =
-          new GridDetectorPixel(oss.str(), id, m_shape, xColumn, this,
-                                size_t(ix), size_t(iy), size_t(iz));
+      auto detector = std::make_unique<Detector>(
+          GridDetectorPixel(oss.str(), id, m_shape, xColumn, this, size_t(ix),
+                            size_t(iy), size_t(iz)));
 
       // Calculate the x,y,z position
       double x = m_xstart + ix * m_xstep;
@@ -504,7 +504,7 @@ void GridDetector::createLayer(const std::string &name, CompAssembly *parent,
       detector->translate(pos);
 
       // Add it to the x-column
-      xColumn->add(detector);
+      xColumn->add(std::move(detector));
     }
   }
 }

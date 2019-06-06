@@ -42,25 +42,29 @@ createMinimalInstrument(const Mantid::Kernel::V3D &sourcePos,
       "0,0,0"));
 
   // A source
-  ObjComponent *source = new ObjComponent("source");
+  auto source = std::make_unique<ObjComponent>("source");
+  auto sourceRaw = source.get();
   source->setPos(sourcePos);
   source->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-  instrument->add(source);
-  instrument->markAsSource(source);
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
 
   // A sample
-  ObjComponent *sample = new ObjComponent("some-surface-holder");
+  auto sample = std::make_unique<ObjComponent>("some-surface-holder");
+  auto sampleRaw = sample.get();
   sample->setPos(samplePos);
   sample->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-  instrument->add(sample);
-  instrument->markAsSamplePos(sample);
+  instrument->add(std::move(sample));
+  instrument->markAsSamplePos(sampleRaw);
 
   // A detector
-  Detector *det = new Detector("point-detector", 1 /*detector id*/, nullptr);
+  auto det =
+      std::make_unique<Detector>("point-detector", 1 /*detector id*/, nullptr);
+  auto detRaw = det.get();
   det->setPos(detectorPos);
   det->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-  instrument->add(det);
-  instrument->markAsDetector(det);
+  instrument->add(std::move(det));
+  instrument->markAsDetector(detRaw);
 
   return instrument;
 }
@@ -75,29 +79,32 @@ createVirtualInstrument(Kernel::V3D sourcePos, Kernel::V3D samplePos,
       "0,0,0"));
 
   // A source
-  ObjComponent *source = new ObjComponent("source");
+  auto source = std::make_unique<ObjComponent>("source");
+  auto sourceRaw = source.get();
   source->setPos(sourcePos);
   source->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-  instrument->add(source);
-  instrument->markAsSource(source);
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
 
   // A sample
-  ObjComponent *sample = new ObjComponent("some-surface-holder");
+  auto sample = std::make_unique<ObjComponent>("some-surface-holder");
+  auto sampleRaw = sample.get();
   sample->setPos(samplePos);
   sample->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-  instrument->add(sample);
-  instrument->markAsSamplePos(sample);
+  instrument->add(std::move(sample));
+  instrument->markAsSamplePos(sampleRaw);
 
   // A detector
   size_t numdets = vecdetpos.size();
   for (size_t i = 0; i < numdets; ++i) {
-    Detector *det =
-        new Detector("point-detector", vecdetid[i] /*detector id*/, nullptr);
+    auto det = std::make_unique<Detector>("point-detector",
+                                          vecdetid[i] /*detector id*/, nullptr);
+    auto detRaw = det.get();
     det->setPos(vecdetpos[i]);
     // FIXME - should be cubi... pixel
     det->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-    instrument->add(det);
-    instrument->markAsDetector(det);
+    instrument->add(std::move(det));
+    instrument->markAsDetector(detRaw);
   }
 
   return instrument;

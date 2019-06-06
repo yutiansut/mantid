@@ -78,11 +78,12 @@ boost::shared_ptr<CSGObject> createCappedCylinder(double radius, double height,
 
 void addSourceToInstrument(Instrument_sptr &instrument, const V3D &sourcePos,
                            const std::string &name) {
-  ObjComponent *source =
-      new ObjComponent(name, IObject_sptr(new CSGObject), instrument.get());
+  auto source = std::make_unique<ObjComponent>(
+      name, IObject_sptr(new CSGObject), instrument.get());
+  auto sourceRaw = source.get();
   source->setPos(sourcePos);
-  instrument->add(source);
-  instrument->markAsSource(source);
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
 }
 //----------------------------------------------------------------------------------------------
 
@@ -122,11 +123,12 @@ void addSampleToInstrument(Instrument_sptr &instrument, const V3D &samplePos) {
   // Define a sample as a simple sphere
   IObject_sptr sampleSphere =
       createSphere(0.001, V3D(0.0, 0.0, 0.0), "sample-shape");
-  ObjComponent *sample =
-      new ObjComponent("sample", sampleSphere, instrument.get());
+  auto sample =
+      std::make_unique<ObjComponent>("sample", sampleSphere, instrument.get());
+  auto sampleRaw = sample.get();
   instrument->setPos(samplePos);
-  instrument->add(sample);
-  instrument->markAsSamplePos(sample);
+  instrument->add(std::move(sample));
+  instrument->markAsSamplePos(sampleRaw);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -234,9 +236,9 @@ boost::shared_ptr<CompAssembly> createTestAssemblyOfFourCylinders() {
       0.5, 1.5, V3D(0.0, 0.0, 0.0), V3D(0., 1.0, 0.), "tube");
   // Four object components
   for (size_t i = 1; i < 5; ++i) {
-    ObjComponent *physicalPixel = new ObjComponent("pixel", pixelShape);
+    auto physicalPixel = std::make_unique<ObjComponent>("pixel", pixelShape);
     physicalPixel->setPos(static_cast<double>(i), 0.0, 0.0);
-    bank->add(physicalPixel);
+    bank->add(std::move(physicalPixel));
   }
 
   return bank;
@@ -375,26 +377,27 @@ Instrument_sptr createTestInstrumentCylindrical(
     // Make a new bank
     std::ostringstream bankname;
     bankname << "bank" << banknum;
-    CompAssembly *bank = new CompAssembly(bankname.str());
-
+    auto bank = std::make_unique<CompAssembly>(bankname.str());
+    auto bankRaw = bank.get();
     // Nine object components
     for (int i = -1; i < 2; ++i) {
       for (int j = -1; j < 2; ++j) {
         std::ostringstream lexer;
         lexer << "pixel-(" << j << ";" << i << ")";
-        Detector *physicalPixel =
-            new Detector(lexer.str(), pixelID, pixelShape, bank);
+        auto physicalPixel =
+            std::make_unique<Detector>(lexer.str(), pixelID, pixelShape, bank.get());
+        auto pixelRaw = physicalPixel.get();
         const double xpos = j * (cylRadius * 2.0);
         const double ypos = i * cylHeight;
         physicalPixel->setPos(xpos, ypos, 0.0);
         pixelID++;
-        bank->add(physicalPixel);
-        testInst->markAsDetector(physicalPixel);
+        bank->add(std::move(physicalPixel));
+        testInst->markAsDetector(pixelRaw);
       }
     }
 
-    testInst->add(bank);
-    bank->setPos(V3D(0.0, 0.0, 5.0 * banknum));
+    testInst->add(std::move(bank));
+    bankRaw->setPos(V3D(0.0, 0.0, 5.0 * banknum));
   }
 
   addSourceToInstrument(testInst, sourcePos);
@@ -422,26 +425,27 @@ createCylInstrumentWithVerticalOffsetsSpecified(
       cylRadius, cylHeight, V3D(0.0, 0.0, 0.0), V3D(0., 1.0, 0.),
       "pixel-shape");
   auto instrument = boost::make_shared<Instrument>("instrument_with_tubes");
-  CompAssembly *bank = new CompAssembly("sixteenpack");
+  auto bank = std::make_unique<CompAssembly>("sixteenpack");
   for (size_t i = 0; i < nTubes; ++i) {
-    ObjCompAssembly *tube = new ObjCompAssembly("tube" + std::to_string(i));
+    auto tube = std::make_unique<ObjCompAssembly>("tube" + std::to_string(i));
     for (size_t j = 0; j < nDetsPerTube; ++j) {
 
       auto id = static_cast<int>(i * nDetsPerTube + j);
-      Detector *physicalPixel =
-          new Detector("det-" + std::to_string(id), id, pixelShape, tube);
-      tube->add(physicalPixel);
-      physicalPixel->setPos(V3D(0, static_cast<double>(j) * cylHeight, 0));
-      instrument->markAsDetector(physicalPixel);
+      auto physicalPixel = std::make_unique<Detector>(
+          "det-" + std::to_string(id), id, pixelShape, tube.get());
+      auto pixelRaw = physicalPixel.get();
+      tube->add(std::move(physicalPixel));
+      pixelRaw->setPos(V3D(0, static_cast<double>(j) * cylHeight, 0));
+      instrument->markAsDetector(pixelRaw);
     }
     tube->setPos(V3D(xMin + static_cast<double>(i) * tubeDiameter,
                      -ySpan / 2 + verticalOffsets[i], 0));
     tube->setOutline(tube->createOutline());
     Mantid::Geometry::BoundingBox tmp = tube->shape()->getBoundingBox();
-    bank->add(tube);
+    bank->add(std::move(tube));
   }
   bank->setPos(V3D(0, 0, bankZPos));
-  instrument->add(bank);
+  instrument->add(std::move(bank));
   instrument->setReferenceFrame(boost::make_shared<ReferenceFrame>(
       Mantid::Geometry::Y /*up*/, Mantid::Geometry::Z /*along*/, Left,
       "0,0,0"));
@@ -507,20 +511,21 @@ createCylInstrumentWithDetInGivenPositions(const std::vector<double> &L2,
   // Just increment pixel ID's
   int pixelID = 1;
   // one bank
-  CompAssembly *bank = new CompAssembly("det_ass");
+  auto bank = std::make_unique<CompAssembly>("det_ass");
 
   for (size_t i = 0; i < azim.size(); i++) {
-    Detector *physicalPixel =
-        new Detector("det" + std::to_string(i), pixelID, pixelShape, bank);
+    auto physicalPixel = std::make_unique<Detector>(
+        "det" + std::to_string(i), pixelID, pixelShape, bank.get());
+    auto pixelRaw = physicalPixel.get();
     double zpos = L2[i] * cos(polar[i]);
     double xpos = L2[i] * sin(polar[i]) * cos(azim[i]);
     double ypos = L2[i] * sin(polar[i]) * sin(azim[i]);
     physicalPixel->setPos(xpos, ypos, zpos);
     pixelID++;
-    bank->add(physicalPixel);
-    testInst->markAsDetector(physicalPixel);
+    bank->add(std::move(physicalPixel));
+    testInst->markAsDetector(pixelRaw);
   }
-  testInst->add(bank);
+  testInst->add(std::move(bank));
   bank->setPos(V3D(0., 0., 0.));
 
   addSourceToInstrument(testInst, V3D(0.0, 0.0, -L2_min));
@@ -542,7 +547,8 @@ void addRectangularBank(Instrument &testInstrument, int idStart, int pixels,
       cylRadius, cylHeight, V3D(0.0, -cylHeight / 2.0, 0.0), V3D(0., 1.0, 0.),
       "pixel-shape");
 
-  RectangularDetector *bank = new RectangularDetector(bankName);
+  auto bank = std::make_unique<RectangularDetector>(bankName);
+  auto bankRaw = bank.get();
   bank->initialize(pixelShape, pixels, 0.0, pixelSpacing, pixels, 0.0,
                    pixelSpacing, idStart, true, pixels);
 
@@ -555,9 +561,9 @@ void addRectangularBank(Instrument &testInstrument, int idStart, int pixels,
         testInstrument.markAsDetector(detector.get());
     }
 
-  testInstrument.add(bank);
-  bank->setPos(bankPos);
-  bank->setRot(bankRot);
+  testInstrument.add(std::move(bank));
+  bankRaw->setPos(bankPos);
+  bankRaw->setRot(bankRot);
 }
 
 //----------------------------------------------------------------------------------------------
@@ -623,7 +629,8 @@ Instrument_sptr createTestInstrumentRectangular2(int num_banks, int pixels,
     std::ostringstream bankname;
     bankname << "bank" << banknum;
 
-    RectangularDetector *bank = new RectangularDetector(bankname.str());
+    auto bank = std::make_unique<RectangularDetector>(bankname.str());
+    auto bankRaw = bank.get();
     bank->initialize(pixelShape, pixels, -pixels * pixelSpacing / 2.0,
                      pixelSpacing, pixels, -pixels * pixelSpacing / 2.0,
                      pixelSpacing, (banknum - 1) * pixels * pixels, true,
@@ -638,11 +645,11 @@ Instrument_sptr createTestInstrumentRectangular2(int num_banks, int pixels,
           testInst->markAsDetector(detector.get());
       }
 
-    testInst->add(bank);
+    testInst->add(std::move(bank));
     // Place the center.
-    bank->setPos(V3D(1.0 * banknum, 0.0, 0.0));
+    bankRaw->setPos(V3D(1.0 * banknum, 0.0, 0.0));
     // rotate detector 90 degrees along vertical
-    bank->setRot(Quat(90.0, V3D(0, 1, 0)));
+    bankRaw->setRot(Quat(90.0, V3D(0, 1, 0)));
   }
 
   addSourceToInstrument(testInst, V3D(0.0, 0.0, -10.0));
@@ -674,43 +681,47 @@ createMinimalInstrument(const Mantid::Kernel::V3D &sourcePos,
       "0,0,0"));
 
   // A source
-  ObjComponent *source = new ObjComponent("source");
+  auto source = std::make_unique<ObjComponent>("source");
+  auto sourceRaw = source.get();
   source->setPos(sourcePos);
   source->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-  instrument->add(source);
-  instrument->markAsSource(source);
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
 
   // A sample
-  ObjComponent *sample = new ObjComponent("some-surface-holder");
+  auto sample = std::make_unique<ObjComponent>("some-surface-holder");
+  auto sampleRaw = sample.get();
   sample->setPos(samplePos);
   sample->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-  instrument->add(sample);
-  instrument->markAsSamplePos(sample);
+  instrument->add(std::move(sample));
+  instrument->markAsSamplePos(sampleRaw);
 
   // A detector
-  Detector *det = new Detector("point-detector", 1 /*detector id*/, nullptr);
+  auto det = std::make_unique<Detector>("point-detector", 1 /*detector id*/, nullptr);
+  auto detRaw = det.get();
   det->setPos(detectorPos);
   det->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-  instrument->add(det);
-  instrument->markAsDetector(det);
+  instrument->add(std::move(det));
+  instrument->markAsDetector(detRaw);
 
   return instrument;
 }
 
-CompAssembly *makeBank(size_t width, size_t height, Instrument *instrument) {
+std::unique_ptr<CompAssembly> makeBank(size_t width, size_t height, Instrument *instrument) {
 
   double width_d = double(width);
   double height_d = double(height);
   static int bankNo = 1;
-  auto bank = new CompAssembly("Bank" + std::to_string(bankNo++));
+  auto bank = std::make_unique<CompAssembly>("Bank" + std::to_string(bankNo++));
   static size_t id = 1;
   for (size_t i = 0; i < width; ++i) {
     for (size_t j = 0; j < height; ++j) {
-      Detector *det = new Detector("pixel", int(id++) /*detector id*/, bank);
+      auto det = std::make_unique<Detector>("pixel", int(id++) /*detector id*/, bank.get());
+      auto detRaw = det.get();
       det->setPos(V3D{double(i), double(j), double(0)});
       det->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-      bank->add(det);
-      instrument->markAsDetector(det);
+      bank->add(std::move(det));
+      instrument->markAsDetector(detRaw);
     }
   }
   bank->setPos(V3D{width_d / 2, height_d / 2, 0});
@@ -735,43 +746,45 @@ Instrument_sptr sansInstrument(const Mantid::Kernel::V3D &sourcePos,
       "0,0,0"));
 
   // A source
-  ObjComponent *source = new ObjComponent("source");
+  auto source = std::make_unique<ObjComponent>("source");
+  auto sourceRaw = source.get();
   source->setPos(sourcePos);
   source->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-  instrument->add(source);
-  instrument->markAsSource(source);
+  instrument->add(std::move(source));
+  instrument->markAsSource(sourceRaw);
 
   // A sample
-  ObjComponent *sample = new ObjComponent("some-surface-holder");
+  auto sample = std::make_unique<ObjComponent>("some-surface-holder");
+  auto sampleRaw = sample.get();
   sample->setPos(samplePos);
   sample->setShape(createSphere(0.01 /*1cm*/, V3D(0, 0, 0), "1"));
-  instrument->add(sample);
-  instrument->markAsSamplePos(sample);
+  instrument->add(std::move(sample));
+  instrument->markAsSamplePos(sampleRaw);
 
   size_t width = 100;
   size_t height = 100;
 
-  CompAssembly *trolley1 = new CompAssembly("Trolley1");
+  auto trolley1 = std::make_unique<CompAssembly>("Trolley1");
   trolley1->setPos(trolley1Pos);
-  CompAssembly *trolley2 = new CompAssembly("Trolley2");
+  auto trolley2 = std::make_unique<CompAssembly>("Trolley2");
   trolley2->setPos(trolley2Pos);
 
-  CompAssembly *N = makeBank(width, height, instrument.get());
-  trolley1->add(N);
-  CompAssembly *E = makeBank(width, height, instrument.get());
-  trolley1->add(E);
-  CompAssembly *S = makeBank(width, height, instrument.get());
-  trolley1->add(S);
-  CompAssembly *W = makeBank(width, height, instrument.get());
-  trolley1->add(W);
+  auto N = makeBank(width, height, instrument.get());
+  trolley1->add(std::move(N));
+  auto E = makeBank(width, height, instrument.get());
+  trolley1->add(std::move(E));
+  auto S = makeBank(width, height, instrument.get());
+  trolley1->add(std::move(S));
+  auto W = makeBank(width, height, instrument.get());
+  trolley1->add(std::move(W));
 
-  CompAssembly *l_curtain = makeBank(width, height, instrument.get());
-  trolley2->add(l_curtain);
-  CompAssembly *r_curtain = makeBank(width, height, instrument.get());
-  trolley2->add(r_curtain);
+  auto l_curtain = makeBank(width, height, instrument.get());
+  trolley2->add(std::move(l_curtain));
+  auto r_curtain = makeBank(width, height, instrument.get());
+  trolley2->add(std::move(r_curtain));
 
-  instrument->add(trolley1);
-  instrument->add(trolley2);
+  instrument->add(std::move(trolley1));
+  instrument->add(std::move(trolley2));
   return instrument;
 }
 
@@ -811,20 +824,21 @@ createInstrumentWithPSDTubes(const size_t nTubes, const size_t nPixelsPerTube,
     if (i == 0 && xDirection < 0)
       x = -1e-32;
     const auto z = radius * cos(theta);
-    CompAssembly *tube = new CompAssembly(lexer.str());
+    auto tube = std::make_unique<CompAssembly>(lexer.str());
     tube->setPos(V3D(x, 0.0, z));
     for (size_t j = 0; j < nPixelsPerTube; ++j) {
       lexer.str("");
       lexer << "pixel-" << i * nPixelsPerTube + j;
-      Detector *pixel = new Detector(
-          lexer.str(), int(i * nPixelsPerTube + j + 1), pixelShape, tube);
+      auto pixel = std::make_unique<Detector>(
+          lexer.str(), int(i * nPixelsPerTube + j + 1), pixelShape, tube.get());
+      auto pixelRaw = pixel.get();
       const double xpos = 0.0;
       const double ypos = double(j) * pixelHeight;
       pixel->setPos(xpos, ypos, 0.0);
-      tube->add(pixel);
-      testInst->markAsDetector(pixel);
+      tube->add(std::move(pixel));
+      testInst->markAsDetector(pixelRaw);
     }
-    testInst->add(tube);
+    testInst->add(std::move(tube));
   }
   addSourceToInstrument(testInst, V3D(0.0, 0.0, -1.0));
   addSampleToInstrument(testInst, V3D(0.0, 0.0, 0.0));

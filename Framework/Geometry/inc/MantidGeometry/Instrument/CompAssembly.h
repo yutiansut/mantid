@@ -32,9 +32,9 @@ namespace Geometry {
 class MANTID_GEOMETRY_DLL CompAssembly : public ICompAssembly,
                                          public Component {
 protected:
-  using comp_it = std::vector<IComponent *>::iterator; ///< Iterator type
+  using comp_it = std::vector<std::unique_ptr<IComponent>>::iterator; ///< Iterator type
   using const_comp_it =
-      std::vector<IComponent *>::const_iterator; ///< Const iterator type
+      std::vector<std::unique_ptr<IComponent>>::const_iterator; ///< Const iterator type
 
 public:
   /// String description of the type of component
@@ -53,7 +53,7 @@ public:
   //! Return the number of elements in the assembly
   int nelements() const override;
   //! Add a component to the assembly
-  int add(IComponent *) override;
+  int add(std::unique_ptr<IComponent>) override;
   //! Add a copy (clone) of a component
 
   void addChildren(IComponent *comp);
@@ -102,7 +102,7 @@ private:
 
 protected:
   /// the group of child components
-  std::vector<IComponent *> m_children;
+  std::vector<std::unique_ptr<IComponent>> m_children;
 
   /// A cached bounding box
   mutable BoundingBox *m_cachedBoundingBox;

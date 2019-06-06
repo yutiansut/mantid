@@ -207,9 +207,10 @@ createSparseWS(const API::MatrixWorkspace &modelWS,
   constexpr Kernel::V3D samplePos{0.0, 0.0, 0.0};
   auto sample = Kernel::make_unique<Geometry::ObjComponent>("sample", nullptr,
                                                             instrument.get());
+  auto sampleRaw = sample.get();
   sample->setPos(samplePos);
-  instrument->add(sample.get());
-  instrument->markAsSamplePos(sample.release());
+  instrument->add(sample);
+  instrument->markAsSamplePos(sampleRaw);
   const double R = 1.0; // This will be the default L2 distance.
   // Add source behind the sample.
   const Kernel::V3D sourcePos = [&]() {

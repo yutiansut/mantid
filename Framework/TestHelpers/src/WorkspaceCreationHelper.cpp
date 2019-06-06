@@ -278,10 +278,11 @@ Workspace2D_sptr maskSpectra(Workspace2D_sptr workspace,
     ShapeFactory sFactory;
     auto shape = sFactory.createShape(xmlShape);
     for (int i = 0; i < nhist; ++i) {
-      Detector *det = new Detector("det", detid_t(i + 1), shape, nullptr);
+      auto det = std::make_unique<Detector>("det", detid_t(i + 1), shape, nullptr);
+      auto detRaw = det.get();
       det->setPos(i, i + 1, 1);
-      instrument->add(det);
-      instrument->markAsDetector(det);
+      instrument->add(std::move(det));
+      instrument->markAsDetector(detRaw);
     }
     workspace->setInstrument(instrument);
     // Set IndexInfo without explicit spectrum definitions to trigger building

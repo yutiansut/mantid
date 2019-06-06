@@ -56,7 +56,7 @@ ObjCompAssembly::ObjCompAssembly(const std::string &n, IComponent *reference)
   if (reference) {
     ICompAssembly *test = dynamic_cast<ICompAssembly *>(reference);
     if (test)
-      test->add(boost::shared_ptr<ICompAssembly>(this));
+      test->add(std::unique_ptr<ICompAssembly>(this));
   }
 }
 
@@ -65,18 +65,18 @@ ObjCompAssembly::ObjCompAssembly(const std::string &n, IComponent *reference)
  */
 ObjCompAssembly::ObjCompAssembly(const ObjCompAssembly &ass)
     : ICompAssembly(ass), IObjComponent(ass), ObjComponent(ass) {
-  group = ass.group;
+  group.resize(ass.group.size());
   // Need to do a deep copy
-  comp_it it;
-  for (it = group.begin(); it != group.end(); ++it) {
-    ObjComponent *c = dynamic_cast<ObjComponent *>((*it)->clone());
+  
+  for (size_t i = 0; i< ass.group.size(); ++i) {
+    ObjComponent *c = dynamic_cast<ObjComponent *>((ass.group[i])->clone());
     if (!c) {
       throw Kernel::Exception::InstrumentDefinitionError(
           "ObjCompAssembly cannot contain components of non-ObjComponent type");
     }
-    *it = boost::shared_ptr<ObjComponent>(c);
+    group[i] = std::unique_ptr<ObjComponent>(c);
     // Move copied component object's parent from old to new ObjCompAssembly
-    (*it)->setParent(this);
+    (group[i])->setParent(this);
   }
 }
 
@@ -102,19 +102,19 @@ IComponent *ObjCompAssembly::clone() const {
  *
  * This becomes the new parent of comp.
  */
-int ObjCompAssembly::add(boost::shared_ptr<IComponent> comp) {
+int ObjCompAssembly::add(std::unique_ptr<IComponent> comp) {
   if (m_map)
     throw std::runtime_error(
         "ObjCompAssembly::add() called on a Parametrized object.");
 
   if (comp) {
-    auto c =boost::dynamic_pointer_cast<ObjComponent>(comp);
+    auto c = std::unique_ptr<ObjComponent>(dynamic_cast<ObjComponent *>(comp.release()));
     if (!c) {
       throw Kernel::Exception::InstrumentDefinitionError(
           "ObjCompAssembly cannot contain components of non-ObjComponent type");
     }
     comp->setParent(this);
-    group.push_back(c);
+    group.push_back(std::move(c));
   }
   return static_cast<int>(group.size());
 }
@@ -133,14 +133,14 @@ int ObjCompAssembly::addCopy(IComponent *comp) {
         "ObjCompAssembly::addCopy() called on a Parametrized object.");
 
   if (comp) {
-    IComponent *newcomp = comp->clone();
-    auto c = boost::shared_ptr<ObjComponent>(newcomp);
+    auto newcomp = dynamic_cast<ObjComponent *>(comp->clone());
+    auto c = std::unique_ptr<ObjComponent>(newcomp);
     if (!c) {
       throw Kernel::Exception::InstrumentDefinitionError(
           "ObjCompAssembly cannot contain components of non-ObjComponent type");
     }
     newcomp->setParent(this);
-    group.push_back(c);
+    group.push_back(std::move(c));
   }
   return static_cast<int>(group.size());
 }
@@ -160,15 +160,15 @@ int ObjCompAssembly::addCopy(IComponent *comp, const std::string &n) {
         "ObjCompAssembly::addCopy() called on a Parametrized object.");
 
   if (comp) {
-    IComponent *newcomp = comp->clone();
-    auto c = boost::shared_ptr<ObjComponent>(newcomp);
+    auto newcomp = dynamic_cast<ObjComponent *>(comp->clone());
+    auto c = std::unique_ptr<ObjComponent>(newcomp);
     if (!c) {
       throw Kernel::Exception::InstrumentDefinitionError(
           "ObjCompAssembly cannot contain components of non-ObjComponent type");
     }
     newcomp->setParent(this);
     newcomp->setName(n);
-    group.push_back(c);
+    group.push_back(std::move(c));
   }
   return static_cast<int>(group.size());
 }
@@ -211,7 +211,7 @@ boost::shared_ptr<IComponent> ObjCompAssembly::operator[](int i) const {
     return ParComponentFactory::create(child_base->operator[](i), m_map);
   } else {
     // Unparamterized - return the normal one
-    return group[i];
+    return boost::shared_ptr<IComponent>(group[i].get(), NoDeleting());
   }
 }
 

@@ -371,7 +371,7 @@ void StructuredDetector::createDetectors() {
       }
 
       // Create and store detector pixel
-      xColumn->add(addDetector(xColumn, oss.str(), ix, iy, id));
+      xColumn->add(std::unique_ptr<Detector>(addDetector(xColumn, oss.str(), ix, iy, id)));
     }
   }
 

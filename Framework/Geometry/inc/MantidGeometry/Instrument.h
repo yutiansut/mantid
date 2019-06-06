@@ -231,7 +231,7 @@ public:
   bool isEmptyInstrument() const;
 
   /// Add a component to the instrument
-  virtual int add(IComponent *component) override;
+  virtual int add(std::unique_ptr<IComponent> component) override;
 
   void parseTreeAndCacheBeamline();
   std::pair<std::unique_ptr<ComponentInfo>, std::unique_ptr<DetectorInfo>>
