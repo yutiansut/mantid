@@ -11,6 +11,7 @@
 #include "MantidAPI/Run.h"
 #include "MantidAPI/SpectrumInfo.h"
 #include "MantidAPI/WorkspaceFactory.h"
+#include "MantidAlgorithms/ReflectometrySumInQ.h"
 #include "MantidGeometry/IDetector.h"
 #include "MantidGeometry/Instrument.h"
 #include "MantidGeometry/Instrument/ReferenceFrame.h"
@@ -943,6 +944,17 @@ ReflectometryReductionOne2::constructIvsLamWS(MatrixWorkspace_sptr detectorWS) {
   return outputWS;
 }
 
+namespace {
+std::vector<int> size_tToint_tVectors(const std::vector<size_t> &rhs) {
+  std::vector<int> ints;
+  ints.reserve(rhs.size());
+  for (const auto &index : rhs) {
+    ints.emplace_back(static_cast<int>(index));
+  }
+  return ints;
+}
+} // namespace
+
 /**
  * Sum counts from the input workspace in lambda along lines of constant Q by
  * projecting to "virtual lambda" at a reference angle twoThetaR.
@@ -952,60 +964,81 @@ ReflectometryReductionOne2::constructIvsLamWS(MatrixWorkspace_sptr detectorWS) {
  */
 MatrixWorkspace_sptr
 ReflectometryReductionOne2::sumInQ(MatrixWorkspace_sptr detectorWS) {
-
-  // Construct the output array in virtual lambda
-  MatrixWorkspace_sptr IvsLam = constructIvsLamWS(detectorWS);
-
-  // Loop through each input group (and corresponding output spectrum)
-  const size_t numGroups = detectorGroups().size();
-  for (size_t groupIdx = 0; groupIdx < numGroups; ++groupIdx) {
-    auto &detectors = detectorGroups()[groupIdx];
-    auto &outputE = IvsLam->dataE(groupIdx);
-
-    // Loop through each spectrum in the detector group
-    for (auto spIdx : detectors) {
-      // Get the angle of this detector and its size in twoTheta
-      const double twoTheta = getDetectorTwoTheta(m_spectrumInfo, spIdx);
-      const double bTwoTheta = getDetectorTwoThetaRange(spIdx);
-
-      // Check X length is Y length + 1
-      const auto &inputX = detectorWS->x(spIdx);
-      const auto &inputY = detectorWS->y(spIdx);
-      const auto &inputE = detectorWS->e(spIdx);
-      if (inputX.size() != inputY.size() + 1) {
-        throw std::runtime_error(
-            "Expected input workspace to be histogram data (got X len=" +
-            std::to_string(inputX.size()) +
-            ", Y len=" + std::to_string(inputY.size()) + ")");
-      }
-
-      // Create a vector for the projected errors for this spectrum.
-      // (Output Y values can simply be accumulated directly into the output
-      // workspace, but for error values we need to create a separate error
-      // vector for the projected errors from each input spectrum and then
-      // do an overall sum in quadrature.)
-      std::vector<double> projectedE(outputE.size(), 0.0);
-
-      // Process each value in the spectrum
-      const int ySize = static_cast<int>(inputY.size());
-      for (int inputIdx = 0; inputIdx < ySize; ++inputIdx) {
-        // Do the summation in Q
-        sumInQProcessValue(inputIdx, twoTheta, bTwoTheta, inputX, inputY,
-                           inputE, detectors, groupIdx, IvsLam, projectedE);
-      }
-
-      // Sum errors in quadrature
-      const int eSize = static_cast<int>(outputE.size());
-      for (int outIdx = 0; outIdx < eSize; ++outIdx) {
-        outputE[outIdx] += projectedE[outIdx] * projectedE[outIdx];
-      }
-    }
-
-    // Take the square root of all the accumulated squared errors for this
-    // detector group. Assumes Gaussian errors
-    double (*rs)(double) = std::sqrt;
-    std::transform(outputE.begin(), outputE.end(), outputE.begin(), rs);
+  // Validate there is only one detector group in the algorithm's detector
+  // groups
+  if (m_detectorGroups.size() > 1) {
+    throw std::runtime_error(
+        "Expected a single group in ProcessingInstructions, in SumInQ");
   }
+
+  double thetaIn = getProperty("ThetaIn");
+  const auto sumInQWorkspaceIndicesInput =
+      size_tToint_tVectors(m_detectorGroups[0]);
+  auto sumInQAlg = this->createChildAlgorithm("ReflectometrySumInQ");
+  sumInQAlg->initialize();
+  sumInQAlg->setWorkspaceInputProperties(
+      "InputWorkspace", detectorWS, IndexType::WorkspaceIndex,
+      std::vector<int64_t>(m_detectorGroups[0].begin(),
+                           m_detectorGroups[0].end()));
+  sumInQAlg->setProperty("ThetaIn", thetaIn);
+  sumInQAlg->setProperty("FlatSample",
+                         getPropertyValue("ReductionType") == "DivergentBeam");
+  sumInQAlg->execute();
+  MatrixWorkspace_sptr IvsLam = sumInQAlg->getProperty("OutputWorkspace");
+
+  // // Construct the output array in virtual lambda
+  // MatrixWorkspace_sptr IvsLam = constructIvsLamWS(detectorWS);
+
+  // // Loop through each input group (and corresponding output spectrum)
+  // const size_t numGroups = detectorGroups().size();
+  // for (size_t groupIdx = 0; groupIdx < numGroups; ++groupIdx) {
+  //   auto &detectors = detectorGroups()[groupIdx];
+  //   auto &outputE = IvsLam->dataE(groupIdx);
+
+  //   // Loop through each spectrum in the detector group
+  //   for (auto spIdx : detectors) {
+  //     // Get the angle of this detector and its size in twoTheta
+  //     const double twoTheta = getDetectorTwoTheta(m_spectrumInfo, spIdx);
+  //     const double bTwoTheta = getDetectorTwoThetaRange(spIdx);
+
+  //     // Check X length is Y length + 1
+  //     const auto &inputX = detectorWS->x(spIdx);
+  //     const auto &inputY = detectorWS->y(spIdx);
+  //     const auto &inputE = detectorWS->e(spIdx);
+  //     if (inputX.size() != inputY.size() + 1) {
+  //       throw std::runtime_error(
+  //           "Expected input workspace to be histogram data (got X len=" +
+  //           std::to_string(inputX.size()) +
+  //           ", Y len=" + std::to_string(inputY.size()) + ")");
+  //     }
+
+  //     // Create a vector for the projected errors for this spectrum.
+  //     // (Output Y values can simply be accumulated directly into the output
+  //     // workspace, but for error values we need to create a separate error
+  //     // vector for the projected errors from each input spectrum and then
+  //     // do an overall sum in quadrature.)
+  //     std::vector<double> projectedE(outputE.size(), 0.0);
+
+  //     // Process each value in the spectrum
+  //     const int ySize = static_cast<int>(inputY.size());
+  //     for (int inputIdx = 0; inputIdx < ySize; ++inputIdx) {
+  //       // Do the summation in Q
+  //       sumInQProcessValue(inputIdx, twoTheta, bTwoTheta, inputX, inputY,
+  //                          inputE, detectors, groupIdx, IvsLam, projectedE);
+  //     }
+
+  //     // Sum errors in quadrature
+  //     const int eSize = static_cast<int>(outputE.size());
+  //     for (int outIdx = 0; outIdx < eSize; ++outIdx) {
+  //       outputE[outIdx] += projectedE[outIdx] * projectedE[outIdx];
+  //     }
+  //   }
+
+  //   // Take the square root of all the accumulated squared errors for this
+  //   // detector group. Assumes Gaussian errors
+  //   double (*rs)(double) = std::sqrt;
+  //   std::transform(outputE.begin(), outputE.end(), outputE.begin(), rs);
+  // }
 
   return IvsLam;
 }

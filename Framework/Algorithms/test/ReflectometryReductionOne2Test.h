@@ -13,6 +13,7 @@
 #include "MantidAPI/FrameworkManager.h"
 #include "MantidAPI/MatrixWorkspace.h"
 #include "MantidAlgorithms/ReflectometryReductionOne2.h"
+#include "MantidDataHandling/SaveNexusProcessed.h"
 #include "MantidGeometry/Instrument.h"
 #include "MantidGeometry/Instrument/ReferenceFrame.h"
 #include "MantidHistogramData/HistogramY.h"

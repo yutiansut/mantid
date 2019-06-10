@@ -30,6 +30,7 @@ const static std::string INPUT_WS{"InputWorkspace"};
 const static std::string IS_FLAT_SAMPLE{"FlatSample"};
 const static std::string OUTPUT_WS{"OutputWorkspace"};
 const static std::string PARTIAL_BINS{"IncludePartialBins"};
+const static std::string THETA_IN{"ThetaIn"};
 } // namespace Prop
 
 /**
@@ -259,7 +260,7 @@ void ReflectometrySumInQ::init() {
           Prop::OUTPUT_WS, "", Kernel::Direction::Output),
       "A single histogram workspace containing the result of summation in Q.");
   declareProperty(
-      Prop::BEAM_CENTRE, EMPTY_DBL(), mandatoryNonnegative,
+      Prop::BEAM_CENTRE, EMPTY_DBL(), nonnegative,
       "Fractional workspace index of the specular reflection centre.");
   declareProperty(Prop::IS_FLAT_SAMPLE, true,
                   "If true, the summation is handled as the standard divergent "
@@ -267,6 +268,7 @@ void ReflectometrySumInQ::init() {
   declareProperty(Prop::PARTIAL_BINS, false,
                   "If true, use the full projected wavelength range possibly "
                   "including partially filled bins.");
+  declareProperty(Prop::THETA_IN, EMPTY_DBL(), nonnegative, "Angle in degrees");
 }
 
 /** Execute the algorithm.
@@ -289,6 +291,16 @@ std::map<std::string, std::string> ReflectometrySumInQ::validateInputs() {
   API::MatrixWorkspace_sptr inWS;
   Indexing::SpectrumIndexSet indices;
 
+  auto beamCentreProperty = getPointerToProperty(Prop::BEAM_CENTRE);
+  const auto thetaIn = getPointerToProperty(Prop::THETA_IN);
+  const std::string beamCentreThetaInIssue =
+      "Beam Centre xor ThetaIn must be declared";
+  if (beamCentreProperty->isDefault() && thetaIn->isDefault()) {
+    issues[Prop::BEAM_CENTRE] = beamCentreThetaInIssue;
+  } else if (!beamCentreProperty->isDefault() && !thetaIn->isDefault()) {
+    issues[Prop::BEAM_CENTRE] = beamCentreThetaInIssue;
+  }
+
   // validateInputs is called on the individual workspaces when the algorithm
   // is executed, it but may get called on a group from AlgorithmDialog. This
   // isn't handled in getWorkspaceAndIndices. We should fix this properly but
@@ -304,24 +316,28 @@ std::map<std::string, std::string> ReflectometrySumInQ::validateInputs() {
   const double beamCentre = getProperty(Prop::BEAM_CENTRE);
   const size_t beamCentreIndex = static_cast<size_t>(beamCentre);
   bool beamCentreFound{false};
-  for (const auto i : indices) {
-    if (spectrumInfo.isMonitor(i)) {
-      issues["InputWorkspaceIndexSet"] = "Index set cannot include monitors.";
-      break;
-    } else if ((i > 0 && spectrumInfo.isMonitor(i - 1)) ||
-               (i < spectrumInfo.size() - 1 && spectrumInfo.isMonitor(i + 1))) {
-      issues["InputWorkspaceIndexSet"] =
-          "A neighbour to any detector in the index set cannot be a monitor";
-      break;
+  // If beamCentre is given
+  if (!beamCentreProperty->isDefault()) {
+    for (const auto i : indices) {
+      if (spectrumInfo.isMonitor(i)) {
+        issues["InputWorkspaceIndexSet"] = "Index set cannot include monitors.";
+        break;
+      } else if ((i > 0 && spectrumInfo.isMonitor(i - 1)) ||
+                 (i < spectrumInfo.size() - 1 &&
+                  spectrumInfo.isMonitor(i + 1))) {
+        issues["InputWorkspaceIndexSet"] =
+            "A neighbour to any detector in the index set cannot be a monitor";
+        break;
+      }
+      if (i == beamCentreIndex) {
+        beamCentreFound = true;
+        break;
+      }
     }
-    if (i == beamCentreIndex) {
-      beamCentreFound = true;
-      break;
+    if (!beamCentreFound) {
+      issues[Prop::BEAM_CENTRE] =
+          "Beam centre is not included in InputWorkspaceIndexSet.";
     }
-  }
-  if (!beamCentreFound) {
-    issues[Prop::BEAM_CENTRE] =
-        "Beam centre is not included in InputWorkspaceIndexSet.";
   }
   return issues;
 }
@@ -505,18 +521,39 @@ ReflectometrySumInQ::projectedLambdaRange(const MinMax &wavelengthRange,
  * @return :: the reference angle struct
  */
 ReflectometrySumInQ::Angles
-ReflectometrySumInQ::referenceAngles(const API::SpectrumInfo &spectrumInfo) {
+ReflectometrySumInQ::referenceAngles(const API::SpectrumInfo &spectrumInfo,
+                                     const std::vector<int64_t> &detectors) {
   Angles a;
   const double beamCentre = getProperty(Prop::BEAM_CENTRE);
+  const double thetaIn = getProperty(Prop::THETA_IN);
   const bool isFlat = getProperty(Prop::IS_FLAT_SAMPLE);
-  if (isFlat) {
-    a.horizon = centreTwoTheta(beamCentre, spectrumInfo) / 2.;
+  if (getPointerToProperty(Prop::THETA_IN)->isDefault()) {
+    if (isFlat) {
+      a.horizon = centreTwoTheta(beamCentre, spectrumInfo) / 2.;
+    } else {
+      a.horizon = 0.;
+    }
+    a.referenceWSIndex = static_cast<size_t>(beamCentre);
+    a.twoTheta = spectrumInfo.twoTheta(a.referenceWSIndex);
+    a.delta = a.twoTheta - a.horizon;
   } else {
-    a.horizon = 0.;
+    if (isFlat) {
+      a.horizon = thetaIn;
+    } else {
+      a.horizon = 0.;
+    }
+    a.referenceWSIndex =
+        detectors.front() + (detectors.back() - detectors.front()) / 2;
+    const auto refTwoTheta = spectrumInfo.twoTheta(a.referenceWSIndex);
+    // The angle that should be used in the final conversion to Q is
+    // (twoThetaR-theta0). However, the angle actually used by ConvertUnits is
+    // twoThetaD/2 where twoThetaD is the detector's twoTheta angle. Since it
+    // is not easy to change what angle ConvertUnits uses, we can compensate by
+    // setting twoThetaR = twoThetaD/2+theta0
+    a.twoTheta = refTwoTheta / 2.0 + a.horizon;
+    a.delta = a.twoTheta - a.horizon;
   }
-  a.referenceWSIndex = static_cast<size_t>(beamCentre);
-  a.twoTheta = spectrumInfo.twoTheta(a.referenceWSIndex);
-  a.delta = a.twoTheta - a.horizon;
+
   return a;
 }
 
@@ -533,7 +570,8 @@ ReflectometrySumInQ::sumInQ(const API::MatrixWorkspace &detectorWS,
                             const Indexing::SpectrumIndexSet &indices) {
 
   const auto spectrumInfo = detectorWS.spectrumInfo();
-  const auto refAngles = referenceAngles(spectrumInfo);
+  const std::vector<int64_t> detectors = getProperty("InputWorkspaceIndexSet");
+  const auto refAngles = referenceAngles(spectrumInfo, detectors);
   // Construct the output workspace in virtual lambda
   API::MatrixWorkspace_sptr IvsLam =
       constructIvsLamWS(detectorWS, indices, refAngles);

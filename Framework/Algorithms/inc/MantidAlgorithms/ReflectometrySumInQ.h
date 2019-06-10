@@ -75,7 +75,8 @@ private:
   MinMax projectedLambdaRange(const MinMax &wavelengthRange,
                               const MinMax &twoThetaRange,
                               const Angles &refAngles);
-  Angles referenceAngles(const API::SpectrumInfo &spectrumInfo);
+  Angles referenceAngles(const API::SpectrumInfo &spectrumInfo,
+                         const std::vector<int64_t> &detectors);
   API::MatrixWorkspace_sptr sumInQ(const API::MatrixWorkspace &detectorWS,
                                    const Indexing::SpectrumIndexSet &indices);
 };
