@@ -31,12 +31,18 @@ def create_test_workspace(ws_name=None,
     if time_series_logs is not None:
         for name, values in time_series_logs:
             tsp = FloatTimeSeriesProperty(name)
-            for value in values:
-                tsp.addValue("2000-05-01T12:00:00", value)
+            for item in values:
+                try:
+                    time, value = item[0], item[1]
+                except TypeError:
+                    time, value = "2000-05-01T12:00:00", item
+                tsp.addValue(time, value)
             run.addProperty(name, tsp, replace=True)
+
     if string_value_logs is not None:
         for name, value in string_value_logs:
-            run.addProperty(StringPropertyWithValue(name, value), replace=True)
+            run.addProperty(
+                name, StringPropertyWithValue(name, value), replace=True)
 
     ws_name = ws_name if ws_name is not None else 'fitting_context_model_test'
     AnalysisDataService.Instance().addOrReplace(ws_name, fake_ws)
@@ -220,6 +226,7 @@ class FitParametersTest(unittest.TestCase):
                 fit_params.error(name),
                 msg="Mismatch in error for parameter" + name)
 
+
 class FitInformationTest(unittest.TestCase):
     def setUp(self):
         self.fitting_context = FittingContext()
@@ -245,9 +252,8 @@ class FitInformationTest(unittest.TestCase):
         self.assertNotEqual(fit_info1, fit_info2)
 
     def test_items_can_be_added_to_fitting_context(self):
-        fit_information_object = FitInformation(mock.MagicMock(),
-                                                'MuonGuassOsc',
-                                                mock.MagicMock())
+        fit_information_object = FitInformation(
+            mock.MagicMock(), 'MuonGuassOsc', mock.MagicMock())
 
         self.fitting_context.add_fit(fit_information_object)
 
@@ -353,6 +359,48 @@ class FitInformationTest(unittest.TestCase):
             fit.has_log('ts_1'),
             msg='All input workspaces should have the requested log')
 
+    def test_string_log_value_from_fit_with_single_workspace(self):
+        single_value_logs = [('sv_1', '5')]
+        fake1 = create_test_workspace(
+            ws_name='fake1', string_value_logs=single_value_logs)
+        fit = FitInformation(mock.MagicMock(), 'func1', [fake1.name()])
+
+        self.assertEqual(
+            float(single_value_logs[0][1]),
+            fit.log_value(single_value_logs[0][0]))
+
+    def test_time_series_log_value_from_fit_with_single_workspace_uses_time_average(
+            self):
+        time_series_logs = \
+            [('ts_1', (("2000-05-01T12:00:00", 5.),
+             ("2000-05-01T12:00:10", 20.),
+             ("2000-05-01T12:05:00", 30.)))]
+        fake1 = create_test_workspace('fake1', time_series_logs)
+        fit = FitInformation(mock.MagicMock(), 'func1', [fake1.name()])
+
+        time_average = (10 * 5 + 290 * 20) / 300.
+        self.assertAlmostEqual(time_average, fit.log_value('ts_1'), places=6)
+
+    def test_time_series_log_value_from_fit_with_multiple_workspaces_uses_average_of_time_average(
+            self):
+        time_series_logs1 = \
+            [('ts_1', (("2000-05-01T12:00:00", 5.),
+             ("2000-05-01T12:00:10", 20.),
+             ("2000-05-01T12:05:00", 30.)))]
+        fake1 = create_test_workspace('fake1', time_series_logs1)
+        time_series_logs2 = \
+            [('ts_1', (("2000-05-01T12:00:30", 10.),
+             ("2000-05-01T12:01:45", 30.),
+             ("2000-05-01T12:05:00", 40.)))]
+        fake2 = create_test_workspace('fake2', time_series_logs2)
+        fit = FitInformation(mock.MagicMock(), 'func1',
+                             [fake1.name(), fake2.name()])
+
+        time_average1 = (10 * 5 + 290 * 20) / 300.
+        time_average2 = (75 * 10 + 195 * 30) / 270.
+        all_average = 0.5 * (time_average1 + time_average2)
+        self.assertAlmostEqual(all_average, fit.log_value('ts_1'), places=6)
+
 
 class FittingContextTest(unittest.TestCase):
     def setUp(self):
@@ -443,8 +491,8 @@ class FittingContextTest(unittest.TestCase):
                          self.fitting_context.fit_list[0])
 
     def test_parameters_are_readonly(self):
-        test_parameters = OrderedDict([('Height', (10., 0.4)),
-                                       ('A0', (1, 0.01)),
+        test_parameters = OrderedDict([('Height', (10., 0.4)), ('A0', (1,
+                                                                       0.01)),
                                        ('Cost function', (0.1, 0.))])
         fit_params = create_test_fit_parameters(test_parameters)
         fit_info = FitInformation(fit_params._parameter_workspace,
