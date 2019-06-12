@@ -9,7 +9,7 @@ from __future__ import (absolute_import, division)
 from collections import OrderedDict
 import re
 
-from mantid.api import AnalysisDataService, WorkspaceGroup
+from mantid.api import AnalysisDataService
 from mantid.py3compat import iteritems, iterkeys, string_types
 
 from Muon.GUI.Common.observer_pattern import Observable
@@ -202,8 +202,8 @@ class FitInformation(object):
     def __eq__(self, other):
         """Objects are equal if each member is equal to the other"""
         return self.parameters == other.parameters and \
-               self.fit_function_name == other.fit_function_name and \
-               self.input_workspaces == other.input_workspaces
+            self.fit_function_name == other.fit_function_name and \
+            self.input_workspaces == other.input_workspaces
 
     @property
     def parameters(self):
