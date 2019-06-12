@@ -11,6 +11,7 @@
 #include "IIndirectFitDataView.h"
 #include "IndirectDataTablePresenter.h"
 #include "IndirectFittingModel.h"
+#include "IndexTypes.h"
 
 #include "DllConfig.h"
 #include "MantidAPI/AnalysisDataServiceObserver.h"
@@ -39,10 +40,9 @@ public:
   void setResolutionWSSuffices(const QStringList &suffices);
   void setResolutionFBSuffices(const QStringList &suffices);
 
-  void setStartX(double startX, std::size_t dataIndex, int spectrumIndex);
-  void setEndX(double endX, std::size_t dataIndex, int spectrumIndex);
-  void setExclude(const std::string &exclude, std::size_t dataIndex,
-                  int spectrumIndex);
+  void setStartX(double startX, DatasetIndex dataIndex, WorkspaceIndex spectrumIndex);
+  void setEndX(double endX, DatasetIndex dataIndex, WorkspaceIndex spectrumIndex);
+  void setExclude(const std::string &exclude, DatasetIndex dataIndex, WorkspaceIndex spectrumIndex);
 
   void loadSettings(const QSettings &settings);
   UserInputValidator &validate(UserInputValidator &validator);
@@ -51,7 +51,7 @@ public:
                      const Workspace_sptr &workspace) override;
 
 public slots:
-  void updateSpectraInTable(std::size_t dataIndex);
+  void updateSpectraInTable(DatasetIndex dataIndex);
 
 protected slots:
   void setModelWorkspace(const QString &name);
@@ -66,9 +66,11 @@ signals:
   void dataAdded();
   void dataRemoved();
   void dataChanged();
-  void startXChanged(double, std::size_t=0, std::size_t=0);
-  void endXChanged(double, std::size_t=0, std::size_t=0);
-  void excludeRegionChanged(const std::string &, std::size_t, std::size_t);
+  void startXChanged(double, DatasetIndex, WorkspaceIndex);
+  void startXChanged(double);
+  void endXChanged(double, DatasetIndex, WorkspaceIndex);
+  void endXChanged(double);
+  void excludeRegionChanged(const std::string &, DatasetIndex, WorkspaceIndex);
   void multipleDataViewSelected();
   void singleDataViewSelected();
   void requestedAddWorkspaceDialog();
@@ -89,7 +91,7 @@ private slots:
 private:
   virtual std::unique_ptr<IAddWorkspaceDialog>
   getAddWorkspaceDialog(QWidget *parent) const;
-  void updateDataInTable(std::size_t dataIndex);
+  void updateDataInTable(DatasetIndex dataIndex);
   void selectReplacedWorkspace(const QString &workspaceName);
 
   std::unique_ptr<IAddWorkspaceDialog> m_addWorkspaceDialog;

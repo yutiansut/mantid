@@ -117,21 +117,21 @@ namespace IDA {
 
 IndirectSpectrumSelectionPresenter::IndirectSpectrumSelectionPresenter(
     IndirectFittingModel *model, IndirectSpectrumSelectionView *view)
-    : QObject(nullptr), m_model(model), m_view(view), m_activeIndex(0),
-      m_maskIndex(0) {
+    : QObject(nullptr), m_model(model), m_view(view), m_activeIndex{0},
+      m_maskIndex{0} {
   connect(m_view.get(), SIGNAL(selectedSpectraChanged(const std::string &)),
           this, SLOT(updateSpectraList(const std::string &)));
   connect(m_view.get(), SIGNAL(selectedSpectraChanged(const std::string &)),
           this, SLOT(setMaskSpectraList(const std::string &)));
   connect(m_view.get(),
-          SIGNAL(selectedSpectraChanged(std::size_t, std::size_t)), this,
-          SLOT(updateSpectraRange(std::size_t, std::size_t)));
+          SIGNAL(selectedSpectraChanged(WorkspaceIndex, WorkspaceIndex)), this,
+          SLOT(updateSpectraRange(WorkspaceIndex, WorkspaceIndex)));
   connect(m_view.get(), SIGNAL(selectedSpectraChanged(const std::string &)),
           this, SLOT(displaySpectraList(const std::string &)));
 
-  connect(m_view.get(), SIGNAL(maskSpectrumChanged(int)), this,
-          SLOT(setMaskIndex(int)));
-  connect(m_view.get(), SIGNAL(maskSpectrumChanged(int)), this,
+  connect(m_view.get(), SIGNAL(maskSpectrumChanged(WorkspaceIndex)), this,
+          SLOT(setMaskIndex(WorkspaceIndex)));
+  connect(m_view.get(), SIGNAL(maskSpectrumChanged(WorkspaceIndex)), this,
           SLOT(displayBinMask()));
   connect(m_view.get(), SIGNAL(maskChanged(const std::string &)), this,
           SLOT(setBinMask(const std::string &)));
@@ -169,14 +169,14 @@ void IndirectSpectrumSelectionPresenter::initSpectraSelectionWidget(int index)
 }
 
 void IndirectSpectrumSelectionPresenter::setActiveIndexToZero() {
-  setActiveModelIndex(0);
+  setActiveModelIndex(DatasetIndex{0});
 }
 
 void IndirectSpectrumSelectionPresenter::updateSpectra() {
   const auto ws = m_model->getWorkspace(m_activeIndex);
   if (ws) {
-    setSpectraRange(0, ws->getNumberHistograms() - 1);
     const auto spectra = m_model->getSpectra(m_activeIndex);
+    setSpectraRange(spectra.front(), spectra.back());
     SetViewSpectra(m_view.get())(spectra);
     enableView();
   } else {
@@ -186,16 +186,14 @@ void IndirectSpectrumSelectionPresenter::updateSpectra() {
 }
 
 void IndirectSpectrumSelectionPresenter::setActiveModelIndex(
-    std::size_t index) {
+    DatasetIndex index) {
   m_activeIndex = index;
   updateSpectra();
 }
 
-void IndirectSpectrumSelectionPresenter::setSpectraRange(std::size_t minimum,
-                                                         std::size_t maximum) {
-  int minimumInt = boost::numeric_cast<int>(minimum);
-  int maximumInt = boost::numeric_cast<int>(maximum);
-  m_view->setSpectraRange(minimumInt, maximumInt);
+void IndirectSpectrumSelectionPresenter::setSpectraRange(WorkspaceIndex minimum,
+                                                         WorkspaceIndex maximum) {
+  m_view->setSpectraRange(minimum, maximum);
 }
 
 void IndirectSpectrumSelectionPresenter::setModelSpectra(
@@ -220,16 +218,19 @@ void IndirectSpectrumSelectionPresenter::updateSpectraList(
 }
 
 void IndirectSpectrumSelectionPresenter::updateSpectraRange(
-    std::size_t minimum, std::size_t maximum) {
+  WorkspaceIndex minimum, WorkspaceIndex maximum) {
   setModelSpectra(Spectra(minimum, maximum));
   emit spectraChanged(m_activeIndex);
 }
 
 void IndirectSpectrumSelectionPresenter::setMaskSpectraList(
     std::string const &spectra) {
-  if (m_spectraError.empty())
-    m_view->setMaskSpectraList(vectorFromString<std::size_t>(spectra));
-  else
+  if (m_spectraError.empty()) {
+    auto const intVec = vectorFromString<int>(spectra);
+    std::vector<WorkspaceIndex> vec(intVec.size());
+    std::transform(intVec.begin(), intVec.end(), vec.begin(), [](int i){return WorkspaceIndex{i};});
+    m_view->setMaskSpectraList(vec);
+  } else
     m_view->setMaskSpectraList({});
 }
 
@@ -251,9 +252,9 @@ void IndirectSpectrumSelectionPresenter::setBinMask(
   }
 }
 
-void IndirectSpectrumSelectionPresenter::setMaskIndex(int index) {
-  if (index >= 0)
-    m_maskIndex = boost::numeric_cast<std::size_t>(index);
+void IndirectSpectrumSelectionPresenter::setMaskIndex(WorkspaceIndex index) {
+  if (index.value >= 0)
+    m_maskIndex = index;
 }
 
 void IndirectSpectrumSelectionPresenter::displayBinMask() {

@@ -18,6 +18,7 @@ using namespace Mantid::API;
 namespace {
 using namespace MantidQt::CustomInterfaces::IDA;
 using namespace Mantid::Kernel::Strings;
+using WorkspaceIndexType = MantidQt::CustomInterfaces::IDA::WorkspaceIndex;
 
 std::string rangeToString(const std::pair<size_t, size_t> &range,
                           const std::string &delimiter = "-") {
@@ -27,39 +28,9 @@ std::string rangeToString(const std::pair<size_t, size_t> &range,
   return std::to_string(range.first);
 }
 
-template <class Vector, typename T>
-std::vector<T> outOfRange(const Vector &values, const T &minimum,
-                          const T &maximum) {
-  std::vector<T> result;
-  std::copy_if(values.begin(), values.end(), std::back_inserter(result),
-               [&minimum, &maximum](const auto &value) {
-                 return value < minimum || value > maximum;
-               });
-  return result;
-}
-
-struct SpectraOutOfRange {
-  SpectraOutOfRange(const size_t &minimum, const size_t &maximum)
-      : m_minimum(minimum), m_maximum(maximum) {}
-
-  auto operator()(const Spectra &spectra) const {
-    return outOfRange(spectra, m_minimum, m_maximum);
-  }
-
-private:
-  const size_t m_minimum, m_maximum;
-};
-
 struct CheckZeroSpectrum {
   bool operator()(const Spectra &spectra) const {
     return spectra.empty();
-  }
-};
-
-struct NumberOfSpectra {
-  size_t
-  operator()(const Spectra &spectra) const {
-    return spectra.size();
   }
 };
 
@@ -131,17 +102,6 @@ struct CombineSpectra {
         SpectraToString()(spectra1) + "," +
         SpectraToString()(spectra2)));
   }
-};
-
-struct GetSpectrum {
-  explicit GetSpectrum(size_t index) : m_index(index) {}
-  size_t
-  operator()(const Spectra &spectra) const {
-    return spectra[m_index];
-  }
-
-private:
-  size_t m_index;
 };
 
 template <typename T>
@@ -221,11 +181,91 @@ std::string createExcludeRegionString(std::string regionString) {
   return orderExcludeRegionString(bounds);
 }
 
+std::vector<MantidQt::CustomInterfaces::IDA::WorkspaceIndex>
+workspaceIndexVectorFromString(const std::string &listString) {
+  auto const intVec = vectorFromString<int>(listString);
+  std::vector<MantidQt::CustomInterfaces::IDA::WorkspaceIndex> output;
+  for (auto const i : intVec) {
+    output.push_back(MantidQt::CustomInterfaces::IDA::WorkspaceIndex{ i });
+  }
+  return output;
+}
+
 } // namespace
 
 namespace MantidQt {
 namespace CustomInterfaces {
 namespace IDA {
+
+Spectra::Spectra(const std::string &str)
+  : m_vec(workspaceIndexVectorFromString(str)), m_isContinuous(true) {
+  if (m_vec.size() > 1) {
+    for (size_t i = 1; i < m_vec.size(); ++i) {
+      if (m_vec[i].value - m_vec[i - 1].value != 1) {
+        m_isContinuous = false;
+        break;
+      }
+    }
+  }
+}
+
+Spectra::Spectra(WorkspaceIndex minimum, WorkspaceIndex maximum) {
+  if (maximum < minimum) {
+    std::swap(minimum, maximum);
+  }
+  m_vec.resize(maximum.value - minimum.value + 1);
+  std::iota(m_vec.begin(), m_vec.end(), minimum);
+}
+
+Spectra::Spectra(const Spectra &vec)
+  : m_vec(vec.m_vec), m_isContinuous(vec.m_isContinuous) {}
+
+Spectra::Spectra(Spectra &&vec)
+  : m_vec(std::move(vec.m_vec)), m_isContinuous(std::move(vec.m_isContinuous)) {}
+
+Spectra &Spectra::operator=(const Spectra &vec) {
+  m_vec = vec.m_vec;
+  m_isContinuous = vec.m_isContinuous;
+  return *this;
+}
+
+Spectra &Spectra::operator=(Spectra &&vec) {
+  m_vec = std::move(vec.m_vec);
+  m_isContinuous = std::move(vec.m_isContinuous);
+  return *this;
+}
+
+bool Spectra::empty() const { return m_vec.empty(); }
+
+SpectrumRowIndex Spectra::size() const { return SpectrumRowIndex{static_cast<int>(m_vec.size())}; }
+
+std::string Spectra::getString() const {
+  if (empty()) return "";
+  if (m_isContinuous) return m_vec.size() > 1 ? std::to_string(m_vec.front().value) + "-" + std::to_string(m_vec.back().value) : std::to_string(m_vec.front().value);
+  std::vector<int> out(m_vec.size());
+  std::transform(m_vec.begin(), m_vec.end(), out.begin(), [](WorkspaceIndex i){return i.value;});
+  return Mantid::Kernel::Strings::toString(out);
+}
+
+std::pair<WorkspaceIndex, WorkspaceIndex> Spectra::getMinMax() const {
+  if (empty()) return std::make_pair(WorkspaceIndex{ 0 }, WorkspaceIndex{ 0 });
+  return std::make_pair(m_vec.front(), m_vec.back());
+}
+
+bool Spectra::operator==(Spectra const &spec) const {
+  return this->getString() == spec.getString();
+}
+
+bool Spectra::isContinuous() const { return m_isContinuous; }
+
+SpectrumRowIndex Spectra::indexOf(WorkspaceIndex i) const {
+  auto const it = std::find(begin(), end(), i);
+  if (it == end()) {
+    throw std::runtime_error("Spectrum index " + std::to_string(i.value) + " not found.");
+  }
+  return SpectrumRowIndex{static_cast<int>(std::distance(begin(), it))};
+}
+
 
 IndirectFitData::IndirectFitData(MatrixWorkspace_sptr workspace,
                                  const Spectra &spectra)
@@ -249,12 +289,12 @@ IndirectFitData::displayName(const std::string &formatString,
 }
 
 std::string IndirectFitData::displayName(const std::string &formatString,
-                                         size_t spectrum) const {
+  WorkspaceIndex spectrum) const {
   const auto workspaceName = getBasename();
 
   auto formatted = boost::format(formatString);
   formatted = tryPassFormatArgument(formatted, workspaceName);
-  formatted = tryPassFormatArgument(formatted, std::to_string(spectrum));
+  formatted = tryPassFormatArgument(formatted, std::to_string(spectrum.value));
   return formatted.str();
 }
 
@@ -268,12 +308,12 @@ Mantid::API::MatrixWorkspace_sptr IndirectFitData::workspace() const {
 
 const Spectra &IndirectFitData::spectra() const { return m_spectra; }
 
-size_t IndirectFitData::getSpectrum(size_t index) const {
-  return GetSpectrum(index)(m_spectra);
+WorkspaceIndex IndirectFitData::getSpectrum(SpectrumRowIndex index) const {
+  return m_spectra[index];
 }
 
-size_t IndirectFitData::numberOfSpectra() const {
-  return NumberOfSpectra()(m_spectra);
+SpectrumRowIndex IndirectFitData::numberOfSpectra() const {
+  return m_spectra.size();
 }
 
 bool IndirectFitData::zeroSpectra() const {
@@ -283,17 +323,17 @@ bool IndirectFitData::zeroSpectra() const {
 }
 
 std::pair<double, double>
-IndirectFitData::getRange(size_t spectrum) const {
+IndirectFitData::getRange(WorkspaceIndex spectrum) const {
   auto range = m_ranges.find(spectrum);
   if (range != m_ranges.end())
     return range->second;
-  range = m_ranges.find(0);
+  range = m_ranges.find(WorkspaceIndex{ 0 });
   if (range != m_ranges.end())
     return range->second;
   return getBinRange(m_workspace);
 }
 
-std::string IndirectFitData::getExcludeRegion(size_t spectrum) const {
+std::string IndirectFitData::getExcludeRegion(WorkspaceIndex spectrum) const {
   const auto region = m_excludeRegions.find(spectrum);
   if (region != m_excludeRegions.end())
     return region->second;
@@ -301,7 +341,7 @@ std::string IndirectFitData::getExcludeRegion(size_t spectrum) const {
 }
 
 std::vector<double>
-IndirectFitData::excludeRegionsVector(size_t spectrum) const {
+IndirectFitData::excludeRegionsVector(WorkspaceIndex spectrum) const {
   return vectorFromString<double>(getExcludeRegion(spectrum));
 }
 
@@ -327,9 +367,12 @@ void IndirectFitData::setSpectra(Spectra const &spectra) {
 }
 
 void IndirectFitData::validateSpectra(Spectra const &spectra) {
-  const auto visitor =
-      SpectraOutOfRange(0, workspace()->getNumberHistograms() - 1);
-  auto notInRange = visitor(spectra);
+  int maxValue = static_cast<int>(workspace()->getNumberHistograms()) - 1;
+  std::vector<int> notInRange;
+  for (auto const i : spectra) {
+    if (i.value < 0 || i.value > maxValue)
+      notInRange.push_back(i.value);
+  }
   if (!notInRange.empty()) {
     if (notInRange.size() > 5)
       throw std::runtime_error("Spectra out of range: " +
@@ -339,7 +382,7 @@ void IndirectFitData::validateSpectra(Spectra const &spectra) {
 }
 
 void IndirectFitData::setStartX(double const &startX,
-                                size_t const &spectrum) {
+  WorkspaceIndex const &spectrum) {
   const auto range = m_ranges.find(spectrum);
   if (range != m_ranges.end())
     range->second.first = startX;
@@ -350,18 +393,18 @@ void IndirectFitData::setStartX(double const &startX,
         "Unable to set StartX: Workspace no longer exists.");
 }
 
-void IndirectFitData::setEndX(double const &endX, size_t const &spectrum) {
+void IndirectFitData::setEndX(double const &endX, WorkspaceIndex const &spectrum) {
   const auto range = m_ranges.find(spectrum);
-  if (range != m_ranges.end())
+  if (range != m_ranges.end()) {
     range->second.second = endX;
-  else if (m_workspace)
+  } else if (m_workspace) {
     m_ranges[spectrum] = std::make_pair(m_workspace->x(0).front(), endX);
-  else
+  } else
     throw std::runtime_error("Unable to set EndX: Workspace no longer exists.");
 }
 
 void IndirectFitData::setExcludeRegionString(
-    std::string const &excludeRegionString, size_t const &spectrum) {
+    std::string const &excludeRegionString, WorkspaceIndex const &spectrum) {
   if (!excludeRegionString.empty())
     m_excludeRegions[spectrum] = createExcludeRegionString(excludeRegionString);
   else

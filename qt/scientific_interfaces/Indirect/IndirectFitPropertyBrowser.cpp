@@ -260,21 +260,21 @@ void IndirectFitPropertyBrowser::setErrorsEnabled(bool enabled)
 }
 
 
-void IndirectFitPropertyBrowser::setCurrentDataset(int i) {
+void IndirectFitPropertyBrowser::setCurrentDataset(SpectrumRowIndex i) {
   if (m_functionBrowser->getNumberOfDatasets() == 0) return;
   if (isFullFunctionBrowserActive()) {
-    m_functionBrowser->setCurrentDataset(i);
+    m_functionBrowser->setCurrentDataset(i.value);
   } else {
-    m_templateBrowser->setCurrentDataset(i);
+    m_templateBrowser->setCurrentDataset(i.value);
   }
 }
 
-int IndirectFitPropertyBrowser::currentDataset() const { return m_functionBrowser->getCurrentDataset(); }
+SpectrumRowIndex IndirectFitPropertyBrowser::currentDataset() const { return SpectrumRowIndex{m_functionBrowser->getCurrentDataset()}; }
 
-void IndirectFitPropertyBrowser::updateFunctionBrowserData(size_t nData, const QStringList &datasetNames) {
-  m_functionBrowser->setNumberOfDatasets(static_cast<int>(nData));
+void IndirectFitPropertyBrowser::updateFunctionBrowserData(SpectrumRowIndex nData, const QStringList &datasetNames) {
+  m_functionBrowser->setNumberOfDatasets(nData.value);
   m_functionBrowser->setDatasetNames(datasetNames);
-  m_templateBrowser->setNumberOfDatasets(static_cast<int>(nData));
+  m_templateBrowser->setNumberOfDatasets(nData.value);
   m_templateBrowser->setDatasetNames(datasetNames);
 }
 

@@ -8,6 +8,7 @@
 #define INDIRECTFITPROPERTYBROWSER_H_
 
 #include "DllConfig.h"
+#include "IndexTypes.h"
 #include "MantidAPI/IFunction_fwd.h"
 #include "MantidAPI/MatrixWorkspace_fwd.h"
 #include "MantidAPI/ITableWorkspace_fwd.h"
@@ -61,9 +62,9 @@ public:
   QString selectedFitType() const;
   void setConvolveMembers(bool convolveMembers);
   void setFitEnabled(bool enable);
-  void setCurrentDataset(int i);
-  int currentDataset() const;
-  void updateFunctionBrowserData(size_t nData, const QStringList &datasetNames);
+  void setCurrentDataset(SpectrumRowIndex i);
+  SpectrumRowIndex currentDataset() const;
+  void updateFunctionBrowserData(SpectrumRowIndex nData, const QStringList &datasetNames);
   void updatePlotGuess(MatrixWorkspace_const_sptr sampleWorkspace);
   void setErrorsEnabled(bool enabled);
 

@@ -40,10 +40,9 @@ public:
   void setSpectrumSelectionView(IndirectSpectrumSelectionView *view);
   void setOutputOptionsView(IIndirectFitOutputOptionsView *view);
   void setFitPropertyBrowser(IndirectFitPropertyBrowser *browser);
-  std::size_t getSelectedDataIndex() const;
-  std::size_t getSelectedSpectrum() const;
-  bool isRangeCurrentlySelected(std::size_t dataIndex,
-                                std::size_t spectrum) const;
+  DatasetIndex getSelectedDataIndex() const;
+  WorkspaceIndex getSelectedSpectrum() const;
+  bool isRangeCurrentlySelected(DatasetIndex dataIndex, WorkspaceIndex spectrum) const;
   QString selectedFitType() const;
   size_t numberOfCustomFunctions(const std::string &functionName) const;
   void setConvolveMembers(bool convolveMembers);
@@ -77,17 +76,14 @@ protected slots:
   void setDataTableStartX(double startX);
   void setDataTableEndX(double endX);
   void setDataTableExclude(const std::string &exclude);
-  void tableStartXChanged(double startX, std::size_t dataIndex,
-                          std::size_t spectrum);
-  void tableEndXChanged(double endX, std::size_t dataIndex,
-                        std::size_t spectrum);
-  void tableExcludeChanged(const std::string &exclude, std::size_t dataIndex,
-                           std::size_t spectrum);
+  void tableStartXChanged(double startX, DatasetIndex dataIndex, WorkspaceIndex spectrum);
+  void tableEndXChanged(double endX, DatasetIndex dataIndex, WorkspaceIndex spectrum);
+  void tableExcludeChanged(const std::string &exclude, DatasetIndex dataIndex, WorkspaceIndex spectrum);
   void updateFitOutput(bool error);
   void updateSingleFitOutput(bool error);
   void fitAlgorithmComplete(bool error);
   void singleFit();
-  void singleFit(std::size_t dataIndex, std::size_t spectrum);
+  void singleFit(DatasetIndex dataIndex, WorkspaceIndex spectrum);
   void executeFit();
   //std::unordered_map<std::string, Mantid::API::IFunction::Attribute>
   //getAttributes(Mantid::API::IFunction_sptr const &function,
@@ -101,16 +97,16 @@ protected slots:
 
 private slots:
   void plotSelectedSpectra();
-  void respondToChangeOfSpectraRange(std::size_t);
+  void respondToChangeOfSpectraRange(DatasetIndex);
   void respondToSingleResolutionLoaded();
   void respondToDataChanged();
   void respondToSingleDataViewSelected();
   void respondToMultipleDataViewSelected();
   void respondToDataAdded();
   void respondToDataRemoved();
-  void respondToSelectedFitDataChanged(std::size_t);
+  void respondToSelectedFitDataChanged(DatasetIndex);
   void respondToNoFitDataSelected();
-  void respondToPlotSpectrumChanged(std::size_t);
+  void respondToPlotSpectrumChanged(WorkspaceIndex);
   void respondToFwhmChanged(double);
   void respondToBackgroundChanged(double);
   void respondToFunctionChanged();

@@ -34,10 +34,10 @@ private:
   Mantid::API::IAlgorithm_sptr simultaneousFitAlgorithm() const override;
   std::string sequentialFitOutputName() const override;
   std::string simultaneousFitOutputName() const override;
-  std::string singleFitOutputName(std::size_t index,
-                                  std::size_t spectrum) const override;
+  std::string singleFitOutputName(DatasetIndex index,
+    WorkspaceIndex spectrum) const override;
   std::unordered_map<std::string, ParameterValue>
-  createDefaultParameters(std::size_t index) const override;
+  createDefaultParameters(DatasetIndex index) const override;
   Mantid::API::MultiDomainFunction_sptr
   createFunctionWithGlobalBeta(Mantid::API::IFunction_sptr function) const;
 

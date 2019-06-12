@@ -16,6 +16,7 @@ set(SRC_FILES
     ISISCalibration.cpp
     ISISDiagnostics.cpp
     ISISEnergyTransfer.cpp
+    IndexTypes.cpp
     IndirectAddWorkspaceDialog.cpp
     IndirectBayes.cpp
     IndirectBayesTab.cpp
@@ -97,6 +98,7 @@ set(INC_FILES
     IIndirectFitOutputOptionsView.h
     IIndirectFitPlotView.h
     ILLEnergyTransfer.h
+    IndexTypes.h
     ISISCalibration.h
     ISISDiagnostics.h
     ISISEnergyTransfer.h

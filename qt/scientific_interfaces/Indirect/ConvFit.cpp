@@ -133,7 +133,7 @@ void ConvFit::setModelResolution(const QString &resolutionName) {
   const auto name = resolutionName.toStdString();
   const auto resolution =
       AnalysisDataService::Instance().retrieveWS<MatrixWorkspace>(name);
-  m_convFittingModel->setResolution(resolution, 0);
+  m_convFittingModel->setResolution(resolution, DatasetIndex{0});
   setModelFitFunction();
 }
 

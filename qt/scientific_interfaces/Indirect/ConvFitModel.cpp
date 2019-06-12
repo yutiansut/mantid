@@ -374,10 +374,9 @@ private:
 };
 
 std::vector<std::string>
-getNames(const std::vector<boost::weak_ptr<Mantid::API::MatrixWorkspace>>
-             &workspaces) {
+getNames(const MantidQt::CustomInterfaces::IDA::ResolutionCollectionType &workspaces) {
   std::vector<std::string> names;
-  names.reserve(workspaces.size());
+  names.reserve(workspaces.size().value);
   std::transform(workspaces.begin(), workspaces.end(),
                  std::back_inserter(names),
                  [](boost::weak_ptr<Mantid::API::MatrixWorkspace> workspace) {
@@ -469,15 +468,15 @@ std::string ConvFitModel::sequentialFitOutputName() const {
   if (isMultiFit())
     return "MultiConvFit_" + m_fitType + m_backgroundString + "_Results";
   return createOutputName(
-      "%1%_conv_" + m_fitType + m_backgroundString + "_s%2%", "_to_", 0);
+      "%1%_conv_" + m_fitType + m_backgroundString + "_s%2%", "_to_", DatasetIndex{0});
 }
 
 std::string ConvFitModel::simultaneousFitOutputName() const {
   return sequentialFitOutputName();
 }
 
-std::string ConvFitModel::singleFitOutputName(std::size_t index,
-                                              std::size_t spectrum) const {
+std::string ConvFitModel::singleFitOutputName(DatasetIndex index,
+  WorkspaceIndex spectrum) const {
   return createSingleFitOutputName("%1%_conv_" + m_fitType +
                                        m_backgroundString + "_s%2%_Results",
                                    index, spectrum);
@@ -495,17 +494,17 @@ Mantid::API::MultiDomainFunction_sptr ConvFitModel::getFittingFunction() const {
 }
 
 boost::optional<double>
-ConvFitModel::getInstrumentResolution(std::size_t dataIndex) const {
+ConvFitModel::getInstrumentResolution(DatasetIndex dataIndex) const {
   if (dataIndex < numberOfWorkspaces())
     return instrumentResolution(getWorkspace(dataIndex));
   return boost::none;
 }
 
-std::size_t ConvFitModel::getNumberHistograms(std::size_t index) const {
+std::size_t ConvFitModel::getNumberHistograms(DatasetIndex index) const {
   return getWorkspace(index)->getNumberHistograms();
 }
 
-MatrixWorkspace_sptr ConvFitModel::getResolution(std::size_t index) const {
+MatrixWorkspace_sptr ConvFitModel::getResolution(DatasetIndex index) const {
   if (index < m_resolution.size())
     return m_resolution[index].lock();
   return nullptr;
@@ -555,25 +554,25 @@ void ConvFitModel::addWorkspace(MatrixWorkspace_sptr workspace,
   if (m_resolution.size() < dataSize)
     m_resolution.emplace_back(MatrixWorkspace_sptr());
   else if (m_resolution.size() == dataSize &&
-           m_resolution[dataSize - 1].lock() &&
+           m_resolution[dataSize - DatasetIndex{1}].lock() &&
            m_extendedResolution.size() < dataSize)
-    addExtendedResolution(dataSize - 1);
+    addExtendedResolution(dataSize - DatasetIndex{1});
 }
 
-void ConvFitModel::removeWorkspace(std::size_t index) {
+void ConvFitModel::removeWorkspace(DatasetIndex index) {
   IndirectFittingModel::removeWorkspace(index);
 
   const auto newSize = numberOfWorkspaces();
   while (m_resolution.size() > newSize)
-    m_resolution.erase(m_resolution.begin() + index);
+    m_resolution.remove(index);
 
   while (m_extendedResolution.size() > newSize) {
     AnalysisDataService::Instance().remove(m_extendedResolution[index]);
-    m_extendedResolution.erase(m_extendedResolution.begin() + index);
+    m_extendedResolution.remove(index);
   }
 }
 
-void ConvFitModel::setResolution(const std::string &name, std::size_t index) {
+void ConvFitModel::setResolution(const std::string &name, DatasetIndex index) {
   if (!name.empty() && doesExistInADS(name))
     setResolution(getADSMatrixWorkspace(name), index);
   else
@@ -581,21 +580,21 @@ void ConvFitModel::setResolution(const std::string &name, std::size_t index) {
 }
 
 void ConvFitModel::setResolution(MatrixWorkspace_sptr resolution,
-                                 std::size_t index) {
+                                 DatasetIndex index) {
   if (m_resolution.size() > index)
     m_resolution[index] = resolution;
   else if (m_resolution.size() == index)
     m_resolution.emplace_back(resolution);
   else
     throw std::out_of_range("Provided resolution index '" +
-                            std::to_string(index) + "' was out of range.");
+                            std::to_string(index.value) + "' was out of range.");
 
   if (numberOfWorkspaces() > index)
     addExtendedResolution(index);
 }
 
-void ConvFitModel::addExtendedResolution(std::size_t index) {
-  const std::string name = "__ConvFitResolution" + std::to_string(index);
+void ConvFitModel::addExtendedResolution(DatasetIndex index) {
+  const std::string name = "__ConvFitResolution" + std::to_string(index.value);
 
   extendResolutionWorkspace(m_resolution[index].lock(),
                             getNumberHistograms(index), name);
@@ -611,7 +610,7 @@ void ConvFitModel::setFitTypeString(const std::string &fitType) {
 }
 
 std::unordered_map<std::string, ParameterValue>
-ConvFitModel::createDefaultParameters(std::size_t index) const {
+ConvFitModel::createDefaultParameters(DatasetIndex index) const {
   std::unordered_map<std::string, ParameterValue> defaultValues;
   defaultValues["PeakCentre"] = ParameterValue(0.0);
   defaultValues["Centre"] = ParameterValue(0.0);
@@ -672,7 +671,7 @@ ConvFitModel::createFitOutput(Mantid::API::WorkspaceGroup_sptr resultGroup,
                               Mantid::API::ITableWorkspace_sptr parameterTable,
                               Mantid::API::WorkspaceGroup_sptr resultWorkspace,
                               IndirectFitData *fitData,
-                              std::size_t spectrum) const {
+                              WorkspaceIndex spectrum) const {
   auto output = IndirectFitOutput(resultGroup, parameterTable, resultWorkspace,
                                   fitData, spectrum);
   output.mapParameterNames(m_parameterNameChanges, fitData, spectrum);
@@ -701,7 +700,7 @@ void ConvFitModel::addOutput(IndirectFitOutput *fitOutput,
                              ITableWorkspace_sptr parameterTable,
                              WorkspaceGroup_sptr resultWorkspace,
                              IndirectFitData *fitData,
-                             std::size_t spectrum) const {
+                             WorkspaceIndex spectrum) const {
   fitOutput->addOutput(resultGroup, parameterTable, resultWorkspace, fitData,
                        spectrum);
   fitOutput->mapParameterNames(m_parameterNameChanges, fitData, spectrum);
