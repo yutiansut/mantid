@@ -319,6 +319,7 @@ void IndirectFitPropertyBrowser::showFullFunctionBrowser(bool on){
     m_functionBrowser->setFunction(fun);
     if (fun) {
       m_functionBrowser->updateMultiDatasetParameters(*m_templateBrowser->getGlobalFunction());
+      m_functionBrowser->setGlobalParameters(m_templateBrowser->getGlobalParameters());
     }
   } else {
     try {
@@ -326,6 +327,7 @@ void IndirectFitPropertyBrowser::showFullFunctionBrowser(bool on){
       m_templateBrowser->setFunction(funStr);
       if (auto const fun = m_functionBrowser->getGlobalFunction()) {
         m_templateBrowser->updateMultiDatasetParameters(*fun);
+        m_templateBrowser->setGlobalParameters(m_functionBrowser->getGlobalParameters());
       }
     } catch (const std::runtime_error&) {
       // Function doesn't match the template.

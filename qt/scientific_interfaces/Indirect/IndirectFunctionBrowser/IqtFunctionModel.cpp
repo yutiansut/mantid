@@ -178,6 +178,11 @@ QStringList IqtFunctionModel::getLocalParameters() const
   return m_model.getLocalParameters();
 }
 
+void IqtFunctionModel::setGlobalParameters(const QStringList & globals)
+{
+  m_model.setGlobalParameters(globals);
+}
+
 bool IqtFunctionModel::isGlobal(const QString &parName) const
 {
   auto const stretchParameterName = getParameterName(ParamNames::STRETCH_STRETCHING);
@@ -187,20 +192,9 @@ bool IqtFunctionModel::isGlobal(const QString &parName) const
   return false;
 }
 
-void IqtFunctionModel::setStretchingGlobal(bool on)
-{
-  m_isStretchGlobal = on;
-  QStringList globals;
-  if (on) {
-    globals << *getStretchPrefix() + "Stretching";
-  }
-  m_model.setGlobalParameters(globals);
-}
-
 void IqtFunctionModel::updateMultiDatasetParameters(const IFunction & fun)
 {
   m_model.updateMultiDatasetParameters(fun);
-  setStretchingGlobal(m_isStretchGlobal);
 }
 
 void IqtFunctionModel::updateMultiDatasetParameters(const ITableWorkspace & paramTable)
@@ -407,7 +401,7 @@ std::string IqtFunctionModel::buildExpDecayFunctionString() const
 
 std::string IqtFunctionModel::buildStretchExpFunctionString() const
 {
-  return "name=StretchExp,Height=1,Lifetime=1,Stretching=1,constraints=(Height>0,Lifetime>0,0<Stretching<=1.1)";
+  return "name=StretchExp,Height=1,Lifetime=1,Stretching=1,constraints=(Height>0,Lifetime>0,0<Stretching<1.001)";
 }
 
 std::string IqtFunctionModel::buildBackgroundFunctionString() const

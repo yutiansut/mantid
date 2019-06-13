@@ -49,6 +49,7 @@ public:
   virtual void setDatasetNames(const QStringList &names) = 0;
   virtual QStringList getGlobalParameters() const = 0;
   virtual QStringList getLocalParameters() const = 0;
+  virtual void setGlobalParameters(const QStringList &globals) = 0;
   virtual void updateMultiDatasetParameters(const IFunction & fun) = 0;
   virtual void updateMultiDatasetParameters(const ITableWorkspace & paramTable) = 0;
   virtual void updateParameters(const IFunction &fun) = 0;

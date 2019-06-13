@@ -232,6 +232,11 @@ QStringList IqtTemplateBrowser::getLocalParameters() const
   return m_presenter.getLocalParameters();
 }
 
+void IqtTemplateBrowser::setGlobalParameters(const QStringList & globals)
+{
+  m_presenter.setGlobalParameters(globals);
+}
+
 void IqtTemplateBrowser::intChanged(QtProperty *prop) {
   if (prop == m_numberOfExponentials) {
     m_presenter.setNumberOfExponentials(m_intManager->value(prop));
@@ -260,11 +265,8 @@ void IqtTemplateBrowser::globalChanged(QtProperty *prop, const QString &name, bo
 
 void IqtTemplateBrowser::parameterChanged(QtProperty *prop)
 {
-  if (prop == m_stretchExpStretching) {
-    auto isGlobal = m_parameterManager->isGlobal(prop);
-    m_presenter.setStretchingGlobal(isGlobal);
-    emit functionStructureChanged();
-  }
+  auto isGlobal = m_parameterManager->isGlobal(prop);
+  m_presenter.setGlobal(m_actualParameterNames[prop], isGlobal);
   if (m_emitParameterValueChange) {
     emit parameterValueChanged(m_actualParameterNames[prop], m_parameterManager->value(prop));
   }
@@ -342,6 +344,24 @@ void IqtTemplateBrowser::setParameterPropertyValue(QtProperty * prop, double val
     ScopedFalse _(m_emitParameterValueChange);
     m_parameterManager->setValue(prop, value);
     m_parameterManager->setError(prop, error);
+  }
+}
+
+void IqtTemplateBrowser::setGlobalParametersQuiet(const QStringList &globals)
+{
+  ScopedFalse _(m_emitParameterValueChange);
+  auto parameterProperies = m_parameterMap.keys();
+  for(auto const prop: m_parameterMap.keys()) {
+    auto const name = m_actualParameterNames[prop];
+    if (globals.contains(name)) {
+      m_parameterManager->setGlobal(prop, true);
+      parameterProperies.removeOne(prop);
+    }
+  }
+  for(auto const prop: parameterProperies) {
+    if (!m_actualParameterNames[prop].isEmpty()) {
+      m_parameterManager->setGlobal(prop, false);
+    }
   }
 }
 

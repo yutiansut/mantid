@@ -430,5 +430,10 @@ void MultiDomainFunctionModel::updateGlobals() {
   }
 }
 
+bool MultiDomainFunctionModel::isGlobal(const QString & parName) const
+{
+  return m_globalParameterNames.contains(parName);
+}
+
 } // namespace MantidWidgets
 } // namespace MantidQt

@@ -55,6 +55,7 @@ public:
   void setDatasetNames(const QStringList &names) override;
   QStringList getGlobalParameters() const override;
   QStringList getLocalParameters() const override;
+  void setGlobalParameters(const QStringList &globals) override;
   void updateMultiDatasetParameters(const IFunction & fun) override;
   void updateMultiDatasetParameters(const ITableWorkspace & paramTable) override;
   void updateParameters(const IFunction &fun) override;
@@ -76,6 +77,7 @@ private:
   void createProperties() override;
   void popupMenu(const QPoint &);
   void setParameterPropertyValue(QtProperty *prop, double value, double error);
+  void setGlobalParametersQuiet(const QStringList &globals);
 
   QtProperty *m_numberOfExponentials;
   QtProperty *m_exp1Height = nullptr;
@@ -95,6 +97,7 @@ private:
 private:
   IqtTemplatePresenter m_presenter;
   bool m_emitParameterValueChange = true;
+  friend class IqtTemplatePresenter;
 };
 
 } // namespace IDA

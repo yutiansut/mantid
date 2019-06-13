@@ -40,8 +40,8 @@ public:
   IFunction_sptr getFunction() const;
   QStringList getGlobalParameters() const;
   QStringList getLocalParameters() const;
+  void setGlobalParameters(const QStringList &globals);
   bool isGlobal(const QString &parName) const;
-  void setStretchingGlobal(bool on);
   void updateMultiDatasetParameters(const IFunction & fun);
   void updateMultiDatasetParameters(const ITableWorkspace & paramTable);
   void updateParameters(const IFunction &fun);

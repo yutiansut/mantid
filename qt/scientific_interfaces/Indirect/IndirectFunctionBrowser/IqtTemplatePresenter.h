@@ -43,7 +43,8 @@ public:
   IFunction_sptr getFunction() const;
   QStringList getGlobalParameters() const;
   QStringList getLocalParameters() const;
-  void setStretchingGlobal(bool on);
+  void setGlobalParameters(const QStringList &globals);
+  void setGlobal(const QString &parName, bool on);
   void updateMultiDatasetParameters(const IFunction & fun);
   void updateMultiDatasetParameters(const ITableWorkspace & paramTable);
   void updateParameters(const IFunction &fun);
@@ -51,7 +52,6 @@ public:
   void setDatasetNames(const QStringList &names);
   void setViewParameterDescriptions();
   void setErrorsEnabled(bool enabled);
-
 
 signals:
   void functionStructureChanged();

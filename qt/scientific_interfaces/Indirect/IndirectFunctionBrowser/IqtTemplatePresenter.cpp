@@ -154,9 +154,25 @@ QStringList IqtTemplatePresenter::getLocalParameters() const
   return m_model.getLocalParameters();
 }
 
-void IqtTemplatePresenter::setStretchingGlobal(bool on)
+void IqtTemplatePresenter::setGlobalParameters(const QStringList & globals)
 {
-  m_model.setStretchingGlobal(on);
+  m_model.setGlobalParameters(globals);
+  if (m_model.hasStretchExponential()) {
+    m_view->setGlobalParametersQuiet(globals);
+  }
+}
+
+void IqtTemplatePresenter::setGlobal(const QString &parName, bool on)
+{
+  auto globals = m_model.getGlobalParameters();
+  if (on) {
+    if (!globals.contains(parName)) {
+      globals.push_back(parName);
+    }
+  } else if (globals.contains(parName)) {
+    globals.removeOne(parName);
+  }
+  setGlobalParameters(globals);
 }
 
 void IqtTemplatePresenter::updateMultiDatasetParameters(const IFunction & fun)

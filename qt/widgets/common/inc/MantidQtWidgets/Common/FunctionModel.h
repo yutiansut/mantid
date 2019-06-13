@@ -51,6 +51,7 @@ public:
   virtual void removeConstraint(const QString &paramName) = 0;
   virtual QStringList getGlobalParameters() const = 0;
   virtual void setGlobalParameters(const QStringList &globals) = 0;
+  virtual bool isGlobal(const QString &parName) const = 0;
   virtual QStringList getLocalParameters() const = 0;
   virtual void updateMultiDatasetParameters(const IFunction &fun) = 0;
   virtual void updateParameters(const IFunction &fun) = 0;
@@ -96,6 +97,7 @@ public:
   void removeConstraint(const QString &paramName) override;
   QStringList getGlobalParameters() const override;
   void setGlobalParameters(const QStringList &globals) override;
+  bool isGlobal(const QString &parName) const override;
   QStringList getLocalParameters() const override;
   void updateMultiDatasetParameters(const IFunction &fun) override;
   void updateParameters(const IFunction &fun) override;
