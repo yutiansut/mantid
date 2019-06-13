@@ -228,28 +228,31 @@ void MultiDomainFunctionModel::setNumberDomains(int nDomains) {
   }
   if (!hasFunction()) {
     m_numberDomains = nd;
-    return;
-  }
-  auto const nfOld = m_numberDomains > 0 ? m_numberDomains : 1;
-  auto const lastIndex = nfOld - 1;
-  auto const nf = nd > 0 ? nd : 1;
-  if (nd > m_numberDomains) {
-    auto fun = m_function->getFunction(lastIndex);
-    for (size_t i = nfOld; i < nf; ++i) {
-      m_function->addFunction(fun->clone());
-      m_function->setDomainIndex(i, i);
-    }
   } else {
-    for (size_t i = lastIndex; i >= nf; --i) {
-      m_function->removeFunction(i);
+    auto const nfOld = m_numberDomains > 0 ? m_numberDomains : 1;
+    auto const lastIndex = nfOld - 1;
+    auto const nf = nd > 0 ? nd : 1;
+    if (nd > m_numberDomains) {
+      auto fun = m_function->getFunction(lastIndex);
+      for (size_t i = nfOld; i < nf; ++i) {
+        m_function->addFunction(fun->clone());
+        m_function->setDomainIndex(i, i);
+      }
+    } else {
+      for (size_t i = lastIndex; i >= nf; --i) {
+        m_function->removeFunction(i);
+      }
+      m_function->checkFunction();
+      m_function->clearDomainIndices();
+      for (size_t i = 0; i < m_function->nFunctions(); ++i) {
+        m_function->setDomainIndex(i, i);
+      }
     }
-    m_function->checkFunction();
-    m_function->clearDomainIndices();
-    for (size_t i = 0; i < m_function->nFunctions(); ++i) {
-      m_function->setDomainIndex(i, i);
-    }
+    m_numberDomains = nDomains;
   }
-  m_numberDomains = nDomains;
+  if (m_currentDomainIndex >= m_numberDomains) {
+    m_currentDomainIndex = m_numberDomains > 0 ? m_numberDomains - 1 : 0;
+  }
 }
 
 void MultiDomainFunctionModel::setDatasetNames(const QStringList &names) {

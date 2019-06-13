@@ -326,7 +326,9 @@ void IndirectFitAnalysisTab::fitAlgorithmComplete(bool error) {
   enableFitButtons(true);
   enableOutputOptions(!error);
   m_fitPropertyBrowser->setErrorsEnabled(!error);
-  updateParameterValues();
+  if (!error) {
+    updateParameterValues();
+  }
   m_spectrumPresenter->enableView();
   m_plotPresenter->updatePlots();
 
