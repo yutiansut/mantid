@@ -293,9 +293,10 @@ std::map<std::string, std::string> ReflectometrySumInQ::validateInputs() {
 
   auto beamCentreProperty = getPointerToProperty(Prop::BEAM_CENTRE);
   const auto thetaIn = getPointerToProperty(Prop::THETA_IN);
+  const bool isFlat = getProperty(Prop::IS_FLAT_SAMPLE);
   const std::string beamCentreThetaInIssue =
-      "Beam Centre xor ThetaIn must be declared";
-  if (beamCentreProperty->isDefault() && thetaIn->isDefault()) {
+      "Beam Centre xor ThetaIn must be declared, unless FlatSample is true.";
+  if (beamCentreProperty->isDefault() && thetaIn->isDefault() && isFlat) {
     issues[Prop::BEAM_CENTRE] = beamCentreThetaInIssue;
   } else if (!beamCentreProperty->isDefault() && !thetaIn->isDefault()) {
     issues[Prop::BEAM_CENTRE] = beamCentreThetaInIssue;
@@ -527,7 +528,8 @@ ReflectometrySumInQ::referenceAngles(const API::SpectrumInfo &spectrumInfo,
   const double beamCentre = getProperty(Prop::BEAM_CENTRE);
   const double thetaIn = getProperty(Prop::THETA_IN);
   const bool isFlat = getProperty(Prop::IS_FLAT_SAMPLE);
-  if (getPointerToProperty(Prop::THETA_IN)->isDefault()) {
+  if (getPointerToProperty(Prop::THETA_IN)->isDefault() &&
+      !getPointerToProperty(Prop::BEAM_CENTRE)->isDefault()) {
     if (isFlat) {
       a.horizon = centreTwoTheta(beamCentre, spectrumInfo) / 2.;
     } else {
