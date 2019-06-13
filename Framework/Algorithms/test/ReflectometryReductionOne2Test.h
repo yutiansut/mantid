@@ -443,7 +443,7 @@ public:
     // ReductionType : not set (invalid)
 
     ReflectometryReductionOne2 alg;
-    setupAlgorithm(alg, 1.5, 15.0, "2");
+    setupAlgorithm(alg, 1.5, 15.0, "3");
     alg.setProperty("SummationType", "SumInQ");
     TS_ASSERT_THROWS_ANYTHING(alg.execute());
   }
@@ -456,11 +456,11 @@ public:
     // SummationType : SumInQ
     // ReductionType : DivergentBeam
     ReflectometryReductionOne2 alg;
-    setupAlgorithm(alg, 1.5, 15.0, "2");
+    setupAlgorithm(alg, 1.5, 15.0, "3");
     alg.setProperty("SummationType", "SumInQ");
     alg.setProperty("ReductionType", "DivergentBeam");
-    alg.setProperty("ThetaIn", 25.0);
-    MatrixWorkspace_sptr outLam = runAlgorithmLam(alg, 12);
+    alg.setProperty("ThetaIn", 0.3);
+    MatrixWorkspace_sptr outLam = runAlgorithmLam(alg, 5);
 
     TS_ASSERT_DELTA(outLam->x(0)[0], 0.934991, 1e-6);
     TS_ASSERT_DELTA(outLam->x(0)[3], 5.173599, 1e-6);
@@ -479,10 +479,10 @@ public:
     // ReductionType : NonFlatSample
 
     ReflectometryReductionOne2 alg;
-    setupAlgorithm(alg, 1.5, 15.0, "2");
+    setupAlgorithm(alg, 1.5, 15.0, "3");
     alg.setProperty("SummationType", "SumInQ");
     alg.setProperty("ReductionType", "NonFlatSample");
-    MatrixWorkspace_sptr outLam = runAlgorithmLam(alg, 10);
+    MatrixWorkspace_sptr outLam = runAlgorithmLam(alg, 9);
 
     TS_ASSERT_DELTA(outLam->x(0)[0], 0.825488, 1e-6);
     TS_ASSERT_DELTA(outLam->x(0)[3], 5.064095, 1e-6);
@@ -516,7 +516,7 @@ public:
     setupAlgorithmMonitorCorrection(alg, 0.0, 15.0, "3", inputWS, false);
     alg.setProperty("SummationType", "SumInQ");
     alg.setProperty("ReductionType", "DivergentBeam");
-    alg.setProperty("ThetaIn", 25.0);
+    alg.setProperty("ThetaIn", 0.3);
     MatrixWorkspace_sptr outLam = runAlgorithmLam(alg, 13);
 
     TS_ASSERT_DELTA(outLam->x(0)[0], -0.748671, 1e-6);
@@ -531,11 +531,11 @@ public:
     // Transmission run is the same as input run
 
     ReflectometryReductionOne2 alg;
-    setupAlgorithmTransmissionCorrection(alg, 1.5, 15.0, "2", m_multiDetectorWS,
+    setupAlgorithmTransmissionCorrection(alg, 1.5, 15.0, "3", m_multiDetectorWS,
                                          false);
     alg.setProperty("SummationType", "SumInQ");
     alg.setProperty("ReductionType", "DivergentBeam");
-    alg.setProperty("ThetaIn", 25.0);
+    alg.setProperty("ThetaIn", 0.3);
     MatrixWorkspace_sptr outLam = runAlgorithmLam(alg, 12);
 
     TS_ASSERT_DELTA(outLam->x(0)[0], 0.934991, 1e-6);
@@ -553,7 +553,7 @@ public:
     setupAlgorithm(alg, 1.5, 15.0, "3");
     alg.setProperty("SummationType", "SumInQ");
     alg.setProperty("ReductionType", "DivergentBeam");
-    alg.setProperty("ThetaIn", 25.0);
+    alg.setProperty("ThetaIn", 0.3);
     alg.setProperty("CorrectionAlgorithm", "ExponentialCorrection");
     alg.setProperty("C0", 0.2);
     alg.setProperty("C1", 0.1);
@@ -578,7 +578,7 @@ public:
     setupAlgorithm(alg, 1.5, 15.0, "3");
     alg.setProperty("SummationType", "SumInQ");
     alg.setProperty("ReductionType", "DivergentBeam");
-    alg.setProperty("ThetaIn", 25.0);
+    alg.setProperty("ThetaIn", 0.3);
     MatrixWorkspace_sptr outQ = runAlgorithmQ(alg, 11);
 
     // X range in outQ
@@ -603,7 +603,7 @@ public:
     alg.setProperty("InputWorkspace", m_singleDetectorWS);
     alg.setProperty("SummationType", "SumInQ");
     alg.setProperty("ReductionType", "DivergentBeam");
-    alg.setProperty("ThetaIn", 25.0);
+    alg.setProperty("ThetaIn", 0.3);
     MatrixWorkspace_sptr outQ = runAlgorithmQ(alg, 28);
 
     // X range in outQ
@@ -619,10 +619,10 @@ public:
   void test_sum_in_q_exclude_partial_bins() {
     // Sum in Q, single detector
     ReflectometryReductionOne2 alg;
-    setupAlgorithm(alg, 1.5, 15.0, "2");
+    setupAlgorithm(alg, 1.5, 15.0, "3");
     alg.setProperty("SummationType", "SumInQ");
     alg.setProperty("ReductionType", "DivergentBeam");
-    alg.setProperty("ThetaIn", 25.0);
+    alg.setProperty("ThetaIn", 0.3);
     alg.setProperty("IncludePartialBins", "0");
     MatrixWorkspace_sptr outLam = runAlgorithmLam(alg, 11);
 
@@ -637,10 +637,10 @@ public:
   void test_sum_in_q_exclude_partial_bins_multiple_detectors() {
     // Sum in Q, multiple detectors in group
     ReflectometryReductionOne2 alg;
-    setupAlgorithm(alg, 1.5, 15.0, "2-4");
+    setupAlgorithm(alg, 1.5, 15.0, "3-4");
     alg.setProperty("SummationType", "SumInQ");
     alg.setProperty("ReductionType", "DivergentBeam");
-    alg.setProperty("ThetaIn", 25.0);
+    alg.setProperty("ThetaIn", 0.3);
     alg.setProperty("IncludePartialBins", "0");
     MatrixWorkspace_sptr outLam = runAlgorithmLam(alg, 11);
 
