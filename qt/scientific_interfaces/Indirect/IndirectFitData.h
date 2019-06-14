@@ -137,7 +137,9 @@ public:
   void setSpectra(Spectra &&spectra);
   void setSpectra(Spectra const &spectra);
   void setStartX(double const &startX, WorkspaceIndex const &index);
+  void setStartX(double const &startX);
   void setEndX(double const &endX, WorkspaceIndex const &spectrum);
+  void setEndX(double const &endX);
   void setExcludeRegionString(std::string const &excludeRegion,
     WorkspaceIndex const &spectrum);
 

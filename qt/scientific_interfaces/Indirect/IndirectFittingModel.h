@@ -81,7 +81,9 @@ public:
   void setSpectra(Spectra &&spectra, DatasetIndex dataIndex);
   void setSpectra(const Spectra &spectra, DatasetIndex dataIndex);
   virtual void setStartX(double startX, DatasetIndex dataIndex, WorkspaceIndex spectrum);
+  virtual void setStartX(double startX, DatasetIndex dataIndex);
   virtual void setEndX(double endX, DatasetIndex dataIndex, WorkspaceIndex spectrum);
+  virtual void setEndX(double endX, DatasetIndex dataIndex);
   virtual void setExcludeRegion(const std::string &exclude,
     DatasetIndex dataIndex, WorkspaceIndex spectrum);
 

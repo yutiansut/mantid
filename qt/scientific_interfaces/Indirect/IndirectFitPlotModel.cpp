@@ -131,12 +131,12 @@ void IndirectFitPlotModel::setActiveSpectrum(WorkspaceIndex spectrum) {
 
 void IndirectFitPlotModel::setStartX(double startX) {
   if (getRange().second > startX)
-    m_fittingModel->setStartX(startX, m_activeIndex, m_activeSpectrum);
+    m_fittingModel->setStartX(startX, m_activeIndex);
 }
 
 void IndirectFitPlotModel::setEndX(double endX) {
   if (getRange().first < endX)
-    m_fittingModel->setEndX(endX, m_activeIndex, m_activeSpectrum);
+    m_fittingModel->setEndX(endX, m_activeIndex);
 }
 
 //void IndirectFitPlotModel::setFWHM(double fwhm) {

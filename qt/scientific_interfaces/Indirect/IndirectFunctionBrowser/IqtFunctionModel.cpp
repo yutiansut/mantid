@@ -406,7 +406,7 @@ std::string IqtFunctionModel::buildStretchExpFunctionString() const
 
 std::string IqtFunctionModel::buildBackgroundFunctionString() const
 {
-  return "name=FlatBackground,A0=0";
+  return "name=FlatBackground,A0=0,constraints=(A0>0)";
 }
 
 QString IqtFunctionModel::buildFunctionString() const

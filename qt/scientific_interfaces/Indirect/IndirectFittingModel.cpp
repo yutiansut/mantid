@@ -153,7 +153,6 @@ void addInputDataToSimultaneousFit(IAlgorithm_sptr fitAlgorithm,
                                    const std::pair<double, double> &xRange,
                                    const std::vector<double> &excludeRegions,
                                    const std::string &suffix) {
-  std::cerr << "EndX" << suffix << ' ' << xRange.second << std::endl;
   fitAlgorithm->setProperty("InputWorkspace" + suffix, workspace);
   fitAlgorithm->setProperty("StartX" + suffix, xRange.first);
   fitAlgorithm->setProperty("EndX" + suffix, xRange.second);
@@ -359,8 +358,6 @@ std::pair<double, double>
 IndirectFittingModel::getFittingRange(DatasetIndex dataIndex, WorkspaceIndex spectrum) const {
   if (dataIndex < m_fittingData.size() &&
       !m_fittingData[dataIndex]->zeroSpectra()) {
-    if (FittingMode::SEQUENTIAL == m_fittingMode)
-      return m_fittingData.front()->getRange(WorkspaceIndex{ 0 });
     return m_fittingData[dataIndex]->getRange(spectrum);
   }
   return std::make_pair(0., 0.);
@@ -370,8 +367,6 @@ std::string IndirectFittingModel::getExcludeRegion(DatasetIndex dataIndex,
   WorkspaceIndex spectrum) const {
   if (dataIndex < m_fittingData.size() &&
       !m_fittingData[dataIndex]->zeroSpectra()) {
-    if (FittingMode::SEQUENTIAL == m_fittingMode)
-      return m_fittingData.back()->getExcludeRegion(WorkspaceIndex{ 0 });
     return m_fittingData[dataIndex]->getExcludeRegion(spectrum);
   }
   return "";
@@ -475,8 +470,6 @@ std::vector<std::string> IndirectFittingModel::getFitParameterNames() const {
 }
 
 Mantid::API::MultiDomainFunction_sptr IndirectFittingModel::getFittingFunction() const {
-  //if (m_activeFunction)
-  //  std::cerr << m_activeFunction->asString() << std::endl;
   return m_activeFunction;
 }
 
@@ -504,29 +497,32 @@ void IndirectFittingModel::setSpectra(const Spectra &spectra,
 void IndirectFittingModel::setStartX(double startX, DatasetIndex dataIndex,
   WorkspaceIndex spectrum) {
   if (m_fittingData.empty()) return;
-  //if (FittingMode::SEQUENTIAL == m_fittingMode)
-  //  m_fittingData.front()->setStartX(startX, 0);
-  //else
-    m_fittingData[dataIndex]->setStartX(startX, spectrum);
+  m_fittingData[dataIndex]->setStartX(startX, spectrum);
+}
+
+void IndirectFittingModel::setStartX(double startX, DatasetIndex dataIndex) {
+  if (m_fittingData.empty())
+    return;
+  m_fittingData[dataIndex]->setStartX(startX);
 }
 
 void IndirectFittingModel::setEndX(double endX, DatasetIndex dataIndex,
   WorkspaceIndex spectrum) {
   if (m_fittingData.empty()) return;
-  //if (FittingMode::SEQUENTIAL == m_fittingMode)
-  //  m_fittingData.front()->setEndX(endX, 0);
-  //else
-    m_fittingData[dataIndex]->setEndX(endX, spectrum);
+  m_fittingData[dataIndex]->setEndX(endX, spectrum);
+}
+
+void IndirectFittingModel::setEndX(double endX, DatasetIndex dataIndex) {
+  if (m_fittingData.empty())
+    return;
+  m_fittingData[dataIndex]->setEndX(endX);
 }
 
 void IndirectFittingModel::setExcludeRegion(const std::string &exclude,
                                             DatasetIndex dataIndex,
   WorkspaceIndex spectrum) {
   if (m_fittingData.empty()) return;
-  //if (FittingMode::SEQUENTIAL == m_fittingMode)
-  //  m_fittingData.front()->setExcludeRegionString(exclude, 0);
-  //else
-    m_fittingData[dataIndex]->setExcludeRegionString(exclude, spectrum);
+  m_fittingData[dataIndex]->setExcludeRegionString(exclude, spectrum);
 }
 
 void IndirectFittingModel::addWorkspace(const std::string &workspaceName) {
@@ -857,7 +853,6 @@ IAlgorithm_sptr IndirectFittingModel::createSequentialFit(
 
   auto const firstWsIndex = initialFitData->getSpectrum(SpectrumRowIndex{0});
   const auto range = initialFitData->getRange(firstWsIndex);
-  std::cerr << "EndX " << range.second << std::endl;
   fitAlgorithm->setProperty("StartX", range.first);
   fitAlgorithm->setProperty("EndX", range.second);
 

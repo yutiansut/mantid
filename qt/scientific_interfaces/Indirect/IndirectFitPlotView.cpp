@@ -56,9 +56,9 @@ WorkspaceIndex IndirectFitPlotView::getSelectedSpectrum() const {
 
 SpectrumRowIndex IndirectFitPlotView::getSelectedSpectrumIndex() const {
   if (m_plotForm->swPlotSpectrum->currentIndex() == 0)
-    return SpectrumRowIndex{ m_plotForm->spPlotSpectrum->value() -
-    m_plotForm->spPlotSpectrum->minimum() };
-  return SpectrumRowIndex{ m_plotForm->cbPlotSpectrum->currentIndex() };
+    return SpectrumRowIndex{m_plotForm->spPlotSpectrum->value() -
+                            m_plotForm->spPlotSpectrum->minimum()};
+  return SpectrumRowIndex{m_plotForm->cbPlotSpectrum->currentIndex()};
 }
 
 DatasetIndex IndirectFitPlotView::getSelectedDataIndex() const {
@@ -84,8 +84,10 @@ void IndirectFitPlotView::showMultipleDataSelection() {
 void IndirectFitPlotView::setAvailableSpectra(WorkspaceIndex minimum,
                                               WorkspaceIndex maximum) {
   m_plotForm->swPlotSpectrum->setCurrentIndex(0);
-  m_plotForm->spPlotSpectrum->setMinimum(boost::numeric_cast<int>(minimum.value));
-  m_plotForm->spPlotSpectrum->setMaximum(boost::numeric_cast<int>(maximum.value));
+  m_plotForm->spPlotSpectrum->setMinimum(
+      boost::numeric_cast<int>(minimum.value));
+  m_plotForm->spPlotSpectrum->setMaximum(
+      boost::numeric_cast<int>(maximum.value));
 }
 
 void IndirectFitPlotView::setAvailableSpectra(
@@ -142,7 +144,8 @@ void IndirectFitPlotView::appendToDataSelection(const std::string &dataName) {
 
 void IndirectFitPlotView::setNameInDataSelection(const std::string &dataName,
                                                  DatasetIndex index) {
-  m_plotForm->cbDataSelection->setItemText(index.value, QString::fromStdString(dataName));
+  m_plotForm->cbDataSelection->setItemText(index.value,
+                                           QString::fromStdString(dataName));
 }
 
 void IndirectFitPlotView::clearDataSelection() {
@@ -158,7 +161,8 @@ void IndirectFitPlotView::plotInTopPreview(
 void IndirectFitPlotView::plotInBottomPreview(
     const QString &name, Mantid::API::MatrixWorkspace_sptr workspace,
     WorkspaceIndex spectrum, Qt::GlobalColor colour) {
-  m_plotForm->ppPlotBottom->addSpectrum(name, workspace, spectrum.value, colour);
+  m_plotForm->ppPlotBottom->addSpectrum(name, workspace, spectrum.value,
+                                        colour);
 }
 
 void IndirectFitPlotView::removeFromTopPreview(const QString &name) {

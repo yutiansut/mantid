@@ -41,7 +41,9 @@ public:
   void setResolutionFBSuffices(const QStringList &suffices);
 
   void setStartX(double startX, DatasetIndex dataIndex, WorkspaceIndex spectrumIndex);
+  void setStartX(double startX, DatasetIndex dataIndex);
   void setEndX(double endX, DatasetIndex dataIndex, WorkspaceIndex spectrumIndex);
+  void setEndX(double endX, DatasetIndex dataIndex);
   void setExclude(const std::string &exclude, DatasetIndex dataIndex, WorkspaceIndex spectrumIndex);
 
   void loadSettings(const QSettings &settings);

@@ -29,17 +29,14 @@ std::string rangeToString(const std::pair<size_t, size_t> &range,
 }
 
 struct CheckZeroSpectrum {
-  bool operator()(const Spectra &spectra) const {
-    return spectra.empty();
-  }
+  bool operator()(const Spectra &spectra) const { return spectra.empty(); }
 };
 
 struct SpectraToString {
   explicit SpectraToString(const std::string &rangeDelimiter = "-")
       : m_rangeDelimiter(rangeDelimiter) {}
 
-  std::string
-  operator()(const Spectra &spectra) const {
+  std::string operator()(const Spectra &spectra) const {
     return spectra.getString();
   }
 
@@ -98,9 +95,8 @@ std::string createSpectraString(std::string string) {
 
 struct CombineSpectra {
   Spectra operator()(const Spectra &spectra1, const Spectra &spectra2) const {
-    return Spectra(createSpectraString(
-        SpectraToString()(spectra1) + "," +
-        SpectraToString()(spectra2)));
+    return Spectra(createSpectraString(SpectraToString()(spectra1) + "," +
+                                       SpectraToString()(spectra2)));
   }
 };
 
@@ -117,8 +113,8 @@ std::string join(const std::vector<T> &values, const char *delimiter) {
 }
 
 template <typename T, typename... Ts>
-std::vector<T, Ts...> subvector(const std::vector<T, Ts...> vec,
-                                size_t start, size_t end) {
+std::vector<T, Ts...> subvector(const std::vector<T, Ts...> vec, size_t start,
+                                size_t end) {
   return std::vector<T, Ts...>(vec.begin() + start, vec.begin() + end);
 }
 
@@ -186,7 +182,7 @@ workspaceIndexVectorFromString(const std::string &listString) {
   auto const intVec = vectorFromString<int>(listString);
   std::vector<MantidQt::CustomInterfaces::IDA::WorkspaceIndex> output;
   for (auto const i : intVec) {
-    output.push_back(MantidQt::CustomInterfaces::IDA::WorkspaceIndex{ i });
+    output.push_back(MantidQt::CustomInterfaces::IDA::WorkspaceIndex{i});
   }
   return output;
 }
@@ -198,7 +194,7 @@ namespace CustomInterfaces {
 namespace IDA {
 
 Spectra::Spectra(const std::string &str)
-  : m_vec(workspaceIndexVectorFromString(str)), m_isContinuous(true) {
+    : m_vec(workspaceIndexVectorFromString(str)), m_isContinuous(true) {
   if (m_vec.size() > 1) {
     for (size_t i = 1; i < m_vec.size(); ++i) {
       if (m_vec[i].value - m_vec[i - 1].value != 1) {
@@ -218,10 +214,11 @@ Spectra::Spectra(WorkspaceIndex minimum, WorkspaceIndex maximum) {
 }
 
 Spectra::Spectra(const Spectra &vec)
-  : m_vec(vec.m_vec), m_isContinuous(vec.m_isContinuous) {}
+    : m_vec(vec.m_vec), m_isContinuous(vec.m_isContinuous) {}
 
 Spectra::Spectra(Spectra &&vec)
-  : m_vec(std::move(vec.m_vec)), m_isContinuous(std::move(vec.m_isContinuous)) {}
+    : m_vec(std::move(vec.m_vec)),
+      m_isContinuous(std::move(vec.m_isContinuous)) {}
 
 Spectra &Spectra::operator=(const Spectra &vec) {
   m_vec = vec.m_vec;
@@ -237,18 +234,26 @@ Spectra &Spectra::operator=(Spectra &&vec) {
 
 bool Spectra::empty() const { return m_vec.empty(); }
 
-SpectrumRowIndex Spectra::size() const { return SpectrumRowIndex{static_cast<int>(m_vec.size())}; }
+SpectrumRowIndex Spectra::size() const {
+  return SpectrumRowIndex{static_cast<int>(m_vec.size())};
+}
 
 std::string Spectra::getString() const {
-  if (empty()) return "";
-  if (m_isContinuous) return m_vec.size() > 1 ? std::to_string(m_vec.front().value) + "-" + std::to_string(m_vec.back().value) : std::to_string(m_vec.front().value);
+  if (empty())
+    return "";
+  if (m_isContinuous)
+    return m_vec.size() > 1 ? std::to_string(m_vec.front().value) + "-" +
+                                  std::to_string(m_vec.back().value)
+                            : std::to_string(m_vec.front().value);
   std::vector<int> out(m_vec.size());
-  std::transform(m_vec.begin(), m_vec.end(), out.begin(), [](WorkspaceIndex i){return i.value;});
+  std::transform(m_vec.begin(), m_vec.end(), out.begin(),
+                 [](WorkspaceIndex i) { return i.value; });
   return Mantid::Kernel::Strings::toString(out);
 }
 
 std::pair<WorkspaceIndex, WorkspaceIndex> Spectra::getMinMax() const {
-  if (empty()) return std::make_pair(WorkspaceIndex{ 0 }, WorkspaceIndex{ 0 });
+  if (empty())
+    return std::make_pair(WorkspaceIndex{0}, WorkspaceIndex{0});
   return std::make_pair(m_vec.front(), m_vec.back());
 }
 
@@ -261,16 +266,20 @@ bool Spectra::isContinuous() const { return m_isContinuous; }
 SpectrumRowIndex Spectra::indexOf(WorkspaceIndex i) const {
   auto const it = std::find(begin(), end(), i);
   if (it == end()) {
-    throw std::runtime_error("Spectrum index " + std::to_string(i.value) + " not found.");
+    throw std::runtime_error("Spectrum index " + std::to_string(i.value) +
+                             " not found.");
   }
   return SpectrumRowIndex{static_cast<int>(std::distance(begin(), it))};
 }
-
 
 IndirectFitData::IndirectFitData(MatrixWorkspace_sptr workspace,
                                  const Spectra &spectra)
     : m_workspace(workspace), m_spectra(Spectra("")) {
   setSpectra(spectra);
+  auto const range = getBinRange(workspace);
+  for (auto const spectrum : spectra) {
+    m_ranges[spectrum] = range;
+  }
 }
 
 std::string
@@ -289,7 +298,7 @@ IndirectFitData::displayName(const std::string &formatString,
 }
 
 std::string IndirectFitData::displayName(const std::string &formatString,
-  WorkspaceIndex spectrum) const {
+                                         WorkspaceIndex spectrum) const {
   const auto workspaceName = getBasename();
 
   auto formatted = boost::format(formatString);
@@ -325,11 +334,13 @@ bool IndirectFitData::zeroSpectra() const {
 std::pair<double, double>
 IndirectFitData::getRange(WorkspaceIndex spectrum) const {
   auto range = m_ranges.find(spectrum);
-  if (range != m_ranges.end())
+  if (range != m_ranges.end()) {
     return range->second;
-  range = m_ranges.find(WorkspaceIndex{ 0 });
-  if (range != m_ranges.end())
+  }
+  range = m_ranges.find(getSpectrum(SpectrumRowIndex{0}));
+  if (range != m_ranges.end()) {
     return range->second;
+  }
   return getBinRange(m_workspace);
 }
 
@@ -347,8 +358,7 @@ IndirectFitData::excludeRegionsVector(WorkspaceIndex spectrum) const {
 
 void IndirectFitData::setSpectra(std::string const &spectra) {
   try {
-    const Spectra spec =
-        Spectra(createSpectraString(spectra));
+    const Spectra spec = Spectra(createSpectraString(spectra));
     setSpectra(spec);
   } catch (std::exception &ex) {
     throw std::runtime_error("Spectra too large for cast: " +
@@ -382,7 +392,7 @@ void IndirectFitData::validateSpectra(Spectra const &spectra) {
 }
 
 void IndirectFitData::setStartX(double const &startX,
-  WorkspaceIndex const &spectrum) {
+                                WorkspaceIndex const &spectrum) {
   const auto range = m_ranges.find(spectrum);
   if (range != m_ranges.end())
     range->second.first = startX;
@@ -393,7 +403,14 @@ void IndirectFitData::setStartX(double const &startX,
         "Unable to set StartX: Workspace no longer exists.");
 }
 
-void IndirectFitData::setEndX(double const &endX, WorkspaceIndex const &spectrum) {
+void IndirectFitData::setStartX(double const &startX) {
+  for (auto const spectrum : m_spectra) {
+    setStartX(startX, spectrum);
+  }
+}
+
+void IndirectFitData::setEndX(double const &endX,
+                              WorkspaceIndex const &spectrum) {
   const auto range = m_ranges.find(spectrum);
   if (range != m_ranges.end()) {
     range->second.second = endX;
@@ -401,6 +418,12 @@ void IndirectFitData::setEndX(double const &endX, WorkspaceIndex const &spectrum
     m_ranges[spectrum] = std::make_pair(m_workspace->x(0).front(), endX);
   } else
     throw std::runtime_error("Unable to set EndX: Workspace no longer exists.");
+}
+
+void IndirectFitData::setEndX(double const &endX) {
+  for (auto const spectrum : m_spectra) {
+    setEndX(endX, spectrum);
+  }
 }
 
 void IndirectFitData::setExcludeRegionString(
@@ -413,8 +436,7 @@ void IndirectFitData::setExcludeRegionString(
 
 IndirectFitData &IndirectFitData::combine(IndirectFitData const &fitData) {
   m_workspace = fitData.m_workspace;
-  setSpectra(
-      CombineSpectra()(m_spectra, fitData.m_spectra));
+  setSpectra(CombineSpectra()(m_spectra, fitData.m_spectra));
   m_excludeRegions.insert(std::begin(fitData.m_excludeRegions),
                           std::end(fitData.m_excludeRegions));
   m_ranges.insert(std::begin(fitData.m_ranges), std::end(fitData.m_ranges));

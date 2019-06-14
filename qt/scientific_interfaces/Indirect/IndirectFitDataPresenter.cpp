@@ -50,8 +50,10 @@ IndirectFitDataPresenter::IndirectFitDataPresenter(
           SLOT(removeSelectedData()));
   connect(m_view, SIGNAL(removeClicked()), this, SIGNAL(dataRemoved()));
   connect(m_view, SIGNAL(removeClicked()), this, SIGNAL(dataChanged()));
-  connect(m_view, SIGNAL(startXChanged(double)), this, SIGNAL(startXChanged(double)));
-  connect(m_view, SIGNAL(endXChanged(double)), this, SIGNAL(endXChanged(double)));
+  connect(m_view, SIGNAL(startXChanged(double)), this,
+          SIGNAL(startXChanged(double)));
+  connect(m_view, SIGNAL(endXChanged(double)), this,
+          SIGNAL(endXChanged(double)));
 
   connect(m_tablePresenter.get(),
           SIGNAL(startXChanged(double, DatasetIndex, WorkspaceIndex)), this,
@@ -60,9 +62,11 @@ IndirectFitDataPresenter::IndirectFitDataPresenter(
           SIGNAL(endXChanged(double, DatasetIndex, WorkspaceIndex)), this,
           SIGNAL(endXChanged(double, DatasetIndex, WorkspaceIndex)));
   connect(m_tablePresenter.get(),
-          SIGNAL(excludeRegionChanged(const std::string &, DatasetIndex, WorkspaceIndex)),
+          SIGNAL(excludeRegionChanged(const std::string &, DatasetIndex,
+                                      WorkspaceIndex)),
           this,
-          SIGNAL(excludeRegionChanged(const std::string &, DatasetIndex, WorkspaceIndex)));
+          SIGNAL(excludeRegionChanged(const std::string &, DatasetIndex,
+                                      WorkspaceIndex)));
 }
 
 IndirectFitDataPresenter::~IndirectFitDataPresenter() { observeReplace(false); }
@@ -97,9 +101,20 @@ void IndirectFitDataPresenter::setStartX(double startX, DatasetIndex dataIndex,
   m_view->setStartX(startX);
 }
 
+void IndirectFitDataPresenter::setStartX(double startX,
+                                         DatasetIndex dataIndex) {
+  m_tablePresenter->setStartX(startX, dataIndex);
+  m_view->setStartX(startX);
+}
+
 void IndirectFitDataPresenter::setEndX(double endX, DatasetIndex dataIndex,
                                        WorkspaceIndex spectrumIndex) {
   m_tablePresenter->setEndX(endX, dataIndex, spectrumIndex);
+  m_view->setEndX(endX);
+}
+
+void IndirectFitDataPresenter::setEndX(double endX, DatasetIndex dataIndex) {
+  m_tablePresenter->setEndX(endX, dataIndex);
   m_view->setEndX(endX);
 }
 
