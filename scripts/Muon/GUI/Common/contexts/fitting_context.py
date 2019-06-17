@@ -343,13 +343,9 @@ class FittingContext(object):
         """
         workspace_list = []
         for fit in self.fit_list:
-            if type(fit.input_workspace) == list:
-                for index, workspace in enumerate(fit.input_workspace):
-                    if workspace == input_workspace_name:
-                        workspace_list.append(fit.output_workspace_names[index])
-            else:
-                if input_workspace_name == fit.input_workspace:
-                    workspace_list.append(fit.output_workspace_names[0])
+            for index, workspace in enumerate(fit.input_workspaces):
+                if workspace == input_workspace_name:
+                    workspace_list.append(fit.output_workspace_names[index])
         return workspace_list
 
 
