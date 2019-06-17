@@ -185,11 +185,7 @@ void IqtFunctionModel::setGlobalParameters(const QStringList & globals)
 
 bool IqtFunctionModel::isGlobal(const QString &parName) const
 {
-  auto const stretchParameterName = getParameterName(ParamNames::STRETCH_STRETCHING);
-  if (parName == stretchParameterName) {
-    return m_isStretchGlobal;
-  }
-  return false;
+  return m_model.isGlobal(parName);
 }
 
 void IqtFunctionModel::updateMultiDatasetParameters(const IFunction & fun)
@@ -264,6 +260,11 @@ bool IqtFunctionModel::isLocalParameterFixed(const QString & parName, int i) con
 QString IqtFunctionModel::getLocalParameterTie(const QString & parName, int i) const
 {
   return m_model.getLocalParameterTie(parName, i);
+}
+
+QString IqtFunctionModel::getLocalParameterConstraint(const QString &parName,
+                                                      int i) const {
+  return m_model.getLocalParameterConstraint(parName, i);
 }
 
 void IqtFunctionModel::setLocalParameterValue(const QString & parName, int i, double value)

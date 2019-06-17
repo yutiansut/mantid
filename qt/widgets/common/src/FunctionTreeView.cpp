@@ -980,17 +980,17 @@ FunctionTreeView::addConstraintProperties(QtProperty *prop,
   if (expr.size() == 3) { // lower < param < upper
     try {
       // check that the first and third terms are numbers
-      double d1 = boost::lexical_cast<double>(expr[0].name());
+      double d1 = boost::lexical_cast<double>(expr[0].str());
       (void)d1;
-      double d2 = boost::lexical_cast<double>(expr[2].name());
+      double d2 = boost::lexical_cast<double>(expr[2].str());
       (void)d2;
       if (expr[1].operator_name() == "<" && expr[2].operator_name() == "<") {
-        lowerBoundStr = QString::fromStdString(expr[0].name());
-        upperBoundStr = QString::fromStdString(expr[2].name());
+        lowerBoundStr = QString::fromStdString(expr[0].str());
+        upperBoundStr = QString::fromStdString(expr[2].str());
       } else // assume that the operators are ">"
       {
-        lowerBoundStr = QString::fromStdString(expr[2].name());
-        upperBoundStr = QString::fromStdString(expr[0].name());
+        lowerBoundStr = QString::fromStdString(expr[2].str());
+        upperBoundStr = QString::fromStdString(expr[0].str());
       }
     } catch (...) { // error in constraint
       return QList<FunctionTreeView::AProperty>();
@@ -1007,15 +1007,15 @@ FunctionTreeView::addConstraintProperties(QtProperty *prop,
     std::string op = expr[1].operator_name();
     if (paramPos == 0) { // parameter goes first
       if (op == "<") {   // param < number
-        upperBoundStr = QString::fromStdString(expr[1].name());
+        upperBoundStr = QString::fromStdString(expr[1].str());
       } else { // param > number
-        lowerBoundStr = QString::fromStdString(expr[1].name());
+        lowerBoundStr = QString::fromStdString(expr[1].str());
       }
     } else {           // parameter is second
       if (op == "<") { // number < param
-        lowerBoundStr = QString::fromStdString(expr[0].name());
+        lowerBoundStr = QString::fromStdString(expr[0].str());
       } else { // number > param
-        upperBoundStr = QString::fromStdString(expr[0].name());
+        upperBoundStr = QString::fromStdString(expr[0].str());
       }
     }
   }
@@ -1374,7 +1374,8 @@ void FunctionTreeView::setParameter(const QString &paramName, double value) {
  * @param paramName :: Parameter name
  * @param error :: New error
  */
-void FunctionTreeView::setParameterError(const QString &paramName, double error) {
+void FunctionTreeView::setParameterError(const QString &paramName,
+                                         double error) {
   QString index, name;
   std::tie(index, name) = splitParameterName(paramName);
   if (auto prop = getFunctionProperty(index)) {
@@ -1640,6 +1641,15 @@ void FunctionTreeView::addConstraints50() {
   emit parameterConstraintAdded(functionIndex, constraint);
 }
 
+void FunctionTreeView::removeConstraintsQuiet(QtProperty *prop) {
+  auto props = prop->subProperties();
+  foreach (QtProperty *p, props) {
+    if (isConstraint(p)) {
+      removeProperty(p);
+    }
+  }
+}
+
 /**
  * Remove both constraints from current parameter
  */
@@ -1650,13 +1660,7 @@ void FunctionTreeView::removeConstraints() {
   QtProperty *prop = item->property();
   if (!isParameter(prop))
     return;
-  // const bool isLocal = isLocalParameterProperty(prop);
-  auto props = prop->subProperties();
-  foreach (QtProperty *p, props) {
-    if (isConstraint(p)) {
-      removeProperty(p);
-    }
-  }
+  removeConstraintsQuiet(prop);
   emit parameterConstraintRemoved(getParameterName(prop));
 }
 
@@ -1869,6 +1873,15 @@ void FunctionTreeView::setParameterTie(const QString &paramName,
   } else if (tieProp) {
     removeProperty(tieProp);
   }
+}
+
+void FunctionTreeView::setParameterConstraint(const QString &paramName,
+                                              const QString &constraint) {
+  auto paramProp = getParameterProperty(paramName);
+  if (hasConstraint(paramProp)) {
+    removeConstraintsQuiet(paramProp);
+  }
+  addConstraintProperties(paramProp, constraint);
 }
 
 QStringList FunctionTreeView::getGlobalParameters() const {

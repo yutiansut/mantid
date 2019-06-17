@@ -168,6 +168,8 @@ void FunctionMultiDomainPresenter::setCurrentDataset(int index) {
     } else {
       m_view->setParameterTie(name, m_model->getLocalParameterTie(name, index));
     }
+    m_view->setParameterConstraint(
+        name, m_model->getLocalParameterConstraint(name, index));
   }
 }
 
@@ -202,6 +204,11 @@ QString
 FunctionMultiDomainPresenter::getLocalParameterTie(const QString &parName,
                                                    int i) const {
   return m_model->getLocalParameterTie(parName, i);
+}
+
+QString FunctionMultiDomainPresenter::getLocalParameterConstraint(
+    const QString &parName, int i) const {
+  return m_model->getLocalParameterConstraint(parName, i);
 }
 
 void FunctionMultiDomainPresenter::setLocalParameterValue(
@@ -239,6 +246,14 @@ void FunctionMultiDomainPresenter::setLocalParameterTie(const QString &parName,
   m_model->setLocalParameterTie(parName, i, tie);
   if (m_model->currentDomainIndex() == i) {
     m_view->setParameterTie(parName, tie);
+  }
+}
+
+void FunctionMultiDomainPresenter::setLocalParameterConstraint(
+    const QString &parName, int i, QString constraint) {
+  m_model->setLocalParameterConstraint(parName, i, constraint);
+  if (m_model->currentDomainIndex() == i) {
+    m_view->setParameterConstraint(parName, constraint);
   }
 }
 
@@ -343,6 +358,7 @@ void FunctionMultiDomainPresenter::editLocalParameter(const QString &parName) {
   QList<double> values;
   QList<bool> fixes;
   QStringList ties;
+  QStringList constraints;
   const int n = wsNames.size();
   for (int i = 0; i < n; ++i) {
     const double value = getLocalParameterValue(parName, i);
@@ -351,10 +367,12 @@ void FunctionMultiDomainPresenter::editLocalParameter(const QString &parName) {
     fixes.push_back(fixed);
     const auto tie = getLocalParameterTie(parName, i);
     ties.push_back(tie);
+    const auto constraint = getLocalParameterConstraint(parName, i);
+    constraints.push_back(constraint);
   }
 
   m_editLocalParameterDialog = new EditLocalParameterDialog(
-      m_view, parName, wsNames, values, fixes, ties);
+      m_view, parName, wsNames, values, fixes, ties, constraints);
   connect(m_editLocalParameterDialog, SIGNAL(finished(int)), this,
           SLOT(editLocalParameterFinish(int)));
   m_editLocalParameterDialog->open();
@@ -366,6 +384,7 @@ void FunctionMultiDomainPresenter::editLocalParameterFinish(int result) {
     auto values = m_editLocalParameterDialog->getValues();
     auto fixes = m_editLocalParameterDialog->getFixes();
     auto ties = m_editLocalParameterDialog->getTies();
+    auto constraints = m_editLocalParameterDialog->getConstraints();
     assert(values.size() == getNumberOfDatasets());
     for (int i = 0; i < values.size(); ++i) {
       setLocalParameterValue(parName, i, values[i]);
@@ -376,6 +395,7 @@ void FunctionMultiDomainPresenter::editLocalParameterFinish(int result) {
       } else {
         setLocalParameterTie(parName, i, "");
       }
+      setLocalParameterConstraint(parName, i, constraints[i]);
     }
   }
   m_editLocalParameterDialog = nullptr;

@@ -155,7 +155,7 @@ void MultiDomainFunctionModel::setParameter(const QString &paramName,
 }
 
 void MultiDomainFunctionModel::setParameterError(const QString &paramName,
-                                             double value) {
+                                                 double value) {
   auto fun = getCurrentFunction();
   auto const index = fun->parameterIndex(paramName.toStdString());
   fun->setError(index, value);
@@ -165,13 +165,15 @@ double MultiDomainFunctionModel::getParameter(const QString &paramName) const {
   return getCurrentFunction()->getParameter(paramName.toStdString());
 }
 
-double MultiDomainFunctionModel::getParameterError(const QString &paramName) const {
+double
+MultiDomainFunctionModel::getParameterError(const QString &paramName) const {
   auto fun = getCurrentFunction();
   auto const index = fun->parameterIndex(paramName.toStdString());
   return fun->getError(index);
 }
 
-QString MultiDomainFunctionModel::getParameterDescription(const QString &paramName) const {
+QString MultiDomainFunctionModel::getParameterDescription(
+    const QString &paramName) const {
   auto fun = getCurrentFunction();
   auto const index = fun->parameterIndex(paramName.toStdString());
   return QString::fromStdString(fun->parameterDescription(index));
@@ -310,6 +312,17 @@ QString MultiDomainFunctionModel::getLocalParameterTie(const QString &parName,
   return tieStr.mid(j + 1);
 }
 
+QString
+MultiDomainFunctionModel::getLocalParameterConstraint(const QString &parName,
+                                                      int i) const {
+  auto fun = getSingleFunction(i);
+  auto const parIndex = fun->parameterIndex(parName.toStdString());
+  auto const constraint = fun->getConstraint(parIndex);
+  auto const out =
+      (!constraint) ? "" : QString::fromStdString(constraint->asString());
+  return out;
+}
+
 void MultiDomainFunctionModel::setLocalParameterValue(const QString &parName,
                                                       int i, double value) {
   getSingleFunction(i)->setParameter(parName.toStdString(), value);
@@ -344,6 +357,17 @@ void MultiDomainFunctionModel::setLocalParameterTie(const QString &parName,
   } else {
     auto const j = tie.indexOf('=');
     fun->tie(name, tie.mid(j + 1).toStdString());
+  }
+}
+
+void MultiDomainFunctionModel::setLocalParameterConstraint(
+    const QString &parName, int i, QString constraint) {
+  auto fun = getSingleFunction(i);
+  auto const name = parName.toStdString();
+  if (constraint.isEmpty()) {
+    fun->removeConstraint(parName.toStdString());
+  } else {
+    fun->addConstraints(constraint.toStdString());
   }
 }
 
@@ -430,8 +454,7 @@ void MultiDomainFunctionModel::updateGlobals() {
   }
 }
 
-bool MultiDomainFunctionModel::isGlobal(const QString & parName) const
-{
+bool MultiDomainFunctionModel::isGlobal(const QString &parName) const {
   return m_globalParameterNames.contains(parName);
 }
 

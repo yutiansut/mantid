@@ -30,13 +30,17 @@ namespace MantidWidgets {
  * @param parName :: [input] Name of parameter to edit in this dialog
  * @param wsNames :: [input] Names of workspaces being fitted
  */
-EditLocalParameterDialog::EditLocalParameterDialog(QWidget *parent, const QString &parName, const QStringList &wsNames,
-                                                   QList<double> values, QList<bool> fixes, QStringList ties)
-    : QDialog(parent), m_parName(parName), m_values(values), m_fixes(fixes), m_ties(ties) {
+EditLocalParameterDialog::EditLocalParameterDialog(
+    QWidget *parent, const QString &parName, const QStringList &wsNames,
+    QList<double> values, QList<bool> fixes, QStringList ties,
+    QStringList constraints)
+    : QDialog(parent), m_parName(parName), m_values(values), m_fixes(fixes),
+      m_ties(ties), m_constraints(constraints) {
   const int n = wsNames.size();
   assert(values.size() == n);
   assert(fixes.size() == n);
   assert(ties.size() == n);
+  assert(constraints.size() == n);
   m_uiForm.setupUi(this);
   setAttribute(Qt::WA_DeleteOnClose);
   doSetup(parName, wsNames);
@@ -96,6 +100,10 @@ void EditLocalParameterDialog::doSetup(const QString &parName,
   connect(deleg, SIGNAL(setTie(int, QString)), this,
           SLOT(setTie(int, QString)));
   connect(deleg, SIGNAL(setTieAll(QString)), this, SLOT(setTieAll(QString)));
+  connect(deleg, SIGNAL(setConstraint(int, QString)), this,
+          SLOT(setConstraint(int, QString)));
+  connect(deleg, SIGNAL(setConstraintAll(QString)), this,
+          SLOT(setConstraintAll(QString)));
   connect(deleg, SIGNAL(setValueToLog(int)), this, SLOT(setValueToLog(int)));
   connect(deleg, SIGNAL(setAllValuesToLog()), this, SLOT(setAllValuesToLog()));
 
@@ -143,6 +151,11 @@ QList<bool> EditLocalParameterDialog::getFixes() const { return m_fixes; }
 /// Get a list of the ties.
 QStringList EditLocalParameterDialog::getTies() const { return m_ties; }
 
+/// Get a list of the constraints
+QStringList EditLocalParameterDialog::getConstraints() const {
+  return m_constraints;
+}
+
 /// Fix/unfix a single parameter.
 /// @param index :: Index of a paramter to fix or unfix.
 /// @param fix :: Fix (true) or unfix (false).
@@ -167,6 +180,19 @@ void EditLocalParameterDialog::setTieAll(QString tie) {
   for (int i = 0; i < m_ties.size(); ++i) {
     m_ties[i] = tie;
     m_fixes[i] = false;
+    updateRoleColumn(i);
+  }
+  redrawCells();
+}
+
+void EditLocalParameterDialog::setConstraint(int index, QString constraint) {
+  m_constraints[index] = constraint;
+  updateRoleColumn(index);
+}
+
+void EditLocalParameterDialog::setConstraintAll(QString constraint) {
+  for (int i = 0; i < m_constraints.size(); ++i) {
+    m_constraints[i] = constraint;
     updateRoleColumn(i);
   }
   redrawCells();
@@ -270,16 +296,21 @@ void EditLocalParameterDialog::redrawCells() {
 /// Update the text in the role column
 void EditLocalParameterDialog::updateRoleColumn(int index) {
   auto cell = m_uiForm.tableWidget->item(index, roleColumn);
+  QString text;
   if (m_fixes[index]) {
-    cell->setText("fixed");
+    text = "fixed";
     cell->setForeground(QBrush(Qt::red));
   } else if (!m_ties[index].isEmpty()) {
-    cell->setText("tied");
+    text = "tied";
     cell->setForeground(QBrush(Qt::blue));
   } else {
-    cell->setText("fitted");
+    text = "fitted";
     cell->setForeground(QBrush(Qt::darkGreen));
   }
+  if (!m_constraints[index].isEmpty()) {
+    text += ", " + m_constraints[index];
+  }
+  cell->setText(text);
 }
 
 /// Check if there are any other fixed parameters

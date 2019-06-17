@@ -253,6 +253,12 @@ QString IqtTemplatePresenter::getLocalParameterTie(const QString & parName, int 
   return m_model.getLocalParameterTie(parName, i);
 }
 
+QString
+IqtTemplatePresenter::getLocalParameterConstraint(const QString &parName,
+                                                  int i) const {
+  return m_model.getLocalParameterConstraint(parName, i);
+}
+
 void IqtTemplatePresenter::setLocalParameterValue(const QString & parName, int i, double value)
 {
   m_model.setLocalParameterValue(parName, i, value);
@@ -278,6 +284,7 @@ void IqtTemplatePresenter::editLocalParameter(const QString &parName) {
   QList<double> values;
   QList<bool> fixes;
   QStringList ties;
+  QStringList constraints;
   const int n = wsNames.size();
   for (int i = 0; i < n; ++i) {
     const double value = getLocalParameterValue(parName, i);
@@ -286,10 +293,12 @@ void IqtTemplatePresenter::editLocalParameter(const QString &parName) {
     fixes.push_back(fixed);
     const auto tie = getLocalParameterTie(parName, i);
     ties.push_back(tie);
+    const auto constraint = getLocalParameterConstraint(parName, i);
+    constraints.push_back(constraint);
   }
 
   m_editLocalParameterDialog = new EditLocalParameterDialog(
-    m_view, parName, wsNames, values, fixes, ties);
+    m_view, parName, wsNames, values, fixes, ties, constraints);
   connect(m_editLocalParameterDialog, SIGNAL(finished(int)), this,
     SLOT(editLocalParameterFinish(int)));
   m_editLocalParameterDialog->open();

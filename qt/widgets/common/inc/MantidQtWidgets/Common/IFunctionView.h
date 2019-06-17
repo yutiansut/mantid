@@ -39,6 +39,8 @@ public:
   virtual boost::optional<QString> currentFunctionIndex() const = 0;
   virtual void setParameterTie(const QString &paramName,
                                const QString &tie) = 0;
+  virtual void setParameterConstraint(const QString &paramName,
+                               const QString &constraint) = 0;
   virtual void setGlobalParameters(const QStringList &) = 0;
 
 signals:

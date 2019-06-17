@@ -52,6 +52,7 @@ public:
   double getLocalParameterValue(const QString &parName, int i) const;
   bool isLocalParameterFixed(const QString &parName, int i) const;
   QString getLocalParameterTie(const QString &parName, int i) const;
+  QString getLocalParameterConstraint(const QString &parName, int i) const;
   void setLocalParameterValue(const QString &parName, int i, double value);
   void setLocalParameterFixed(const QString &parName, int i, bool fixed);
   void setLocalParameterTie(const QString &parName, int i, const QString &tie);
@@ -93,7 +94,6 @@ private:
   int m_numberOfExponentials = 0;
   bool m_hasStretchExponential = false;
   QString m_background;
-  bool m_isStretchGlobal = false;
 };
 
 } // namespace IDA
