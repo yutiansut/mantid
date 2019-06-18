@@ -103,17 +103,17 @@ void IqtTemplatePresenter::setBackground(const QString & name)
 
 void IqtTemplatePresenter::setNumberOfDatasets(int n)
 {
-  m_model.setNumberOfDatasets(n);
+  m_model.setNumberDomains(n);
 }
 
 int IqtTemplatePresenter::getNumberOfDatasets() const
 {
-  return m_model.getNumberOfDatasets();
+  return m_model.getNumberDomains();
 }
 
 void IqtTemplatePresenter::setFunction(const QString & funStr)
 {
-  m_model.setFunction(funStr);
+  m_model.setFunctionString(funStr);
   m_view->clear();
   setErrorsEnabled(false);
   if (m_model.hasBackground()) {
@@ -136,12 +136,12 @@ void IqtTemplatePresenter::setFunction(const QString & funStr)
 
 IFunction_sptr IqtTemplatePresenter::getGlobalFunction() const
 {
-  return m_model.getGlobalFunction();
+  return m_model.getFitFunction();
 }
 
 IFunction_sptr IqtTemplatePresenter::getFunction() const
 {
-  return m_model.getFunction();
+  return m_model.getCurrentFunction();
 }
 
 QStringList IqtTemplatePresenter::getGlobalParameters() const
@@ -195,7 +195,7 @@ void IqtTemplatePresenter::updateParameters(const IFunction & fun)
 
 void IqtTemplatePresenter::setCurrentDataset(int i)
 {
-  m_model.setCurrentDataset(i);
+  m_model.setCurrentDomainIndex(i);
   updateViewParameters();
 }
 
@@ -338,7 +338,7 @@ void IqtTemplatePresenter::viewChangedParameterValue(const QString & parName, do
       setLocalParameterValue(parName, i, value);
     }
   } else {
-    auto const i = m_model.getCurrentDataset();
+    auto const i = m_model.currentDomainIndex();
     auto const oldValue = m_model.getLocalParameterValue(parName, i);
     if (fabs(value - oldValue) > 1e-6) {
       setErrorsEnabled(false);

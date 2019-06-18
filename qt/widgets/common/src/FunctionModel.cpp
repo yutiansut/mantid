@@ -40,6 +40,29 @@ QString IFunctionModel::getFitFunctionString() const {
 
 void IFunctionModel::clear() { setFunction(IFunction_sptr()); }
 
+int IFunctionModel::getNumberLocalFunctions() const {
+  auto const n = getNumberDomains();
+  return n > 0 ? n : 1;
+}
+
+void IFunctionModel::copyParametersAndErrors(const IFunction &funFrom,
+                                             IFunction &funTo) {
+  if (funTo.nParams() != funFrom.nParams())
+    return;
+  for (size_t i = 0; i < funFrom.nParams(); ++i) {
+    funTo.setParameter(i, funFrom.getParameter(i));
+    funTo.setError(i, funFrom.getError(i));
+  }
+}
+
+void IFunctionModel::copyParametersAndErrorsToAllLocalFunctions(
+    const IFunction &fun) {
+  for (auto i = 0; i < getNumberLocalFunctions(); ++i) {
+    auto localFun = getSingleFunction(i);
+    copyParametersAndErrors(fun, *localFun);
+  }
+}
+
 void MultiDomainFunctionModel::setFunction(IFunction_sptr fun) {
   m_globalParameterNames.clear();
   m_function = boost::dynamic_pointer_cast<MultiDomainFunction>(fun);
@@ -349,7 +372,7 @@ void MultiDomainFunctionModel::setLocalParameterFixed(const QString &parName,
 }
 
 void MultiDomainFunctionModel::setLocalParameterTie(const QString &parName,
-                                                    int i, QString tie) {
+                                                    int i, const QString &tie) {
   auto fun = getSingleFunction(i);
   auto const name = parName.toStdString();
   if (tie.isEmpty()) {
@@ -361,16 +384,17 @@ void MultiDomainFunctionModel::setLocalParameterTie(const QString &parName,
 }
 
 void MultiDomainFunctionModel::setLocalParameterConstraint(
-    const QString &parName, int i, QString constraint) {
+    const QString &parName, int i, const QString &constraint) {
   auto const parts = splitConstraintString(constraint);
   QString prefix, name;
   std::tie(prefix, name) = splitParameterName(parName);
   auto fun = getFunctionWithPrefix(prefix, getSingleFunction(i));
-  constraint.replace(parts.first, name);
   if (constraint.isEmpty()) {
     fun->removeConstraint(name.toStdString());
   } else {
-    fun->addConstraints(constraint.toStdString());
+    auto newConstraint(constraint);
+    newConstraint.replace(parts.first, name);
+    fun->addConstraints(newConstraint.toStdString());
   }
 }
 
@@ -437,12 +461,7 @@ void MultiDomainFunctionModel::updateParameters(const IFunction &fun) {
   if (!hasFunction())
     return;
   auto currentFun = getCurrentFunction();
-  if (currentFun->nParams() == fun.nParams())
-    return;
-  for (size_t i = 0; i < fun.nParams(); ++i) {
-    currentFun->setParameter(i, fun.getParameter(i));
-    currentFun->setError(i, fun.getError(i));
-  }
+  copyParametersAndErrors(fun, *currentFun);
 }
 
 void MultiDomainFunctionModel::updateGlobals() {

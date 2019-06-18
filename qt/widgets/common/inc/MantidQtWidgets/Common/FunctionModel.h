@@ -26,6 +26,7 @@ public:
   QString getFunctionString() const;
   QString getFitFunctionString() const;
   void clear();
+  int getNumberLocalFunctions() const;
   virtual void setFunction(IFunction_sptr fun) = 0;
   virtual IFunction_sptr getFitFunction() const = 0;
   virtual bool hasFunction() const = 0;
@@ -55,6 +56,26 @@ public:
   virtual QStringList getLocalParameters() const = 0;
   virtual void updateMultiDatasetParameters(const IFunction &fun) = 0;
   virtual void updateParameters(const IFunction &fun) = 0;
+  virtual double getLocalParameterValue(const QString &parName, int i) const = 0;
+  virtual bool isLocalParameterFixed(const QString &parName, int i) const = 0;
+  virtual QString getLocalParameterTie(const QString &parName, int i) const = 0;
+  virtual QString getLocalParameterConstraint(const QString &parName,
+                                              int i) const = 0;
+  virtual void setLocalParameterValue(const QString &parName, int i,
+                                      double value) = 0;
+  virtual void setLocalParameterValue(const QString &parName, int i,
+                                      double value, double error) = 0;
+  virtual void setLocalParameterFixed(const QString &parName, int i,
+                                      bool fixed) = 0;
+  virtual void setLocalParameterTie(const QString &parName, int i,
+                                    const QString &tie) = 0;
+  virtual void setLocalParameterConstraint(const QString &parName, int i,
+                                           const QString &constraint) = 0;
+
+protected:
+  static void copyParametersAndErrors(const IFunction &funFrom,
+                                      IFunction &funTo);
+  void copyParametersAndErrorsToAllLocalFunctions(const IFunction &fun);
 };
 
 class EXPORT_OPT_MANTIDQT_COMMON MultiDomainFunctionModel
@@ -91,8 +112,9 @@ public:
   void setLocalParameterValue(const QString &parName, int i, double value,
                               double error);
   void setLocalParameterFixed(const QString &parName, int i, bool fixed);
-  void setLocalParameterTie(const QString &parName, int i, QString tie);
-  void setLocalParameterConstraint(const QString &parName, int i, QString comnstraint);
+  void setLocalParameterTie(const QString &parName, int i, const QString &tie);
+  void setLocalParameterConstraint(const QString &parName, int i,
+                                   const QString &constraint);
   void changeTie(const QString &parName, const QString &tie) override;
   void addConstraint(const QString &functionIndex,
                      const QString &constraint) override;

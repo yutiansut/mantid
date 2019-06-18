@@ -8,6 +8,7 @@
 #include "MantidAPI/IFunction.h"
 #include "MantidAPI/ITableWorkspace.h"
 #include "MantidAPI/FunctionFactory.h"
+#include "MantidQtWidgets/Common/FunctionBrowser/FunctionBrowserUtils.h"
 #include <map>
 
 namespace MantidQt {
@@ -33,11 +34,142 @@ namespace {
 IqtFunctionModel::IqtFunctionModel() {
 }
 
-void IqtFunctionModel::clear() {
+void IqtFunctionModel::clearData() {
   m_numberOfExponentials = 0;
   m_hasStretchExponential = false;
   m_background.clear();
   m_model.clear();
+}
+
+void IqtFunctionModel::setFunction(IFunction_sptr fun) {
+  clearData();
+  if (fun->nFunctions() == 0) {
+    auto const name = fun->name();
+    if (name == "ExpDecay") {
+      m_numberOfExponentials = 1;
+    } else if (name == "StretchExp") {
+      m_hasStretchExponential = true;
+    } else if (name == "FlatBackground") {
+      m_background = QString::fromStdString(name);
+    } else {
+      throw std::runtime_error("Cannot set function " + name);
+    }
+    m_model.setFunction(fun);
+    return;
+  }
+  bool areExponentialsSet = false;
+  bool isStretchSet = false;
+  bool isBackgroundSet = false;
+  for (size_t i = 0; i < fun->nFunctions(); ++i) {
+    auto f = fun->getFunction(i);
+    auto const name = f->name();
+    if (name == "ExpDecay") {
+      if (areExponentialsSet) {
+        throw std::runtime_error("Function has wrong structure.");
+      }
+      if (m_numberOfExponentials == 0) {
+        m_numberOfExponentials = 1;
+      } else {
+        m_numberOfExponentials = 2;
+        areExponentialsSet = true;
+      }
+    } else if (name == "StretchExp") {
+      if (isStretchSet) {
+        throw std::runtime_error("Function has wrong structure.");
+      }
+      m_hasStretchExponential = true;
+      areExponentialsSet = true;
+      isStretchSet = true;
+    } else if (name == "FlatBackground") {
+      if (isBackgroundSet) {
+        throw std::runtime_error("Function has wrong structure.");
+      }
+      m_background = QString::fromStdString(name);
+      areExponentialsSet = true;
+      isStretchSet = true;
+      isBackgroundSet = true;
+    } else {
+      clear();
+      throw std::runtime_error("Function has wrong structure.");
+    }
+  }
+  m_model.setFunction(fun);
+}
+
+IFunction_sptr IqtFunctionModel::getFitFunction() const {
+  return m_model.getFitFunction();
+}
+
+bool IqtFunctionModel::hasFunction() const { return m_model.hasFunction(); }
+
+void IqtFunctionModel::addFunction(const QString &prefix,
+                                   const QString &funStr) {
+  if (!prefix.isEmpty())
+    throw std::runtime_error(
+        "Function doesn't have member function with prefix " +
+        prefix.toStdString());
+  auto fun =
+      FunctionFactory::Instance().createInitialized(funStr.toStdString());
+  auto const name = fun->name();
+  QString newPrefix;
+  if (name == "ExpDecay") {
+    auto const ne = getNumberOfExponentials();
+    if (ne > 1)
+      throw std::runtime_error("Cannot add more exponentials.");
+    setNumberOfExponentials(ne + 1);
+    if (auto const prefix = getExp2Prefix()) {
+      newPrefix = *prefix;
+    } else {
+      newPrefix = *getExp1Prefix();
+    }
+  } else if (name == "StretchExp") {
+    if (hasStretchExponential())
+      throw std::runtime_error("Cannot add more stretched exponentials.");
+    setStretchExponential(true);
+    newPrefix = *getStretchPrefix();
+  } else if (name == "FlatBackground") {
+    if (hasBackground())
+      throw std::runtime_error("Cannot add more backgrounds.");
+    setBackground(QString::fromStdString(name));
+    newPrefix = *getBackgroundPrefix();
+  } else {
+    throw std::runtime_error("Cannot add funtion " + name);
+  }
+  auto newFun = getFunctionWithPrefix(newPrefix, getSingleFunction(0));
+  copyParametersAndErrors(*fun, *newFun);
+  if (getNumberLocalFunctions() > 1) {
+    copyParametersAndErrorsToAllLocalFunctions(*getSingleFunction(0));
+  }
+}
+
+void IqtFunctionModel::removeFunction(const QString &prefix) {
+  if (prefix.isEmpty()) {
+    clear();
+    return;
+  }
+  auto prefix1 = getExp1Prefix();
+  if (prefix1 && *prefix1 == prefix) {
+    setNumberOfExponentials(0);
+    return;
+  }
+  prefix1 = getExp2Prefix();
+  if (prefix1 && *prefix1 == prefix) {
+    setNumberOfExponentials(1);
+    return;
+  }
+  prefix1 = getStretchPrefix();
+  if (prefix1 && *prefix1 == prefix) {
+    setStretchExponential(false);
+    return;
+  }
+  prefix1 = getBackgroundPrefix();
+  if (prefix1 && *prefix1 == prefix) {
+    removeBackground();
+    return;
+  }
+  throw std::runtime_error(
+      "Function doesn't have member function with prefix " +
+      prefix.toStdString());
 }
 
 void IqtFunctionModel::setNumberOfExponentials(int n) {
@@ -86,85 +218,47 @@ bool IqtFunctionModel::hasBackground() const
   return !m_background.isEmpty();
 }
 
-void IqtFunctionModel::setNumberOfDatasets(int n)
+void IqtFunctionModel::setNumberDomains(int n)
 {
   m_model.setNumberDomains(n);
 }
 
-int IqtFunctionModel::getNumberOfDatasets() const
+int IqtFunctionModel::getNumberDomains() const
 {
   return m_model.getNumberDomains();
 }
 
-void IqtFunctionModel::setFunction(const QString & funStr)
-{
-  clear();
-  if (funStr.isEmpty()) {
-    m_model.setFunctionString(funStr);
-    return;
-  }
-  auto fun = FunctionFactory::Instance().createInitialized(funStr.toStdString());
-  if (fun->nFunctions() == 0) {
-    auto const name = fun->name();
-    if (name == "ExpDecay") {
-      m_numberOfExponentials = 1;
-    } else if (name == "StretchExp") {
-      m_hasStretchExponential = true;
-    } else if (name == "FlatBackground") {
-      m_background = QString::fromStdString(name);
-    } else {
-      throw std::runtime_error("Cannot set function " + name);
-    }
-    m_model.setFunctionString(funStr);
-    return;
-  }
-  bool areExponentialsSet = false;
-  bool isStretchSet = false;
-  bool isBackgroundSet = false;
-  for (size_t i = 0; i < fun->nFunctions(); ++i) {
-    auto f = fun->getFunction(i);
-    auto const name = f->name();
-    if (name == "ExpDecay") {
-      if (areExponentialsSet) {
-        throw std::runtime_error("Function has wrong structure.");
-      }
-      if (m_numberOfExponentials == 0) {
-        m_numberOfExponentials = 1;
-      } else {
-        m_numberOfExponentials = 2;
-        areExponentialsSet = true;
-      }
-    } else if (name == "StretchExp") {
-      if (isStretchSet) {
-        throw std::runtime_error("Function has wrong structure.");
-      }
-      m_hasStretchExponential = true;
-      areExponentialsSet = true;
-      isStretchSet = true;
-    } else if (name == "FlatBackground") {
-      if (isBackgroundSet) {
-        throw std::runtime_error("Function has wrong structure.");
-      }
-      m_background = QString::fromStdString(name);
-      areExponentialsSet = true;
-      isStretchSet = true;
-      isBackgroundSet = true;
-    } else {
-      clear();
-      throw std::runtime_error("Function has wrong structure.");
-    }
-  }
-  m_model.setFunctionString(funStr);
+void IqtFunctionModel::setParameter(const QString &paramName, double value) {
+  m_model.setParameterError(paramName, value);
 }
 
-IFunction_sptr IqtFunctionModel::getGlobalFunction() const
-{
-  return m_model.getFitFunction();
+void IqtFunctionModel::setParameterError(const QString &paramName,
+                                         double value) {
+  m_model.setParameterError(paramName, value);
 }
 
-IFunction_sptr IqtFunctionModel::getFunction() const
-{
-  auto fun = m_model.getCurrentFunction();
+double IqtFunctionModel::getParameter(const QString &paramName) const {
+  return m_model.getParameter(paramName);
+}
+
+double IqtFunctionModel::getParameterError(const QString &paramName) const {
+  return m_model.getParameterError(paramName);
+}
+
+QString
+IqtFunctionModel::getParameterDescription(const QString &paramName) const {
+  return m_model.getParameterDescription(paramName);
+}
+
+QStringList IqtFunctionModel::getParameterNames() const {
+  return m_model.getParameterNames();
+}
+
+IFunction_sptr IqtFunctionModel::getSingleFunction(int index) const {
+  return m_model.getSingleFunction(index);
+}
+
+IFunction_sptr IqtFunctionModel::getCurrentFunction() const {
   return m_model.getCurrentFunction();
 }
 
@@ -227,14 +321,25 @@ void IqtFunctionModel::updateParameters(const IFunction & fun)
   m_model.updateParameters(fun);
 }
 
-void IqtFunctionModel::setCurrentDataset(int i)
-{
+void IqtFunctionModel::setCurrentDomainIndex(int i) {
   m_model.setCurrentDomainIndex(i);
 }
 
-int IqtFunctionModel::getCurrentDataset() const
-{
+int IqtFunctionModel::currentDomainIndex() const {
   return m_model.currentDomainIndex();
+}
+
+void IqtFunctionModel::changeTie(const QString &paramName, const QString &tie) {
+  m_model.changeTie(paramName, tie);
+}
+
+void IqtFunctionModel::addConstraint(const QString &functionIndex,
+                                     const QString &constraint) {
+  m_model.addConstraint(functionIndex, constraint);
+}
+
+void IqtFunctionModel::removeConstraint(const QString &paramName) {
+  m_model.removeConstraint(paramName);
 }
 
 void IqtFunctionModel::setDatasetNames(const QStringList & names)
@@ -272,9 +377,20 @@ void IqtFunctionModel::setLocalParameterValue(const QString & parName, int i, do
   m_model.setLocalParameterValue(parName, i, value);
 }
 
+void IqtFunctionModel::setLocalParameterValue(const QString &parName, int i,
+                                              double value, double error) {
+  m_model.setLocalParameterValue(parName, i, value, error);
+}
+
 void IqtFunctionModel::setLocalParameterTie(const QString & parName, int i, const QString & tie)
 {
   m_model.setLocalParameterTie(parName, i, tie);
+}
+
+void IqtFunctionModel::setLocalParameterConstraint(const QString &parName,
+                                                   int i,
+                                                   const QString &constraint) {
+  m_model.setLocalParameterConstraint(parName, i, constraint);
 }
 
 void IqtFunctionModel::setLocalParameterFixed(const QString & parName, int i, bool fixed)
