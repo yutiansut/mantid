@@ -362,10 +362,13 @@ void MultiDomainFunctionModel::setLocalParameterTie(const QString &parName,
 
 void MultiDomainFunctionModel::setLocalParameterConstraint(
     const QString &parName, int i, QString constraint) {
-  auto fun = getSingleFunction(i);
-  auto const name = parName.toStdString();
+  auto const parts = splitConstraintString(constraint);
+  QString prefix, name;
+  std::tie(prefix, name) = splitParameterName(parName);
+  auto fun = getFunctionWithPrefix(prefix, getSingleFunction(i));
+  constraint.replace(parts.first, name);
   if (constraint.isEmpty()) {
-    fun->removeConstraint(parName.toStdString());
+    fun->removeConstraint(name.toStdString());
   } else {
     fun->addConstraints(constraint.toStdString());
   }

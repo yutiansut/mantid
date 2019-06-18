@@ -971,54 +971,11 @@ FunctionTreeView::addConstraintProperties(QtProperty *prop,
                                           QString constraint) {
   if (!isParameter(prop))
     return QList<FunctionTreeView::AProperty>();
-  QString lowerBoundStr = "";
-  QString upperBoundStr = "";
-  Mantid::API::Expression expr;
-  expr.parse(constraint.toStdString());
-  if (expr.name() != "==")
+  auto const parts = splitConstraintString(constraint);
+  if (parts.first.isEmpty())
     return QList<FunctionTreeView::AProperty>();
-  if (expr.size() == 3) { // lower < param < upper
-    try {
-      // check that the first and third terms are numbers
-      double d1 = boost::lexical_cast<double>(expr[0].str());
-      (void)d1;
-      double d2 = boost::lexical_cast<double>(expr[2].str());
-      (void)d2;
-      if (expr[1].operator_name() == "<" && expr[2].operator_name() == "<") {
-        lowerBoundStr = QString::fromStdString(expr[0].str());
-        upperBoundStr = QString::fromStdString(expr[2].str());
-      } else // assume that the operators are ">"
-      {
-        lowerBoundStr = QString::fromStdString(expr[2].str());
-        upperBoundStr = QString::fromStdString(expr[0].str());
-      }
-    } catch (...) { // error in constraint
-      return QList<FunctionTreeView::AProperty>();
-    }
-  } else if (expr.size() == 2) { // lower < param or param > lower etc
-    size_t paramPos = 0;
-    try // find position of the parameter name in expression
-    {
-      double d = boost::lexical_cast<double>(expr[1].name());
-      (void)d;
-    } catch (...) {
-      paramPos = 1;
-    }
-    std::string op = expr[1].operator_name();
-    if (paramPos == 0) { // parameter goes first
-      if (op == "<") {   // param < number
-        upperBoundStr = QString::fromStdString(expr[1].str());
-      } else { // param > number
-        lowerBoundStr = QString::fromStdString(expr[1].str());
-      }
-    } else {           // parameter is second
-      if (op == "<") { // number < param
-        lowerBoundStr = QString::fromStdString(expr[0].str());
-      } else { // number > param
-        upperBoundStr = QString::fromStdString(expr[0].str());
-      }
-    }
-  }
+  QString lowerBoundStr = parts.second.first;
+  QString upperBoundStr = parts.second.second;
 
   // add properties
   QList<FunctionTreeView::AProperty> plist;
