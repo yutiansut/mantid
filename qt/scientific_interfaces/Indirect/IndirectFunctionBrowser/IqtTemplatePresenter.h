@@ -52,6 +52,8 @@ public:
   void setDatasetNames(const QStringList &names);
   void setViewParameterDescriptions();
   void setErrorsEnabled(bool enabled);
+  bool tieIntensities(bool on);
+  bool canTieIntensities() const;
 
 signals:
   void functionStructureChanged();
@@ -72,6 +74,7 @@ private:
   void setLocalParameterFixed(const QString &parName, int i, bool fixed);
   void setLocalParameterTie(const QString &parName, int i, const QString &tie);
   void updateViewParameterNames();
+  void updateView();
   IqtTemplateBrowser *m_view;
   IqtFunctionModel m_model;
   EditLocalParameterDialog *m_editLocalParameterDialog;

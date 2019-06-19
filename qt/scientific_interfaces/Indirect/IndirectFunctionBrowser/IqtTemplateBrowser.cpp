@@ -57,6 +57,8 @@ IqtTemplateBrowser::IqtTemplateBrowser(QWidget *parent)
 
 void IqtTemplateBrowser::createProperties() {
   m_parameterManager->blockSignals(true);
+  m_boolManager->blockSignals(true);
+  m_enumManager->blockSignals(true);
   m_exp1Height = m_parameterManager->addProperty("f0.Height");
   m_parameterManager->setDecimals(m_exp1Height, 6);
   m_exp1Lifetime = m_parameterManager->addProperty("f0.Lifetime");
@@ -100,7 +102,6 @@ void IqtTemplateBrowser::createProperties() {
   m_parameterManager->setDescription(
       m_stretchExpStretching, m_parameterDescriptions[m_stretchExpStretching]);
   m_parameterManager->setDescription(m_A0, m_parameterDescriptions[m_A0]);
-  m_parameterManager->blockSignals(false);
 
   m_numberOfExponentials = m_intManager->addProperty("Exponentials");
   m_intManager->setMinimum(m_numberOfExponentials, 0);
@@ -116,6 +117,13 @@ void IqtTemplateBrowser::createProperties() {
               << "FlatBackground";
   m_enumManager->setEnumNames(m_background, backgrounds);
   m_browser->addProperty(m_background);
+
+  m_tieIntensities = m_boolManager->addProperty("Tie Intensities");
+  m_browser->addProperty(m_tieIntensities);
+  m_parameterManager->blockSignals(false);
+  m_enumManager->blockSignals(false);
+  m_boolManager->blockSignals(false);
+  updateState();
 }
 
 void IqtTemplateBrowser::addExponentialOne() {
@@ -164,16 +172,14 @@ void IqtTemplateBrowser::removeStretchExponential() {
 
 void IqtTemplateBrowser::addFlatBackground() {
   m_background->addSubProperty(m_A0);
-  blockSignals(true);
+  ScopedFalse _false(m_emitEnumChange);
   m_enumManager->setValue(m_background, 1);
-  blockSignals(false);
 }
 
 void IqtTemplateBrowser::removeBackground() {
   m_background->removeSubProperty(m_A0);
-  blockSignals(true);
+  ScopedFalse _false(m_emitEnumChange);
   m_enumManager->setValue(m_background, 0);
-  blockSignals(false);
 }
 
 void IqtTemplateBrowser::setExp1Height(double value, double error) {
@@ -251,12 +257,20 @@ void IqtTemplateBrowser::intChanged(QtProperty *prop) {
 }
 
 void IqtTemplateBrowser::boolChanged(QtProperty *prop) {
-  if (prop == m_stretchExponential && m_emitBoolChange) {
-    m_presenter.setStretchExponential(m_boolManager->value(prop));
+  if (!m_emitBoolChange)
+    return;
+  auto const on = m_boolManager->value(prop);
+  if (prop == m_stretchExponential) {
+    m_presenter.setStretchExponential(on);
+  }
+  if (prop == m_tieIntensities) {
+    m_presenter.tieIntensities(on);
   }
 }
 
 void IqtTemplateBrowser::enumChanged(QtProperty *prop) {
+  if (!m_emitEnumChange)
+    return;
   if (prop == m_background) {
     auto background =
         m_enumManager->enumNames(prop)[m_enumManager->value(prop)];
@@ -362,6 +376,20 @@ void IqtTemplateBrowser::setGlobalParametersQuiet(const QStringList &globals) {
       m_parameterManager->setGlobal(prop, false);
     }
   }
+}
+
+void IqtTemplateBrowser::setTieIntensitiesQuiet(bool on) {
+  ScopedFalse _false(m_emitBoolChange);
+  m_boolManager->setValue(m_tieIntensities, on);
+}
+
+void IqtTemplateBrowser::updateState() {
+  auto const on = m_presenter.canTieIntensities();
+  if (!on && m_boolManager->value(m_tieIntensities)) {
+    ScopedFalse _false(m_emitBoolChange);
+    m_boolManager->setValue(m_tieIntensities, false);
+  }
+  m_tieIntensities->setEnabled(on);
 }
 
 } // namespace IDA

@@ -78,6 +78,8 @@ private:
   void popupMenu(const QPoint &);
   void setParameterPropertyValue(QtProperty *prop, double value, double error);
   void setGlobalParametersQuiet(const QStringList &globals);
+  void setTieIntensitiesQuiet(bool on);
+  void updateState();
 
   QtProperty *m_numberOfExponentials;
   QtProperty *m_exp1Height = nullptr;
@@ -90,6 +92,7 @@ private:
   QtProperty *m_stretchExpStretching = nullptr;
   QtProperty *m_background;
   QtProperty *m_A0 = nullptr;
+  QtProperty *m_tieIntensities = nullptr;
   QMap<QtProperty*, int> m_parameterMap;
   QMap<QtProperty*, QString> m_actualParameterNames;
   QMap<QtProperty*, std::string> m_parameterDescriptions;
@@ -99,6 +102,7 @@ private:
   bool m_emitParameterValueChange = true;
   bool m_emitIntChange = true;
   bool m_emitBoolChange = true;
+  bool m_emitEnumChange = true;
   friend class IqtTemplatePresenter;
 };
 

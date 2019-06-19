@@ -64,8 +64,7 @@ void IqtTemplatePresenter::setNumberOfExponentials(int n) {
   assert(nCurrent == n);
   m_model.setNumberOfExponentials(n);
   setErrorsEnabled(false);
-  updateViewParameterNames();
-  updateViewParameters();
+  updateView();
   emit functionStructureChanged();
 }
 
@@ -79,8 +78,7 @@ void IqtTemplatePresenter::setStretchExponential(bool on)
   }
   m_model.setStretchExponential(on);
   setErrorsEnabled(false);
-  updateViewParameterNames();
-  updateViewParameters();
+  updateView();
   emit functionStructureChanged();
 }
 
@@ -96,8 +94,7 @@ void IqtTemplatePresenter::setBackground(const QString & name)
     throw std::logic_error("Browser doesn't support background " + name.toStdString());
   }
   setErrorsEnabled(false);
-  updateViewParameterNames();
-  updateViewParameters();
+  updateView();
   emit functionStructureChanged();
 }
 
@@ -214,6 +211,17 @@ void IqtTemplatePresenter::setErrorsEnabled(bool enabled)
   m_view->setErrorsEnabled(enabled);
 }
 
+bool IqtTemplatePresenter::tieIntensities(bool on) {
+  if (on && !canTieIntensities())
+    return false;
+  m_model.tieIntensities(on);
+  return true;
+}
+
+bool IqtTemplatePresenter::canTieIntensities() const {
+  return m_model.hasStretchExponential() && m_model.hasBackground();
+}
+
 void IqtTemplatePresenter::updateViewParameters()
 {
   static std::map<IqtFunctionModel::ParamNames, void (IqtTemplateBrowser::*)(double, double)> setters{
@@ -272,6 +280,12 @@ void IqtTemplatePresenter::setLocalParameterTie(const QString & parName, int i, 
 void IqtTemplatePresenter::updateViewParameterNames()
 {
   m_view->updateParameterNames(m_model.getParameterNameMap());
+}
+
+void IqtTemplatePresenter::updateView() {
+  updateViewParameterNames();
+  updateViewParameters();
+  m_view->updateState();
 }
 
 void IqtTemplatePresenter::setLocalParameterFixed(const QString & parName, int i, bool fixed)

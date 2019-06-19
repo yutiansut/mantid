@@ -79,6 +79,7 @@ public:
   void setBackground(const QString &name);
   void removeBackground();
   bool hasBackground() const;
+  void tieIntensities(bool on);
 
   enum class ParamNames {
     EXP1_HEIGHT,
