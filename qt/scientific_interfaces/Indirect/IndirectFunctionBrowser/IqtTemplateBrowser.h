@@ -97,6 +97,8 @@ private:
 private:
   IqtTemplatePresenter m_presenter;
   bool m_emitParameterValueChange = true;
+  bool m_emitIntChange = true;
+  bool m_emitBoolChange = true;
   friend class IqtTemplatePresenter;
 };
 

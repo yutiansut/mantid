@@ -121,41 +121,59 @@ void IqtTemplateBrowser::createProperties() {
 void IqtTemplateBrowser::addExponentialOne() {
   m_numberOfExponentials->addSubProperty(m_exp1Height);
   m_numberOfExponentials->addSubProperty(m_exp1Lifetime);
+  ScopedFalse _false(m_emitIntChange);
+  m_intManager->setValue(m_numberOfExponentials, 1);
 }
 
 void IqtTemplateBrowser::removeExponentialOne() {
   m_numberOfExponentials->removeSubProperty(m_exp1Height);
   m_numberOfExponentials->removeSubProperty(m_exp1Lifetime);
+  ScopedFalse _false(m_emitIntChange);
+  m_intManager->setValue(m_numberOfExponentials, 0);
 }
 
 void IqtTemplateBrowser::addExponentialTwo() {
   m_numberOfExponentials->addSubProperty(m_exp2Height);
   m_numberOfExponentials->addSubProperty(m_exp2Lifetime);
+  ScopedFalse _false(m_emitIntChange);
+  m_intManager->setValue(m_numberOfExponentials, 2);
 }
 
 void IqtTemplateBrowser::removeExponentialTwo() {
   m_numberOfExponentials->removeSubProperty(m_exp2Height);
   m_numberOfExponentials->removeSubProperty(m_exp2Lifetime);
+  ScopedFalse _false(m_emitIntChange);
+  m_intManager->setValue(m_numberOfExponentials, 1);
 }
 
 void IqtTemplateBrowser::addStretchExponential() {
   m_stretchExponential->addSubProperty(m_stretchExpHeight);
   m_stretchExponential->addSubProperty(m_stretchExpLifetime);
   m_stretchExponential->addSubProperty(m_stretchExpStretching);
+  ScopedFalse _false(m_emitBoolChange);
+  m_boolManager->setValue(m_stretchExponential, true);
 }
 
 void IqtTemplateBrowser::removeStretchExponential() {
   m_stretchExponential->removeSubProperty(m_stretchExpHeight);
   m_stretchExponential->removeSubProperty(m_stretchExpLifetime);
   m_stretchExponential->removeSubProperty(m_stretchExpStretching);
+  ScopedFalse _false(m_emitBoolChange);
+  m_boolManager->setValue(m_stretchExponential, false);
 }
 
 void IqtTemplateBrowser::addFlatBackground() {
   m_background->addSubProperty(m_A0);
+  blockSignals(true);
+  m_enumManager->setValue(m_background, 1);
+  blockSignals(false);
 }
 
 void IqtTemplateBrowser::removeBackground() {
   m_background->removeSubProperty(m_A0);
+  blockSignals(true);
+  m_enumManager->setValue(m_background, 0);
+  blockSignals(false);
 }
 
 void IqtTemplateBrowser::setExp1Height(double value, double error) {
@@ -227,13 +245,13 @@ void IqtTemplateBrowser::setGlobalParameters(const QStringList &globals) {
 }
 
 void IqtTemplateBrowser::intChanged(QtProperty *prop) {
-  if (prop == m_numberOfExponentials) {
+  if (prop == m_numberOfExponentials && m_emitIntChange) {
     m_presenter.setNumberOfExponentials(m_intManager->value(prop));
   }
 }
 
 void IqtTemplateBrowser::boolChanged(QtProperty *prop) {
-  if (prop == m_stretchExponential) {
+  if (prop == m_stretchExponential && m_emitBoolChange) {
     m_presenter.setStretchExponential(m_boolManager->value(prop));
   }
 }
@@ -284,7 +302,7 @@ void IqtTemplateBrowser::setCurrentDataset(int i) {
 void IqtTemplateBrowser::updateParameterNames(
     const QMap<int, QString> &parameterNames) {
   m_actualParameterNames.clear();
-  ScopedFalse _(m_emitParameterValueChange);
+  ScopedFalse _false(m_emitParameterValueChange);
   for (auto const prop : m_parameterMap.keys()) {
     auto const i = m_parameterMap[prop];
     auto const name = parameterNames[i];
@@ -305,7 +323,7 @@ void IqtTemplateBrowser::updateParameterDescriptions(
 }
 
 void IqtTemplateBrowser::setErrorsEnabled(bool enabled) {
-  ScopedFalse _(m_emitParameterValueChange);
+  ScopedFalse _false(m_emitParameterValueChange);
   m_parameterManager->setErrorsEnabled(enabled);
 }
 
@@ -323,14 +341,14 @@ void IqtTemplateBrowser::popupMenu(const QPoint &) {
 void IqtTemplateBrowser::setParameterPropertyValue(QtProperty *prop,
                                                    double value, double error) {
   if (prop) {
-    ScopedFalse _(m_emitParameterValueChange);
+    ScopedFalse _false(m_emitParameterValueChange);
     m_parameterManager->setValue(prop, value);
     m_parameterManager->setError(prop, error);
   }
 }
 
 void IqtTemplateBrowser::setGlobalParametersQuiet(const QStringList &globals) {
-  ScopedFalse _(m_emitParameterValueChange);
+  ScopedFalse _false(m_emitParameterValueChange);
   auto parameterProperies = m_parameterMap.keys();
   for (auto const prop : m_parameterMap.keys()) {
     auto const name = m_actualParameterNames[prop];
