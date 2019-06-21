@@ -9,9 +9,9 @@
 
 #include "IAddWorkspaceDialog.h"
 #include "IIndirectFitDataView.h"
+#include "IndexTypes.h"
 #include "IndirectDataTablePresenter.h"
 #include "IndirectFittingModel.h"
-#include "IndexTypes.h"
 
 #include "DllConfig.h"
 #include "MantidAPI/AnalysisDataServiceObserver.h"
@@ -40,17 +40,22 @@ public:
   void setResolutionWSSuffices(const QStringList &suffices);
   void setResolutionFBSuffices(const QStringList &suffices);
 
-  void setStartX(double startX, DatasetIndex dataIndex, WorkspaceIndex spectrumIndex);
+  void setStartX(double startX, DatasetIndex dataIndex,
+                 WorkspaceIndex spectrumIndex);
   void setStartX(double startX, DatasetIndex dataIndex);
-  void setEndX(double endX, DatasetIndex dataIndex, WorkspaceIndex spectrumIndex);
+  void setEndX(double endX, DatasetIndex dataIndex,
+               WorkspaceIndex spectrumIndex);
   void setEndX(double endX, DatasetIndex dataIndex);
-  void setExclude(const std::string &exclude, DatasetIndex dataIndex, WorkspaceIndex spectrumIndex);
+  void setExclude(const std::string &exclude, DatasetIndex dataIndex,
+                  WorkspaceIndex spectrumIndex);
 
   void loadSettings(const QSettings &settings);
   UserInputValidator &validate(UserInputValidator &validator);
 
   void replaceHandle(const std::string &workspaceName,
                      const Workspace_sptr &workspace) override;
+  DataForParameterEstimationCollection
+  getDataForParameterEstimation(EstimationDataSelector selector) const;
 
 public slots:
   void updateSpectraInTable(DatasetIndex dataIndex);

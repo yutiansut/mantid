@@ -115,8 +115,9 @@ private:
   /// Overidden by child class.
   void setup() override;
   void loadSettings(const QSettings &settings) override;
-  virtual void setupFitTab() = 0;
   bool validate() override;
+  virtual void setupFitTab() = 0;
+  virtual EstimationDataSelector getEstimationDataSelector() const = 0;
   void connectPlotPresenter();
   void connectSpectrumPresenter();
   void connectFitPropertyBrowser();
@@ -131,6 +132,7 @@ private:
   void enableFitButtons(bool enable);
   void enableOutputOptions(bool enable);
   void setPDFWorkspace(std::string const &workspaceName);
+  void updateParameterEstimationData();
 
   std::unique_ptr<IndirectFittingModel> m_fittingModel;
   std::unique_ptr<IndirectFitDataPresenter> m_dataPresenter;

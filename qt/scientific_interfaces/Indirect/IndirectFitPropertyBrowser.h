@@ -9,9 +9,10 @@
 
 #include "DllConfig.h"
 #include "IndexTypes.h"
+#include "IndirectFittingModel.h"
 #include "MantidAPI/IFunction_fwd.h"
-#include "MantidAPI/MatrixWorkspace_fwd.h"
 #include "MantidAPI/ITableWorkspace_fwd.h"
+#include "MantidAPI/MatrixWorkspace_fwd.h"
 
 #include <QDockWidget>
 
@@ -24,9 +25,9 @@ class QStackedWidget;
 
 namespace MantidQt {
 namespace MantidWidgets {
-  class FunctionBrowser;
-  class FitOptionsBrowser;
-}
+class FunctionBrowser;
+class FitOptionsBrowser;
+} // namespace MantidWidgets
 namespace CustomInterfaces {
 namespace IDA {
 
@@ -35,19 +36,16 @@ using namespace MantidWidgets;
 
 class FunctionTemplateBrowser;
 
-class MANTIDQT_INDIRECT_DLL IndirectFitPropertyBrowser
-  : public QDockWidget {
+class MANTIDQT_INDIRECT_DLL IndirectFitPropertyBrowser : public QDockWidget {
   Q_OBJECT
 
 public:
   IndirectFitPropertyBrowser(QWidget *parent = nullptr);
   void init();
   void setFunctionTemplateBrowser(FunctionTemplateBrowser *templateBrowser);
-
-  Q_INVOKABLE void setFunction(const QString &funStr);
-  Q_INVOKABLE int getNumberOfDatasets() const;
-  Q_INVOKABLE QString getSingleFunctionStr() const;
-
+  void setFunction(const QString &funStr);
+  int getNumberOfDatasets() const;
+  QString getSingleFunctionStr() const;
   MultiDomainFunction_sptr getFittingFunction() const;
   std::string minimizer(bool withProperties = false) const;
   int maxIterations() const;
@@ -64,9 +62,11 @@ public:
   void setFitEnabled(bool enable);
   void setCurrentDataset(SpectrumRowIndex i);
   SpectrumRowIndex currentDataset() const;
-  void updateFunctionBrowserData(SpectrumRowIndex nData, const QStringList &datasetNames);
+  void updateFunctionBrowserData(SpectrumRowIndex nData,
+                                 const QStringList &datasetNames);
   void updatePlotGuess(MatrixWorkspace_const_sptr sampleWorkspace);
   void setErrorsEnabled(bool enabled);
+  void updateParameterEstimationData(DataForParameterEstimationCollection &&data);
 
 public slots:
   void fit();
@@ -101,7 +101,6 @@ private:
   FunctionTemplateBrowser *m_templateBrowser;
   QStackedWidget *m_functionWidget;
   QCheckBox *m_browserSwitcher;
-
 };
 
 } // namespace IDA

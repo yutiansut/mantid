@@ -133,7 +133,7 @@ private:
   size_t m_currentDomainIndex = 0;
   size_t m_numberDomains = 0;
   mutable QStringList m_datasetNames;
-  QStringList m_globalParameterNames;
+  mutable QStringList m_globalParameterNames;
 };
 
 } // namespace MantidWidgets

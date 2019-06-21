@@ -582,6 +582,12 @@ void IndirectFitAnalysisTab::setPDFWorkspace(std::string const &workspaceName) {
   m_outOptionsPresenter->setMultiWorkspaceOptionsVisible(enablePDFOptions);
 }
 
+void IndirectFitAnalysisTab::updateParameterEstimationData() {
+  m_fitPropertyBrowser->updateParameterEstimationData(
+      m_dataPresenter->getDataForParameterEstimation(
+          getEstimationDataSelector()));
+}
+
 /**
  * Sets the visiblity of the output options Edit Result button
  * @param visible :: true to make the edit result button visible
@@ -684,6 +690,7 @@ void IndirectFitAnalysisTab::respondToChangeOfSpectraRange(DatasetIndex i) {
   m_fitPropertyBrowser->updateFunctionBrowserData(
       m_fittingModel->getNumberOfDomains(), getDatasetNames());
   setModelFitFunction();
+  updateParameterEstimationData();
 }
 
 void IndirectFitAnalysisTab::respondToSingleResolutionLoaded() {
@@ -699,6 +706,7 @@ void IndirectFitAnalysisTab::respondToDataChanged() {
   m_plotPresenter->updateAvailableSpectra();
   m_plotPresenter->updatePlots();
   m_plotPresenter->updateGuess();
+  updateParameterEstimationData();
 }
 
 void IndirectFitAnalysisTab::respondToSingleDataViewSelected() {
@@ -713,11 +721,13 @@ void IndirectFitAnalysisTab::respondToMultipleDataViewSelected() {
 void IndirectFitAnalysisTab::respondToDataAdded() {
   updateDataReferences();
   m_plotPresenter->appendLastDataToSelection();
+  updateParameterEstimationData();
 }
 
 void IndirectFitAnalysisTab::respondToDataRemoved() {
   updateDataReferences();
   m_plotPresenter->updateDataSelection();
+  updateParameterEstimationData();
 }
 
 void IndirectFitAnalysisTab::respondToSelectedFitDataChanged(DatasetIndex i) {

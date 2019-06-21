@@ -7,6 +7,7 @@
 #ifndef INDIRECT_FUNCTIONTEMPLATEBROWSER_H_
 #define INDIRECT_FUNCTIONTEMPLATEBROWSER_H_
 
+#include "ParameterEstimation.h"
 #include "DllConfig.h"
 #include "MantidAPI/IFunction_fwd.h"
 #include "MantidAPI/ITableWorkspace_fwd.h"
@@ -50,14 +51,19 @@ public:
   virtual QStringList getGlobalParameters() const = 0;
   virtual QStringList getLocalParameters() const = 0;
   virtual void setGlobalParameters(const QStringList &globals) = 0;
-  virtual void updateMultiDatasetParameters(const IFunction & fun) = 0;
-  virtual void updateMultiDatasetParameters(const ITableWorkspace & paramTable) = 0;
+  virtual void updateMultiDatasetParameters(const IFunction &fun) = 0;
+  virtual void
+  updateMultiDatasetParameters(const ITableWorkspace &paramTable) = 0;
   virtual void updateParameters(const IFunction &fun) = 0;
   virtual void setCurrentDataset(int i) = 0;
-  virtual void updateParameterNames(const QMap<int, QString> &parameterNames) = 0;
-  virtual void updateParameterDescriptions(const QMap<int, std::string> &parameterNames) = 0;
+  virtual void
+  updateParameterNames(const QMap<int, QString> &parameterNames) = 0;
+  virtual void
+  updateParameterDescriptions(const QMap<int, std::string> &parameterNames) = 0;
   virtual void setErrorsEnabled(bool enabled) = 0;
   virtual void clear() = 0;
+  virtual void updateParameterEstimationData(
+      DataForParameterEstimationCollection &&data) = 0;
 
 signals:
   void functionStructureChanged();

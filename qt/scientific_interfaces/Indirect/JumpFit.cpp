@@ -21,6 +21,7 @@
 
 #include <string>
 
+using namespace Mantid;
 using namespace Mantid::API;
 
 namespace {
@@ -92,6 +93,13 @@ void JumpFit::addFunctions(std::vector<std::string> const &functions) {
   //for (auto const &function : functions)
   //  addComboBoxFunctionGroup(QString::fromStdString(function),
   //                           {factory.createFunction(function)});
+}
+
+EstimationDataSelector JumpFit::getEstimationDataSelector() const {
+  return
+      [](const MantidVec &x, const MantidVec &y) -> DataForParameterEstimation {
+        return DataForParameterEstimation{{}, {}};
+      };
 }
 
 void JumpFit::updateModelFitTypeString() {

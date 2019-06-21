@@ -9,6 +9,7 @@
 
 #include "DllConfig.h"
 #include "IqtFunctionModel.h"
+#include "ParameterEstimation.h"
 
 #include <QMap>
 #include <QWidget>
@@ -45,15 +46,17 @@ public:
   QStringList getLocalParameters() const;
   void setGlobalParameters(const QStringList &globals);
   void setGlobal(const QString &parName, bool on);
-  void updateMultiDatasetParameters(const IFunction & fun);
-  void updateMultiDatasetParameters(const ITableWorkspace & paramTable);
+  void updateMultiDatasetParameters(const IFunction &fun);
+  void updateMultiDatasetParameters(const ITableWorkspace &paramTable);
   void updateParameters(const IFunction &fun);
   void setCurrentDataset(int i);
   void setDatasetNames(const QStringList &names);
   void setViewParameterDescriptions();
   void setErrorsEnabled(bool enabled);
-  bool tieIntensities(bool on);
+  void tieIntensities(bool on);
   bool canTieIntensities() const;
+  void
+  updateParameterEstimationData(DataForParameterEstimationCollection &&data);
 
 signals:
   void functionStructureChanged();

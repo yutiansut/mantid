@@ -25,7 +25,8 @@ namespace IDA {
  * and set properties that can be used to generate a fit function.
  *
  */
-class MANTIDQT_INDIRECT_DLL IqtTemplateBrowser : public FunctionTemplateBrowser {
+class MANTIDQT_INDIRECT_DLL IqtTemplateBrowser
+    : public FunctionTemplateBrowser {
   Q_OBJECT
 public:
   IqtTemplateBrowser(QWidget *parent = nullptr);
@@ -56,16 +57,19 @@ public:
   QStringList getGlobalParameters() const override;
   QStringList getLocalParameters() const override;
   void setGlobalParameters(const QStringList &globals) override;
-  void updateMultiDatasetParameters(const IFunction & fun) override;
-  void updateMultiDatasetParameters(const ITableWorkspace & paramTable) override;
+  void updateMultiDatasetParameters(const IFunction &fun) override;
+  void updateMultiDatasetParameters(const ITableWorkspace &paramTable) override;
   void updateParameters(const IFunction &fun) override;
   void setCurrentDataset(int i) override;
   void updateParameterNames(const QMap<int, QString> &parameterNames) override;
-  void updateParameterDescriptions(const QMap<int, std::string> &parameterNames) override;
+  void updateParameterDescriptions(
+      const QMap<int, std::string> &parameterNames) override;
   void setErrorsEnabled(bool enabled) override;
   void clear() override;
+  void updateParameterEstimationData(
+      DataForParameterEstimationCollection &&data) override;
 
- protected slots:
+protected slots:
   void intChanged(QtProperty *) override;
   void boolChanged(QtProperty *) override;
   void enumChanged(QtProperty *) override;
@@ -93,9 +97,9 @@ private:
   QtProperty *m_background;
   QtProperty *m_A0 = nullptr;
   QtProperty *m_tieIntensities = nullptr;
-  QMap<QtProperty*, int> m_parameterMap;
-  QMap<QtProperty*, QString> m_actualParameterNames;
-  QMap<QtProperty*, std::string> m_parameterDescriptions;
+  QMap<QtProperty *, int> m_parameterMap;
+  QMap<QtProperty *, QString> m_actualParameterNames;
+  QMap<QtProperty *, std::string> m_parameterDescriptions;
 
 private:
   IqtTemplatePresenter m_presenter;

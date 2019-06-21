@@ -8,9 +8,10 @@
 #define MANTIDQT_INDIRECT_IQTFUNCTIONMODEL_H_
 
 #include "DllConfig.h"
-#include "MantidQtWidgets/Common/FunctionModel.h"
 #include "MantidAPI/IFunction_fwd.h"
 #include "MantidAPI/ITableWorkspace_fwd.h"
+#include "MantidQtWidgets/Common/FunctionModel.h"
+#include "ParameterEstimation.h"
 
 #include <QMap>
 #include <boost/optional.hpp>
@@ -52,7 +53,7 @@ public:
   void setGlobalParameters(const QStringList &globals) override;
   bool isGlobal(const QString &parName) const override;
   QStringList getLocalParameters() const override;
-  void updateMultiDatasetParameters(const IFunction & fun) override;
+  void updateMultiDatasetParameters(const IFunction &fun) override;
   void updateParameters(const IFunction &fun) override;
 
   double getLocalParameterValue(const QString &parName, int i) const override;
@@ -80,6 +81,8 @@ public:
   void removeBackground();
   bool hasBackground() const;
   void tieIntensities(bool on);
+  void
+  updateParameterEstimationData(DataForParameterEstimationCollection &&data);
 
   enum class ParamNames {
     EXP1_HEIGHT,
@@ -114,11 +117,13 @@ private:
   std::string buildExpDecayFunctionString() const;
   std::string buildStretchExpFunctionString() const;
   std::string buildBackgroundFunctionString() const;
+  void estimateStretchExpParameters();
 
   MultiDomainFunctionModel m_model;
   int m_numberOfExponentials = 0;
   bool m_hasStretchExponential = false;
   QString m_background;
+  DataForParameterEstimationCollection m_estimationData;
 };
 
 } // namespace IDA

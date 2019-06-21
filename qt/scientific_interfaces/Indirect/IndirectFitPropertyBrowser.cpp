@@ -259,6 +259,11 @@ void IndirectFitPropertyBrowser::setErrorsEnabled(bool enabled)
   m_templateBrowser->setErrorsEnabled(enabled);
 }
 
+void IndirectFitPropertyBrowser::updateParameterEstimationData(
+    DataForParameterEstimationCollection &&data) {
+  m_templateBrowser->updateParameterEstimationData(std::move(data));
+}
+
 
 void IndirectFitPropertyBrowser::setCurrentDataset(SpectrumRowIndex i) {
   if (m_functionBrowser->getNumberOfDatasets() == 0) return;

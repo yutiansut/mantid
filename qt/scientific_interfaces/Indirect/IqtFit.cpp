@@ -24,6 +24,7 @@
 
 #include <boost/algorithm/string/predicate.hpp>
 
+using namespace Mantid;
 using namespace Mantid::API;
 
 namespace {
@@ -61,33 +62,24 @@ void IqtFit::setupFitTab() {
   const auto exponential = functionFactory.createFunction("ExpDecay");
   const auto stretchedExponential =
       functionFactory.createFunction("StretchExp");
-  //addSpinnerFunctionGroup("Exponential", {exponential}, 0, 2);
-  //addCheckBoxFunctionGroup("Stretched Exponential", {stretchedExponential});
-
-  //// Add custom settings
-  //addBoolCustomSetting("ConstrainIntensities", "Constrain Intensities");
-  //addBoolCustomSetting("ConstrainBeta", "Make Beta Global");
-  //addBoolCustomSetting("ExtractMembers", "Extract Members");
-  //setCustomSettingEnabled("ConstrainBeta", false);
-  //setCustomSettingEnabled("ConstrainIntensities", false);
-
-  //// Set available background options
-  //setBackgroundOptions({"None", "FlatBackground"});
 
   connect(m_uiForm->pbRun, SIGNAL(clicked()), this, SLOT(runClicked()));
-
   connect(this, SIGNAL(functionChanged()), this, SLOT(fitFunctionChanged()));
   connect(this, SIGNAL(customBoolChanged(const QString &, bool)), this,
           SLOT(customBoolUpdated(const QString &, bool)));
 }
 
+EstimationDataSelector IqtFit::getEstimationDataSelector() const {
+  return
+      [](const MantidVec &x, const MantidVec &y) -> DataForParameterEstimation {
+        size_t const n = 4;
+        if (y.size() < n + 1)
+          return DataForParameterEstimation{{}, {}};
+        return DataForParameterEstimation{{x[0], x[n]}, {y[0], y[n]}};
+      };
+}
+
 void IqtFit::fitFunctionChanged() {
-  //if (numberOfCustomFunctions("StretchExp") > 0) {
-  //  setCustomSettingEnabled("ConstrainBeta", true);
-  //} else {
-  //  setCustomBoolSetting("ConstrainBeta", false);
-  //  setCustomSettingEnabled("ConstrainBeta", false);
-  //}
   setConstrainIntensitiesEnabled(m_iqtFittingModel->canConstrainIntensities());
   m_iqtFittingModel->setFitTypeString(fitTypeString());
 }

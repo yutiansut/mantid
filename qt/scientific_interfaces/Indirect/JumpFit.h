@@ -38,6 +38,7 @@ private slots:
 
 private:
   void addFunctions(std::vector<std::string> const &functions);
+  EstimationDataSelector getEstimationDataSelector() const override;
 
   JumpFitModel *m_jumpFittingModel;
   std::unique_ptr<Ui::JumpFit> m_uiForm;

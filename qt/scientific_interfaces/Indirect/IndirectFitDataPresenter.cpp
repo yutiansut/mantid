@@ -168,6 +168,12 @@ void IndirectFitDataPresenter::replaceHandle(const std::string &workspaceName,
     selectReplacedWorkspace(QString::fromStdString(workspaceName));
 }
 
+DataForParameterEstimationCollection
+IndirectFitDataPresenter::getDataForParameterEstimation(
+    EstimationDataSelector selector) const {
+  return m_model->getDataForParameterEstimation(selector);
+}
+
 void IndirectFitDataPresenter::selectReplacedWorkspace(
     const QString &workspaceName) {
   if (m_view->isSampleWorkspaceSelectorVisible()) {

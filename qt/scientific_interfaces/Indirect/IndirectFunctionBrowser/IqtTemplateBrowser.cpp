@@ -348,6 +348,11 @@ void IqtTemplateBrowser::clear() {
   removeExponentialOne();
 }
 
+void IqtTemplateBrowser::updateParameterEstimationData(
+    DataForParameterEstimationCollection &&data) {
+  m_presenter.updateParameterEstimationData(std::move(data));
+}
+
 void IqtTemplateBrowser::popupMenu(const QPoint &) {
   std::cerr << "Popup" << std::endl;
 }

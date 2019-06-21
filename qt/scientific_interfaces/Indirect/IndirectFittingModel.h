@@ -7,13 +7,14 @@
 #ifndef MANTIDQTCUSTOMINTERFACESIDA_INDIRECTFITTINGMODEL_H_
 #define MANTIDQTCUSTOMINTERFACESIDA_INDIRECTFITTINGMODEL_H_
 
+#include "IndexTypes.h"
 #include "IndirectFitData.h"
 #include "IndirectFitOutput.h"
-#include "IndexTypes.h"
+#include "ParameterEstimation.h"
 
 #include "DllConfig.h"
-#include "MantidAPI/IFunction_fwd.h"
 #include "MantidAPI/IAlgorithm.h"
+#include "MantidAPI/IFunction_fwd.h"
 
 #include <boost/optional.hpp>
 #include <boost/variant.hpp>
@@ -26,8 +27,11 @@ enum class FittingMode { SEQUENTIAL, SIMULTANEOUS };
 
 class IndirectFittingModel;
 
-using IndirectFitDataCollectionType = IndexCollectionType<DatasetIndex, std::unique_ptr<IndirectFitData>>;
-using DefaultParametersType = IndexCollectionType<DatasetIndex, std::unordered_map<std::string, ParameterValue>>;
+using IndirectFitDataCollectionType =
+    IndexCollectionType<DatasetIndex, std::unique_ptr<IndirectFitData>>;
+using DefaultParametersType =
+    IndexCollectionType<DatasetIndex,
+                        std::unordered_map<std::string, ParameterValue>>;
 
 struct PrivateFittingData {
   friend class IndirectFittingModel;
@@ -55,8 +59,10 @@ public:
   virtual Mantid::API::MatrixWorkspace_sptr
   getWorkspace(DatasetIndex index) const;
   Spectra getSpectra(DatasetIndex index) const;
-  virtual std::pair<double, double> getFittingRange(DatasetIndex dataIndex, WorkspaceIndex spectrum) const;
-  virtual std::string getExcludeRegion(DatasetIndex dataIndex, WorkspaceIndex index) const;
+  virtual std::pair<double, double>
+  getFittingRange(DatasetIndex dataIndex, WorkspaceIndex spectrum) const;
+  virtual std::string getExcludeRegion(DatasetIndex dataIndex,
+                                       WorkspaceIndex index) const;
   virtual std::string createDisplayName(const std::string &formatString,
                                         const std::string &rangeDelimiter,
                                         DatasetIndex dataIndex) const;
@@ -70,7 +76,8 @@ public:
   virtual DatasetIndex numberOfWorkspaces() const;
   SpectrumRowIndex getNumberOfSpectra(DatasetIndex index) const;
   SpectrumRowIndex getNumberOfDomains() const;
-  SpectrumRowIndex getDomainIndex(DatasetIndex dataIndex, WorkspaceIndex spectrum) const;
+  SpectrumRowIndex getDomainIndex(DatasetIndex dataIndex,
+                                  WorkspaceIndex spectrum) const;
   std::vector<std::string> getFitParameterNames() const;
   virtual Mantid::API::MultiDomainFunction_sptr getFittingFunction() const;
 
@@ -80,12 +87,15 @@ public:
   void setSpectra(const std::string &spectra, DatasetIndex dataIndex);
   void setSpectra(Spectra &&spectra, DatasetIndex dataIndex);
   void setSpectra(const Spectra &spectra, DatasetIndex dataIndex);
-  virtual void setStartX(double startX, DatasetIndex dataIndex, WorkspaceIndex spectrum);
+  virtual void setStartX(double startX, DatasetIndex dataIndex,
+                         WorkspaceIndex spectrum);
   virtual void setStartX(double startX, DatasetIndex dataIndex);
-  virtual void setEndX(double endX, DatasetIndex dataIndex, WorkspaceIndex spectrum);
+  virtual void setEndX(double endX, DatasetIndex dataIndex,
+                       WorkspaceIndex spectrum);
   virtual void setEndX(double endX, DatasetIndex dataIndex);
   virtual void setExcludeRegion(const std::string &exclude,
-    DatasetIndex dataIndex, WorkspaceIndex spectrum);
+                                DatasetIndex dataIndex,
+                                WorkspaceIndex spectrum);
 
   virtual void addWorkspace(const std::string &workspaceName);
   void addWorkspace(const std::string &workspaceName,
@@ -99,7 +109,8 @@ public:
   virtual void setFitFunction(Mantid::API::MultiDomainFunction_sptr function);
   virtual void setDefaultParameterValue(const std::string &name, double value,
                                         DatasetIndex dataIndex);
-  void addSingleFitOutput(Mantid::API::IAlgorithm_sptr fitAlgorithm, DatasetIndex index);
+  void addSingleFitOutput(Mantid::API::IAlgorithm_sptr fitAlgorithm,
+                          DatasetIndex index);
   virtual void addOutput(Mantid::API::IAlgorithm_sptr fitAlgorithm);
 
   template <typename F>
@@ -112,18 +123,22 @@ public:
   getFitParameters(DatasetIndex dataIndex, WorkspaceIndex spectrum) const;
   std::unordered_map<std::string, ParameterValue>
   getDefaultParameters(DatasetIndex dataIndex) const;
-  boost::optional<ResultLocation> getResultLocation(DatasetIndex dataIndex,
-    WorkspaceIndex spectrum) const;
+  boost::optional<ResultLocation>
+  getResultLocation(DatasetIndex dataIndex, WorkspaceIndex spectrum) const;
   Mantid::API::WorkspaceGroup_sptr getResultWorkspace() const;
   Mantid::API::WorkspaceGroup_sptr getResultGroup() const;
   virtual Mantid::API::IAlgorithm_sptr getFittingAlgorithm() const;
-  Mantid::API::IAlgorithm_sptr getSingleFit(DatasetIndex dataIndex, WorkspaceIndex spectrum) const;
-  Mantid::API::IFunction_sptr getSingleFunction(DatasetIndex dataIndex, WorkspaceIndex spectrum) const;
+  Mantid::API::IAlgorithm_sptr getSingleFit(DatasetIndex dataIndex,
+                                            WorkspaceIndex spectrum) const;
+  Mantid::API::IFunction_sptr getSingleFunction(DatasetIndex dataIndex,
+                                                WorkspaceIndex spectrum) const;
   std::string getOutputBasename() const;
 
   void cleanFailedRun(Mantid::API::IAlgorithm_sptr fittingAlgorithm);
   void cleanFailedSingleRun(Mantid::API::IAlgorithm_sptr fittingAlgorithm,
                             DatasetIndex index);
+  DataForParameterEstimationCollection
+  getDataForParameterEstimation(EstimationDataSelector selector) const;
 
 protected:
   Mantid::API::IAlgorithm_sptr getFittingAlgorithm(FittingMode mode) const;
@@ -138,7 +153,7 @@ protected:
   mapDefaultParameterNames() const;
   std::string createSingleFitOutputName(const std::string &formatString,
                                         DatasetIndex index,
-    WorkspaceIndex spectrum) const;
+                                        WorkspaceIndex spectrum) const;
   void addNewWorkspace(Mantid::API::MatrixWorkspace_sptr workspace,
                        const Spectra &spectra);
   void removeFittingData(DatasetIndex index);
@@ -157,7 +172,7 @@ private:
   virtual std::string sequentialFitOutputName() const = 0;
   virtual std::string simultaneousFitOutputName() const = 0;
   virtual std::string singleFitOutputName(DatasetIndex index,
-    WorkspaceIndex spectrum) const = 0;
+                                          WorkspaceIndex spectrum) const = 0;
   virtual std::unordered_map<std::string, ParameterValue>
   createDefaultParameters(DatasetIndex index) const;
 
@@ -200,7 +215,8 @@ private:
                          Mantid::API::WorkspaceGroup_sptr resultGroup,
                          Mantid::API::ITableWorkspace_sptr parameterTable,
                          Mantid::API::WorkspaceGroup_sptr resultWorkspace,
-                         IndirectFitData *fitData, WorkspaceIndex spectrum) const;
+                         IndirectFitData *fitData,
+                         WorkspaceIndex spectrum) const;
 
   std::unique_ptr<IndirectFitOutput> m_fitOutput;
   IndirectFitDataCollectionType m_fittingData;

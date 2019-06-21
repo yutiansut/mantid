@@ -188,6 +188,9 @@ void IqtFunctionModel::setStretchExponential(bool on) {
   m_hasStretchExponential = on;
   m_model.setFunctionString(buildFunctionString());
   setCurrentValues(oldValues);
+  if (on) {
+    estimateStretchExpParameters();
+  }
 }
 
 bool IqtFunctionModel::hasStretchExponential() const {
@@ -211,16 +214,19 @@ void IqtFunctionModel::removeBackground() {
 bool IqtFunctionModel::hasBackground() const { return !m_background.isEmpty(); }
 
 void IqtFunctionModel::tieIntensities(bool on) {
-  if (!on)
-    return;
   auto const heightName = getParameterName(ParamNames::STRETCH_HEIGHT);
   auto const a0Name = getParameterName(ParamNames::BG_A0);
   if (!heightName || !a0Name)
     return;
-  auto const tie = QString("1-%1").arg(*a0Name);
+  auto const tie = on? QString("1-%1").arg(*a0Name) : QString();
   for (auto i = 0; i < getNumberDomains(); ++i) {
     setLocalParameterTie(*heightName, i, tie);
   }
+}
+
+void IqtFunctionModel::updateParameterEstimationData(
+    DataForParameterEstimationCollection &&data) {
+  m_estimationData = std::move(data);
 }
 
 void IqtFunctionModel::setNumberDomains(int n) { m_model.setNumberDomains(n); }
@@ -534,6 +540,26 @@ std::string IqtFunctionModel::buildStretchExpFunctionString() const {
 
 std::string IqtFunctionModel::buildBackgroundFunctionString() const {
   return "name=FlatBackground,A0=0,constraints=(A0>0)";
+}
+
+void IqtFunctionModel::estimateStretchExpParameters() {
+  auto const heightName = getParameterName(ParamNames::STRETCH_HEIGHT);
+  auto const lifeTimeName = getParameterName(ParamNames::STRETCH_LIFETIME);
+  auto const stretchingName = getParameterName(ParamNames::STRETCH_STRETCHING);
+  if (!heightName || !lifeTimeName || !stretchingName)
+    return;
+  assert(getNumberDomains() == m_estimationData.size());
+  for (auto i = 0; i < getNumberDomains(); ++i) {
+    auto const &x = m_estimationData[i].x;
+    auto const &y = m_estimationData[i].y;
+    auto lifeTime = (x[1] - x[0]) / (log(y[0]) - log(y[1]));
+    if (lifeTime <= 0)
+      lifeTime = 1.0;
+    auto const height = y[0] * exp(x[0] / lifeTime);
+    setLocalParameterValue(*heightName, i, height);
+    setLocalParameterValue(*lifeTimeName, i, lifeTime);
+    setLocalParameterValue(*stretchingName, i, 1.0);
+  }
 }
 
 QString IqtFunctionModel::buildFunctionString() const {

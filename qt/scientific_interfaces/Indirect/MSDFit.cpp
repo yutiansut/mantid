@@ -19,6 +19,7 @@
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 
+using namespace Mantid;
 using namespace Mantid::API;
 
 namespace {
@@ -59,6 +60,13 @@ void MSDFit::setupFitTab() {
   connect(m_uiForm->pbRun, SIGNAL(clicked()), this, SLOT(runClicked()));
   connect(this, SIGNAL(functionChanged()), this,
           SLOT(updateModelFitTypeString()));
+}
+
+EstimationDataSelector MSDFit::getEstimationDataSelector() const {
+  return
+      [](const MantidVec &x, const MantidVec &y) -> DataForParameterEstimation {
+        return DataForParameterEstimation{{}, {}};
+      };
 }
 
 void MSDFit::updateModelFitTypeString() {

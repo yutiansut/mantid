@@ -211,15 +211,20 @@ void IqtTemplatePresenter::setErrorsEnabled(bool enabled)
   m_view->setErrorsEnabled(enabled);
 }
 
-bool IqtTemplatePresenter::tieIntensities(bool on) {
+void IqtTemplatePresenter::tieIntensities(bool on) {
   if (on && !canTieIntensities())
-    return false;
+    return;
   m_model.tieIntensities(on);
-  return true;
+  emit functionStructureChanged();
 }
 
 bool IqtTemplatePresenter::canTieIntensities() const {
   return m_model.hasStretchExponential() && m_model.hasBackground();
+}
+
+void IqtTemplatePresenter::updateParameterEstimationData(
+    DataForParameterEstimationCollection &&data) {
+  m_model.updateParameterEstimationData(std::move(data));
 }
 
 void IqtTemplatePresenter::updateViewParameters()
