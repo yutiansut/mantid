@@ -52,6 +52,7 @@ public:
   QStringList getGlobalParameters() const override;
   void setGlobalParameters(const QStringList &globals) override;
   bool isGlobal(const QString &parName) const override;
+  void setGlobal(const QString &parName, bool on);
   QStringList getLocalParameters() const override;
   void updateMultiDatasetParameters(const IFunction &fun) override;
   void updateParameters(const IFunction &fun) override;
@@ -84,7 +85,7 @@ public:
   void
   updateParameterEstimationData(DataForParameterEstimationCollection &&data);
 
-  enum class ParamNames {
+  enum class ParamID {
     EXP1_HEIGHT,
     EXP1_LIFETIME,
     EXP2_HEIGHT,
@@ -94,8 +95,8 @@ public:
     STRETCH_STRETCHING,
     BG_A0
   };
-  QMap<ParamNames, double> getCurrentValues() const;
-  QMap<ParamNames, double> getCurrentErrors() const;
+  QMap<ParamID, double> getCurrentValues() const;
+  QMap<ParamID, double> getCurrentErrors() const;
   QMap<int, QString> getParameterNameMap() const;
   QMap<int, std::string> getParameterDescriptionMap() const;
 
@@ -106,24 +107,29 @@ private:
   boost::optional<QString> getExp2Prefix() const;
   boost::optional<QString> getStretchPrefix() const;
   boost::optional<QString> getBackgroundPrefix() const;
-  void setParameter(ParamNames name, double value);
-  boost::optional<double> getParameter(ParamNames name) const;
-  boost::optional<double> getParameterError(ParamNames name) const;
-  boost::optional<QString> getParameterName(ParamNames name) const;
-  boost::optional<QString> getParameterDescription(ParamNames name) const;
-  boost::optional<QString> getPrefix(ParamNames name) const;
-  void setCurrentValues(const QMap<ParamNames, double> &);
-  void applyParameterFunction(std::function<void(ParamNames)> paramFun) const;
+  void setParameter(ParamID name, double value);
+  boost::optional<double> getParameter(ParamID name) const;
+  boost::optional<double> getParameterError(ParamID name) const;
+  boost::optional<QString> getParameterName(ParamID name) const;
+  boost::optional<QString> getParameterDescription(ParamID name) const;
+  boost::optional<QString> getPrefix(ParamID name) const;
+  void setCurrentValues(const QMap<ParamID, double> &);
+  void applyParameterFunction(std::function<void(ParamID)> paramFun) const;
+  boost::optional<ParamID> getParameterId(const QString &parName);
   std::string buildExpDecayFunctionString() const;
   std::string buildStretchExpFunctionString() const;
   std::string buildBackgroundFunctionString() const;
   void estimateStretchExpParameters();
+  void addGlobal(const QString &parName);
+  void removeGlobal(const QString &parName);
+  QStringList makeGlobalList() const;
 
   MultiDomainFunctionModel m_model;
   int m_numberOfExponentials = 0;
   bool m_hasStretchExponential = false;
   QString m_background;
   DataForParameterEstimationCollection m_estimationData;
+  QList<ParamID> m_globals;
 };
 
 } // namespace IDA

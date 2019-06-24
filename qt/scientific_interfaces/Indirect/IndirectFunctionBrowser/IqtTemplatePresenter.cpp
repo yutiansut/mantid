@@ -151,25 +151,14 @@ QStringList IqtTemplatePresenter::getLocalParameters() const
   return m_model.getLocalParameters();
 }
 
-void IqtTemplatePresenter::setGlobalParameters(const QStringList & globals)
-{
+void IqtTemplatePresenter::setGlobalParameters(const QStringList &globals) {
   m_model.setGlobalParameters(globals);
-  if (m_model.hasStretchExponential()) {
-    m_view->setGlobalParametersQuiet(globals);
-  }
+  m_view->setGlobalParametersQuiet(globals);
 }
 
-void IqtTemplatePresenter::setGlobal(const QString &parName, bool on)
-{
-  auto globals = m_model.getGlobalParameters();
-  if (on) {
-    if (!globals.contains(parName)) {
-      globals.push_back(parName);
-    }
-  } else if (globals.contains(parName)) {
-    globals.removeOne(parName);
-  }
-  setGlobalParameters(globals);
+void IqtTemplatePresenter::setGlobal(const QString &parName, bool on) {
+  m_model.setGlobal(parName, on);
+  m_view->setGlobalParametersQuiet(m_model.getGlobalParameters());
 }
 
 void IqtTemplatePresenter::updateMultiDatasetParameters(const IFunction & fun)
@@ -229,15 +218,15 @@ void IqtTemplatePresenter::updateParameterEstimationData(
 
 void IqtTemplatePresenter::updateViewParameters()
 {
-  static std::map<IqtFunctionModel::ParamNames, void (IqtTemplateBrowser::*)(double, double)> setters{
-  { IqtFunctionModel::ParamNames::EXP1_HEIGHT, &IqtTemplateBrowser::setExp1Height },
-  { IqtFunctionModel::ParamNames::EXP1_LIFETIME, &IqtTemplateBrowser::setExp1Lifetime },
-  { IqtFunctionModel::ParamNames::EXP2_HEIGHT, &IqtTemplateBrowser::setExp2Height },
-  { IqtFunctionModel::ParamNames::EXP2_LIFETIME, &IqtTemplateBrowser::setExp2Lifetime },
-  { IqtFunctionModel::ParamNames::STRETCH_HEIGHT, &IqtTemplateBrowser::setStretchHeight},
-  { IqtFunctionModel::ParamNames::STRETCH_LIFETIME, &IqtTemplateBrowser::setStretchLifetime },
-  { IqtFunctionModel::ParamNames::STRETCH_STRETCHING, &IqtTemplateBrowser::setStretchStretching },
-  { IqtFunctionModel::ParamNames::BG_A0, &IqtTemplateBrowser::setA0 }
+  static std::map<IqtFunctionModel::ParamID, void (IqtTemplateBrowser::*)(double, double)> setters{
+  { IqtFunctionModel::ParamID::EXP1_HEIGHT, &IqtTemplateBrowser::setExp1Height },
+  { IqtFunctionModel::ParamID::EXP1_LIFETIME, &IqtTemplateBrowser::setExp1Lifetime },
+  { IqtFunctionModel::ParamID::EXP2_HEIGHT, &IqtTemplateBrowser::setExp2Height },
+  { IqtFunctionModel::ParamID::EXP2_LIFETIME, &IqtTemplateBrowser::setExp2Lifetime },
+  { IqtFunctionModel::ParamID::STRETCH_HEIGHT, &IqtTemplateBrowser::setStretchHeight},
+  { IqtFunctionModel::ParamID::STRETCH_LIFETIME, &IqtTemplateBrowser::setStretchLifetime },
+  { IqtFunctionModel::ParamID::STRETCH_STRETCHING, &IqtTemplateBrowser::setStretchStretching },
+  { IqtFunctionModel::ParamID::BG_A0, &IqtTemplateBrowser::setA0 }
   };
   auto values = m_model.getCurrentValues();
   auto errors = m_model.getCurrentErrors();

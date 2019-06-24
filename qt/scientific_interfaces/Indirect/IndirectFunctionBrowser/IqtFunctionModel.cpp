@@ -19,15 +19,15 @@ using namespace MantidWidgets;
 using namespace Mantid::API;
 
 namespace {
-std::map<IqtFunctionModel::ParamNames, QString> g_paramName{
-    {IqtFunctionModel::ParamNames::EXP1_HEIGHT, "Height"},
-    {IqtFunctionModel::ParamNames::EXP1_LIFETIME, "Lifetime"},
-    {IqtFunctionModel::ParamNames::EXP2_HEIGHT, "Height"},
-    {IqtFunctionModel::ParamNames::EXP2_LIFETIME, "Lifetime"},
-    {IqtFunctionModel::ParamNames::STRETCH_HEIGHT, "Height"},
-    {IqtFunctionModel::ParamNames::STRETCH_LIFETIME, "Lifetime"},
-    {IqtFunctionModel::ParamNames::STRETCH_STRETCHING, "Stretching"},
-    {IqtFunctionModel::ParamNames::BG_A0, "A0"}};
+std::map<IqtFunctionModel::ParamID, QString> g_paramName{
+    {IqtFunctionModel::ParamID::EXP1_HEIGHT, "Height"},
+    {IqtFunctionModel::ParamID::EXP1_LIFETIME, "Lifetime"},
+    {IqtFunctionModel::ParamID::EXP2_HEIGHT, "Height"},
+    {IqtFunctionModel::ParamID::EXP2_LIFETIME, "Lifetime"},
+    {IqtFunctionModel::ParamID::STRETCH_HEIGHT, "Height"},
+    {IqtFunctionModel::ParamID::STRETCH_LIFETIME, "Lifetime"},
+    {IqtFunctionModel::ParamID::STRETCH_STRETCHING, "Stretching"},
+    {IqtFunctionModel::ParamID::BG_A0, "A0"}};
 }
 
 IqtFunctionModel::IqtFunctionModel() {}
@@ -176,6 +176,7 @@ void IqtFunctionModel::setNumberOfExponentials(int n) {
   auto oldValues = getCurrentValues();
   m_numberOfExponentials = n;
   m_model.setFunctionString(buildFunctionString());
+  m_model.setGlobalParameters(makeGlobalList());
   setCurrentValues(oldValues);
 }
 
@@ -187,6 +188,7 @@ void IqtFunctionModel::setStretchExponential(bool on) {
   auto oldValues = getCurrentValues();
   m_hasStretchExponential = on;
   m_model.setFunctionString(buildFunctionString());
+  m_model.setGlobalParameters(makeGlobalList());
   setCurrentValues(oldValues);
   if (on) {
     estimateStretchExpParameters();
@@ -201,6 +203,7 @@ void IqtFunctionModel::setBackground(const QString &name) {
   auto oldValues = getCurrentValues();
   m_background = name;
   m_model.setFunctionString(buildFunctionString());
+  m_model.setGlobalParameters(makeGlobalList());
   setCurrentValues(oldValues);
 }
 
@@ -208,14 +211,15 @@ void IqtFunctionModel::removeBackground() {
   auto oldValues = getCurrentValues();
   m_background.clear();
   m_model.setFunctionString(buildFunctionString());
+  m_model.setGlobalParameters(makeGlobalList());
   setCurrentValues(oldValues);
 }
 
 bool IqtFunctionModel::hasBackground() const { return !m_background.isEmpty(); }
 
 void IqtFunctionModel::tieIntensities(bool on) {
-  auto const heightName = getParameterName(ParamNames::STRETCH_HEIGHT);
-  auto const a0Name = getParameterName(ParamNames::BG_A0);
+  auto const heightName = getParameterName(ParamID::STRETCH_HEIGHT);
+  auto const a0Name = getParameterName(ParamID::BG_A0);
   if (!heightName || !a0Name)
     return;
   auto const tie = on? QString("1-%1").arg(*a0Name) : QString();
@@ -278,11 +282,51 @@ QStringList IqtFunctionModel::getLocalParameters() const {
 }
 
 void IqtFunctionModel::setGlobalParameters(const QStringList &globals) {
-  m_model.setGlobalParameters(globals);
+  m_globals.clear();
+  for (auto const &name : globals) {
+    addGlobal(name);
+  }
+  auto newGlobals = makeGlobalList();
+  m_model.setGlobalParameters(newGlobals);
 }
 
 bool IqtFunctionModel::isGlobal(const QString &parName) const {
   return m_model.isGlobal(parName);
+}
+
+void IqtFunctionModel::setGlobal(const QString &parName, bool on) {
+  if (parName.isEmpty())
+    return;
+  if (on)
+    addGlobal(parName);
+  else
+    removeGlobal(parName);
+  auto globals = makeGlobalList();
+  m_model.setGlobalParameters(globals);
+}
+
+void IqtFunctionModel::addGlobal(const QString &parName) {
+  auto const pid = getParameterId(parName);
+  if (pid && !m_globals.contains(*pid)) {
+    m_globals.push_back(*pid);
+  }
+}
+
+void IqtFunctionModel::removeGlobal(const QString &parName) {
+  auto const pid = getParameterId(parName);
+  if (pid && m_globals.contains(*pid)) {
+    m_globals.removeOne(*pid);
+  }
+}
+
+QStringList IqtFunctionModel::makeGlobalList() const {
+  QStringList globals;
+  for (auto const id : m_globals) {
+    auto const name = getParameterName(id);
+    if (name)
+      globals << *name;
+  }
+  return globals;
 }
 
 void IqtFunctionModel::updateMultiDatasetParameters(const IFunction &fun) {
@@ -401,65 +445,65 @@ void IqtFunctionModel::setLocalParameterFixed(const QString &parName, int i,
   m_model.setLocalParameterFixed(parName, i, fixed);
 }
 
-void IqtFunctionModel::setParameter(ParamNames name, double value) {
+void IqtFunctionModel::setParameter(ParamID name, double value) {
   auto const prefix = getPrefix(name);
   if (prefix) {
     m_model.setParameter(*prefix + g_paramName.at(name), value);
   }
 }
 
-boost::optional<double> IqtFunctionModel::getParameter(ParamNames name) const {
+boost::optional<double> IqtFunctionModel::getParameter(ParamID name) const {
   auto const paramName = getParameterName(name);
   return paramName ? m_model.getParameter(*paramName)
                    : boost::optional<double>();
 }
 
 boost::optional<double>
-IqtFunctionModel::getParameterError(ParamNames name) const {
+IqtFunctionModel::getParameterError(ParamID name) const {
   auto const paramName = getParameterName(name);
   return paramName ? m_model.getParameterError(*paramName)
                    : boost::optional<double>();
 }
 
 boost::optional<QString>
-IqtFunctionModel::getParameterName(ParamNames name) const {
+IqtFunctionModel::getParameterName(ParamID name) const {
   auto const prefix = getPrefix(name);
   return prefix ? *prefix + g_paramName.at(name) : boost::optional<QString>();
 }
 
 boost::optional<QString>
-IqtFunctionModel::getParameterDescription(ParamNames name) const {
+IqtFunctionModel::getParameterDescription(ParamID name) const {
   auto const paramName = getParameterName(name);
   return paramName ? m_model.getParameterDescription(*paramName)
                    : boost::optional<QString>();
 }
 
-boost::optional<QString> IqtFunctionModel::getPrefix(ParamNames name) const {
-  if (name <= ParamNames::EXP1_LIFETIME) {
+boost::optional<QString> IqtFunctionModel::getPrefix(ParamID name) const {
+  if (name <= ParamID::EXP1_LIFETIME) {
     return getExp1Prefix();
-  } else if (name <= ParamNames::EXP2_LIFETIME) {
+  } else if (name <= ParamID::EXP2_LIFETIME) {
     return getExp2Prefix();
-  } else if (name <= ParamNames::STRETCH_STRETCHING) {
+  } else if (name <= ParamID::STRETCH_STRETCHING) {
     return getStretchPrefix();
   } else {
     return getBackgroundPrefix();
   }
 }
 
-QMap<IqtFunctionModel::ParamNames, double>
+QMap<IqtFunctionModel::ParamID, double>
 IqtFunctionModel::getCurrentValues() const {
-  QMap<ParamNames, double> values;
-  auto store = [&values, this](ParamNames name) {
+  QMap<ParamID, double> values;
+  auto store = [&values, this](ParamID name) {
     values[name] = *getParameter(name);
   };
   applyParameterFunction(store);
   return values;
 }
 
-QMap<IqtFunctionModel::ParamNames, double>
+QMap<IqtFunctionModel::ParamID, double>
 IqtFunctionModel::getCurrentErrors() const {
-  QMap<ParamNames, double> errors;
-  auto store = [&errors, this](ParamNames name) {
+  QMap<ParamID, double> errors;
+  auto store = [&errors, this](ParamID name) {
     errors[name] = *getParameterError(name);
   };
   applyParameterFunction(store);
@@ -468,7 +512,7 @@ IqtFunctionModel::getCurrentErrors() const {
 
 QMap<int, QString> IqtFunctionModel::getParameterNameMap() const {
   QMap<int, QString> out;
-  auto addToMap = [&out, this](ParamNames name) {
+  auto addToMap = [&out, this](ParamID name) {
     out[static_cast<int>(name)] = *getParameterName(name);
   };
   applyParameterFunction(addToMap);
@@ -479,54 +523,65 @@ QMap<int, std::string> IqtFunctionModel::getParameterDescriptionMap() const {
   QMap<int, std::string> out;
   auto expDecay = FunctionFactory::Instance().createInitialized(
       buildExpDecayFunctionString());
-  out[static_cast<int>(ParamNames::EXP1_HEIGHT)] =
+  out[static_cast<int>(ParamID::EXP1_HEIGHT)] =
       expDecay->parameterDescription(0);
-  out[static_cast<int>(ParamNames::EXP1_LIFETIME)] =
+  out[static_cast<int>(ParamID::EXP1_LIFETIME)] =
       expDecay->parameterDescription(1);
-  out[static_cast<int>(ParamNames::EXP2_HEIGHT)] =
+  out[static_cast<int>(ParamID::EXP2_HEIGHT)] =
       expDecay->parameterDescription(0);
-  out[static_cast<int>(ParamNames::EXP2_LIFETIME)] =
+  out[static_cast<int>(ParamID::EXP2_LIFETIME)] =
       expDecay->parameterDescription(1);
   auto stretchExp = FunctionFactory::Instance().createInitialized(
       buildStretchExpFunctionString());
-  out[static_cast<int>(ParamNames::STRETCH_HEIGHT)] =
+  out[static_cast<int>(ParamID::STRETCH_HEIGHT)] =
       stretchExp->parameterDescription(0);
-  out[static_cast<int>(ParamNames::STRETCH_LIFETIME)] =
+  out[static_cast<int>(ParamID::STRETCH_LIFETIME)] =
       stretchExp->parameterDescription(1);
-  out[static_cast<int>(ParamNames::STRETCH_STRETCHING)] =
+  out[static_cast<int>(ParamID::STRETCH_STRETCHING)] =
       stretchExp->parameterDescription(2);
   auto background = FunctionFactory::Instance().createInitialized(
       buildBackgroundFunctionString());
-  out[static_cast<int>(ParamNames::BG_A0)] =
+  out[static_cast<int>(ParamID::BG_A0)] =
       background->parameterDescription(0);
   return out;
 }
 
 void IqtFunctionModel::setCurrentValues(
-    const QMap<ParamNames, double> &values) {
+    const QMap<ParamID, double> &values) {
   for (auto const name : values.keys()) {
     setParameter(name, values[name]);
   }
 }
 
 void IqtFunctionModel::applyParameterFunction(
-    std::function<void(ParamNames)> paramFun) const {
+    std::function<void(ParamID)> paramFun) const {
   if (m_numberOfExponentials > 0) {
-    paramFun(ParamNames::EXP1_HEIGHT);
-    paramFun(ParamNames::EXP1_LIFETIME);
+    paramFun(ParamID::EXP1_HEIGHT);
+    paramFun(ParamID::EXP1_LIFETIME);
   }
   if (m_numberOfExponentials > 1) {
-    paramFun(ParamNames::EXP2_HEIGHT);
-    paramFun(ParamNames::EXP2_LIFETIME);
+    paramFun(ParamID::EXP2_HEIGHT);
+    paramFun(ParamID::EXP2_LIFETIME);
   }
   if (m_hasStretchExponential) {
-    paramFun(ParamNames::STRETCH_HEIGHT);
-    paramFun(ParamNames::STRETCH_LIFETIME);
-    paramFun(ParamNames::STRETCH_STRETCHING);
+    paramFun(ParamID::STRETCH_HEIGHT);
+    paramFun(ParamID::STRETCH_LIFETIME);
+    paramFun(ParamID::STRETCH_STRETCHING);
   }
   if (!m_background.isEmpty()) {
-    paramFun(ParamNames::BG_A0);
+    paramFun(ParamID::BG_A0);
   }
+}
+
+boost::optional<IqtFunctionModel::ParamID>
+IqtFunctionModel::getParameterId(const QString &parName) {
+  boost::optional<ParamID> result;
+  auto getter = [&result, parName, this](ParamID pid) {
+    if (parName == *getParameterName(pid))
+      result = pid;
+  };
+  applyParameterFunction(getter);
+  return result;
 }
 
 std::string IqtFunctionModel::buildExpDecayFunctionString() const {
@@ -543,9 +598,9 @@ std::string IqtFunctionModel::buildBackgroundFunctionString() const {
 }
 
 void IqtFunctionModel::estimateStretchExpParameters() {
-  auto const heightName = getParameterName(ParamNames::STRETCH_HEIGHT);
-  auto const lifeTimeName = getParameterName(ParamNames::STRETCH_LIFETIME);
-  auto const stretchingName = getParameterName(ParamNames::STRETCH_STRETCHING);
+  auto const heightName = getParameterName(ParamID::STRETCH_HEIGHT);
+  auto const lifeTimeName = getParameterName(ParamID::STRETCH_LIFETIME);
+  auto const stretchingName = getParameterName(ParamID::STRETCH_STRETCHING);
   if (!heightName || !lifeTimeName || !stretchingName)
     return;
   assert(getNumberDomains() == m_estimationData.size());

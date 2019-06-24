@@ -121,7 +121,7 @@ void ParameterPropertyManager::setErrorsEnabled(bool enabled) {
   m_errorsEnabled = enabled;
   cleanUpErrors();
   foreach (QtProperty *prop, m_errors.keys()) {
-    emit propertyChanged(prop);
+    //updateTooltip(prop) emits propertyChanged(prop)
     updateTooltip(prop);
   }
 }

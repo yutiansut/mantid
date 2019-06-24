@@ -83,15 +83,16 @@ IFunction_sptr MultiDomainFunctionModel::getFitFunction() const {
   if (!m_function) {
     return m_function;
   }
-  if (m_function->nFunctions() > 1) {
+  auto const nf = m_function->nFunctions();
+  if (nf > 1) {
     auto fun =
         boost::dynamic_pointer_cast<MultiDomainFunction>(m_function->clone());
-    auto const n = m_function->nFunctions();
+    auto const singleFun = m_function->getFunction(0);
     for (auto par = m_globalParameterNames.begin();
          par != m_globalParameterNames.end();) {
-      if (m_function->hasParameter(par->toStdString())) {
+      if (singleFun->hasParameter(par->toStdString())) {
         QStringList ties;
-        for (size_t i = 1; i < n; ++i) {
+        for (size_t i = 1; i < nf; ++i) {
           ties << "f" + QString::number(i) + "." + *par;
         }
         ties << "f0." + *par;
@@ -103,7 +104,7 @@ IFunction_sptr MultiDomainFunctionModel::getFitFunction() const {
     }
     return fun;
   }
-  if (m_function->nFunctions() == 1) {
+  if (nf == 1) {
     auto fun = m_function->getFunction(0);
     auto compFun = boost::dynamic_pointer_cast<CompositeFunction>(fun);
     if (compFun && compFun->nFunctions() == 1) {
