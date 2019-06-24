@@ -218,7 +218,9 @@ void IqtFunctionModel::removeBackground() {
 bool IqtFunctionModel::hasBackground() const { return !m_background.isEmpty(); }
 
 void IqtFunctionModel::tieIntensities(bool on) {
-  auto const heightName = getParameterName(ParamID::STRETCH_HEIGHT);
+  auto heightName = getParameterName(ParamID::STRETCH_HEIGHT);
+  if (!heightName)
+    heightName = getParameterName(ParamID::EXP1_HEIGHT);
   auto const a0Name = getParameterName(ParamID::BG_A0);
   if (!heightName || !a0Name)
     return;

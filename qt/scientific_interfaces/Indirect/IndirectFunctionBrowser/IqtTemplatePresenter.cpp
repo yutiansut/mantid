@@ -208,7 +208,9 @@ void IqtTemplatePresenter::tieIntensities(bool on) {
 }
 
 bool IqtTemplatePresenter::canTieIntensities() const {
-  return m_model.hasStretchExponential() && m_model.hasBackground();
+  return (m_model.hasStretchExponential() ||
+          m_model.getNumberOfExponentials() > 0) &&
+         m_model.hasBackground();
 }
 
 void IqtTemplatePresenter::updateParameterEstimationData(
