@@ -60,6 +60,8 @@ set(SRC_FILES
     Iqt.cpp
     IqtFit.cpp
     IqtFitModel.cpp
+#    IndirectFunctionBrowser/ConvTemplateBrowser.cpp
+#    IndirectFunctionBrowser/ConvTemplatePresenter.cpp
     IndirectFunctionBrowser/IqtFunctionModel.cpp
     IndirectFunctionBrowser/IqtTemplateBrowser.cpp
     IndirectFunctionBrowser/IqtTemplatePresenter.cpp
@@ -143,6 +145,8 @@ set(INC_FILES
     Iqt.h
     IqtFit.h
     IqtFitModel.h
+#    IndirectFunctionBrowser/ConvTemplateBrowser.h
+#    IndirectFunctionBrowser/ConvTemplatePresenter.h
     IndirectFunctionBrowser/IqtFunctionModel.h
     IndirectFunctionBrowser/IqtTemplateBrowser.h
     IndirectFunctionBrowser/IqtTemplatePresenter.h
@@ -154,6 +158,7 @@ set(INC_FILES
     JumpFitModel.h
     MSDFit.h
     MSDFitModel.h
+    ParameterEstimation.h
     Quasi.h
     ResNorm.h
     Stretch.h)
@@ -213,6 +218,8 @@ set(MOC_FILES
     IndirectTab.h
     Iqt.h
     IqtFit.h
+#    IndirectFunctionBrowser/ConvTemplateBrowser.h
+#    IndirectFunctionBrowser/ConvTemplatePresenter.h
     IndirectFunctionBrowser/IqtTemplateBrowser.h
     IndirectFunctionBrowser/IqtTemplatePresenter.h
     JumpFit.h

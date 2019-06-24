@@ -6,6 +6,7 @@
 // SPDX - License - Identifier: GPL - 3.0 +
 #include "ConvFit.h"
 #include "ConvFitDataPresenter.h"
+//#include "IndirectFunctionBrowser/ConvTemplateBrowser.h"
 
 #include "MantidQtWidgets/Common/UserInputValidator.h"
 
@@ -25,6 +26,7 @@
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 
+using namespace Mantid;
 using namespace Mantid::API;
 
 namespace {
@@ -46,6 +48,7 @@ ConvFit::ConvFit(QWidget *parent)
   setPlotView(m_uiForm->pvFitPlotView);
   setSpectrumSelectionView(m_uiForm->svSpectrumView);
   setOutputOptionsView(m_uiForm->ovOutputOptionsView);
+  //m_uiForm->fitPropertyBrowser->setFunctionTemplateBrowser(new ConvTemplateBrowser);
   setFitPropertyBrowser(m_uiForm->fitPropertyBrowser);
 
   setEditResultVisible(true);
@@ -127,6 +130,13 @@ void ConvFit::setupFit(Mantid::API::IAlgorithm_sptr fitAlgorithm) {
   //fitAlgorithm->setProperty("ExtractMembers",
   //                          boolSettingValue("ExtractMembers"));
   IndirectFitAnalysisTab::setupFit(fitAlgorithm);
+}
+
+EstimationDataSelector ConvFit::getEstimationDataSelector() const {
+  return
+      [](const MantidVec &x, const MantidVec &y) -> DataForParameterEstimation {
+        return DataForParameterEstimation{};
+      };
 }
 
 void ConvFit::setModelResolution(const QString &resolutionName) {
