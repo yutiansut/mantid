@@ -80,6 +80,8 @@ public:
   QStringList getLocalParameters() const;
   /// Get the number of datasets
   int getNumberOfDatasets() const override;
+  /// Get the names of datasets
+  QStringList getDatasetNames() const override;
   /// Get value of a local parameter
   double getLocalParameterValue(const QString &parName, int i) const override;
   /// Set value of a local parameter

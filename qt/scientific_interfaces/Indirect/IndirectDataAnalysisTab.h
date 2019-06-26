@@ -61,6 +61,12 @@ public:
   /// Loads the tab's settings.
   void loadTabSettings(const QSettings &settings);
 
+  /// Prevent loading of data with incorrect naming
+  void filterInputData(bool filter);
+
+  /// Allows the user to turn the plotting of error bars off and on
+  void setPlotErrorBars(bool errorBars);
+
 protected:
   /// Function to run a string as python code
   void runPythonScript(const QString &pyInput);
@@ -147,6 +153,7 @@ private:
   bool validate() override = 0;
   /// Overidden by child class.
   virtual void loadSettings(const QSettings &settings) = 0;
+  virtual void setFileExtensionsByName(bool filter) = 0;
 
   /// A pointer to the parent (friend) IndirectDataAnalysis object.
   IndirectDataAnalysis *m_parent;

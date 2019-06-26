@@ -12,10 +12,10 @@
 #include "IndirectFitOutputOptionsPresenter.h"
 #include "IndirectFitOutputOptionsView.h"
 #include "IndirectFitPlotPresenter.h"
+#include "IndirectFitPropertyBrowser.h"
 #include "IndirectFittingModel.h"
 #include "IndirectSpectrumSelectionPresenter.h"
 #include "IndirectSpectrumSelectionView.h"
-#include "IndirectFitPropertyBrowser.h"
 
 #include <boost/optional.hpp>
 
@@ -42,18 +42,27 @@ public:
   void setFitPropertyBrowser(IndirectFitPropertyBrowser *browser);
   DatasetIndex getSelectedDataIndex() const;
   WorkspaceIndex getSelectedSpectrum() const;
-  bool isRangeCurrentlySelected(DatasetIndex dataIndex, WorkspaceIndex spectrum) const;
+  bool isRangeCurrentlySelected(DatasetIndex dataIndex,
+                                WorkspaceIndex spectrum) const;
+
+  virtual std::string tabName() const = 0;
+
+  virtual bool hasResolution() const = 0;
   QString selectedFitType() const;
   size_t numberOfCustomFunctions(const std::string &functionName) const;
   void setConvolveMembers(bool convolveMembers);
 
 protected:
   IndirectFittingModel *fittingModel() const;
-  void setSampleWSSuffices(const QStringList &suffices);
-  void setSampleFBSuffices(const QStringList &suffices);
-  void setResolutionWSSuffices(const QStringList &suffices);
-  void setResolutionFBSuffices(const QStringList &suffices);
   void run() override;
+  void setSampleWSSuffixes(const QStringList &suffices);
+  void setSampleFBSuffixes(const QStringList &suffices);
+  void setResolutionWSSuffixes(const QStringList &suffices);
+  void setResolutionFBSuffixes(const QStringList &suffices);
+  void setFileExtensionsByName(bool filter);
+  void setSampleSuffixes(std::string const &tab, bool filter);
+  void setResolutionSuffixes(std::string const &tab, bool filter);
+
   void setAlgorithmProperties(Mantid::API::IAlgorithm_sptr fitAlgorithm) const;
   void runFitAlgorithm(Mantid::API::IAlgorithm_sptr fitAlgorithm);
   void runSingleFit(Mantid::API::IAlgorithm_sptr fitAlgorithm);
@@ -76,17 +85,20 @@ protected slots:
   void setDataTableStartX(double startX);
   void setDataTableEndX(double endX);
   void setDataTableExclude(const std::string &exclude);
-  void tableStartXChanged(double startX, DatasetIndex dataIndex, WorkspaceIndex spectrum);
-  void tableEndXChanged(double endX, DatasetIndex dataIndex, WorkspaceIndex spectrum);
-  void tableExcludeChanged(const std::string &exclude, DatasetIndex dataIndex, WorkspaceIndex spectrum);
+  void tableStartXChanged(double startX, DatasetIndex dataIndex,
+                          WorkspaceIndex spectrum);
+  void tableEndXChanged(double endX, DatasetIndex dataIndex,
+                        WorkspaceIndex spectrum);
+  void tableExcludeChanged(const std::string &exclude, DatasetIndex dataIndex,
+                           WorkspaceIndex spectrum);
   void updateFitOutput(bool error);
   void updateSingleFitOutput(bool error);
   void fitAlgorithmComplete(bool error);
   void singleFit();
   void singleFit(DatasetIndex dataIndex, WorkspaceIndex spectrum);
   void executeFit();
-  //std::unordered_map<std::string, Mantid::API::IFunction::Attribute>
-  //getAttributes(Mantid::API::IFunction_sptr const &function,
+  // std::unordered_map<std::string, Mantid::API::IFunction::Attribute>
+  // getAttributes(Mantid::API::IFunction_sptr const &function,
   //              std::vector<std::string> const &attributeNames);
   void updateParameterValues();
   void updateParameterValues(
@@ -123,8 +135,7 @@ private:
   void connectFitPropertyBrowser();
   void connectDataPresenter();
   void plotSelectedSpectra(std::vector<SpectrumToPlot> const &spectra);
-  void plotSpectrum(std::string const &workspaceName, std::size_t const &index,
-                    bool errorBars);
+  void plotSpectrum(std::string const &workspaceName, std::size_t const &index);
   std::string getOutputBasename() const;
   Mantid::API::WorkspaceGroup_sptr getResultWorkspace() const;
   std::vector<std::string> getFitParameterNames() const;

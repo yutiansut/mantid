@@ -243,7 +243,8 @@ void IqtFitModel::setFitTypeString(const std::string &fitType) {
   m_fitType = fitType;
 }
 
-void IqtFitModel::setFitFunction(Mantid::API::MultiDomainFunction_sptr function) {
+void IqtFitModel::setFitFunction(
+    Mantid::API::MultiDomainFunction_sptr function) {
   IndirectFittingModel::setFitFunction(function);
   if (m_constrainIntensities)
     constrainIntensities(function);

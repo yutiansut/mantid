@@ -15,8 +15,7 @@ const QString ParameterPropertyManager::ERROR_TOOLTIP(" (Error)");
 ParameterPropertyManager::ParameterPropertyManager(QObject *parent,
                                                    bool hasGlobalOption)
     : QtDoublePropertyManager(parent), m_errors(), m_errorsEnabled(false),
-      m_hasGlobalOption(hasGlobalOption) {
-}
+      m_hasGlobalOption(hasGlobalOption) {}
 
 /**
  * Throws if property error is not set

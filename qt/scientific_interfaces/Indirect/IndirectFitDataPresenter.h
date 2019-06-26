@@ -39,6 +39,10 @@ public:
   void setSampleFBSuffices(const QStringList &suffices);
   void setResolutionWSSuffices(const QStringList &suffices);
   void setResolutionFBSuffices(const QStringList &suffices);
+  void setMultiInputSampleWSSuffixes();
+  void setMultiInputSampleFBSuffixes();
+  void setMultiInputResolutionWSSuffixes();
+  void setMultiInputResolutionFBSuffixes();
 
   void setStartX(double startX, DatasetIndex dataIndex,
                  WorkspaceIndex spectrumIndex);
@@ -100,6 +104,9 @@ private:
   getAddWorkspaceDialog(QWidget *parent) const;
   void updateDataInTable(DatasetIndex dataIndex);
   void selectReplacedWorkspace(const QString &workspaceName);
+
+  virtual void setMultiInputResolutionFBSuffixes(IAddWorkspaceDialog *dialog);
+  virtual void setMultiInputResolutionWSSuffixes(IAddWorkspaceDialog *dialog);
 
   std::unique_ptr<IAddWorkspaceDialog> m_addWorkspaceDialog;
   IndirectFittingModel *m_model;

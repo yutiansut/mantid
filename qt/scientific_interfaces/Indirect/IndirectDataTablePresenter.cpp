@@ -35,9 +35,9 @@ public:
   QWidget *createEditor(QWidget *parent,
                         const QStyleOptionViewItem & /*option*/,
                         const QModelIndex & /*index*/) const override {
-    auto lineEdit = Mantid::Kernel::make_unique<QLineEdit>(parent);
-    auto validator = Mantid::Kernel::make_unique<QRegExpValidator>(
-        QRegExp(Regexes::MASK_LIST), parent);
+    auto lineEdit = std::make_unique<QLineEdit>(parent);
+    auto validator =
+        std::make_unique<QRegExpValidator>(QRegExp(Regexes::MASK_LIST), parent);
     lineEdit->setValidator(validator.release());
     return lineEdit.release();
   }
@@ -112,8 +112,7 @@ IndirectDataTablePresenter::IndirectDataTablePresenter(
     : m_model(model), m_dataTable(dataTable) {
   setHorizontalHeaders(headers);
   m_dataTable->setItemDelegateForColumn(
-      headers.size() - 1,
-      Mantid::Kernel::make_unique<ExcludeRegionDelegate>().release());
+      headers.size() - 1, std::make_unique<ExcludeRegionDelegate>().release());
   m_dataTable->verticalHeader()->setVisible(false);
 
   connect(m_dataTable, SIGNAL(cellChanged(int, int)), this,
@@ -257,7 +256,7 @@ void IndirectDataTablePresenter::setStartX(double startX,
 
 void IndirectDataTablePresenter::setStartX(double startX,
                                            SpectrumRowIndex index) {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
+  MantidQt::API::SignalBlocker blocker(m_dataTable);
   m_dataTable->item(index.value, startXColumn())->setText(makeNumber(startX));
 }
 
@@ -280,7 +279,7 @@ void IndirectDataTablePresenter::setEndX(double endX, DatasetIndex dataIndex) {
 }
 
 void IndirectDataTablePresenter::setEndX(double endX, SpectrumRowIndex index) {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
+  MantidQt::API::SignalBlocker blocker(m_dataTable);
   m_dataTable->item(index.value, endXColumn())->setText(makeNumber(endX));
 }
 
@@ -300,7 +299,7 @@ void IndirectDataTablePresenter::setExclude(const std::string &exclude,
 
 void IndirectDataTablePresenter::setExcludeRegion(const std::string &exclude,
                                                   SpectrumRowIndex index) {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
+  MantidQt::API::SignalBlocker blocker(m_dataTable);
   if (FittingMode::SEQUENTIAL == m_model->getFittingMode())
     setExcludeRegion(exclude);
   else
@@ -324,7 +323,7 @@ void IndirectDataTablePresenter::addData(DatasetIndex index) {
 }
 
 void IndirectDataTablePresenter::addNewData(DatasetIndex index) {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
+  MantidQt::API::SignalBlocker blocker(m_dataTable);
   const auto start = SpectrumRowIndex{m_dataTable->rowCount()};
 
   const auto addRow = [&](WorkspaceIndex spectrum) {
@@ -344,7 +343,7 @@ void IndirectDataTablePresenter::updateData(DatasetIndex index) {
 }
 
 void IndirectDataTablePresenter::updateExistingData(DatasetIndex index) {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
+  MantidQt::API::SignalBlocker blocker(m_dataTable);
   auto position = m_dataPositions[index];
   const auto nextPosition = getNextPosition(index);
   const auto initialSize = nextPosition - position;
@@ -381,7 +380,7 @@ void IndirectDataTablePresenter::collapseData(SpectrumRowIndex from,
 }
 
 void IndirectDataTablePresenter::removeSelectedData() {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
+  MantidQt::API::SignalBlocker blocker(m_dataTable);
   auto selectedIndices = m_dataTable->selectionModel()->selectedIndexes();
   const auto modifiedIndicesAndCount = removeTableRows(selectedIndices);
   const auto &modifiedCount = modifiedIndicesAndCount.second;
@@ -485,7 +484,7 @@ void IndirectDataTablePresenter::setGlobalFittingRange(bool global) {
 void IndirectDataTablePresenter::updateAllFittingRangeFrom(int irow,
                                                            int column) {
   SpectrumRowIndex row{irow};
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
+  MantidQt::API::SignalBlocker blocker(m_dataTable);
   if (startXColumn() == column)
     setStartX(getDouble(row, column));
   else if (endXColumn() == column)
@@ -495,7 +494,7 @@ void IndirectDataTablePresenter::updateAllFittingRangeFrom(int irow,
 }
 
 void IndirectDataTablePresenter::enableGlobalFittingRange() {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
+  MantidQt::API::SignalBlocker blocker(m_dataTable);
   const auto range =
       m_model->getFittingRange(DatasetIndex{0}, WorkspaceIndex{0});
   setStartX(range.first);
@@ -526,7 +525,7 @@ void IndirectDataTablePresenter::clearTable() {
 
 void IndirectDataTablePresenter::setColumnValues(int column,
                                                  const QString &value) {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_dataTable);
+  MantidQt::API::SignalBlocker blocker(m_dataTable);
   for (int i = 0; i < m_dataTable->rowCount(); ++i)
     m_dataTable->item(i, column)->setText(value);
 }
@@ -554,29 +553,25 @@ void IndirectDataTablePresenter::addTableEntry(DatasetIndex dataIndex,
   m_dataTable->insertRow(row.value);
 
   const auto &name = m_model->getWorkspace(dataIndex)->getName();
-  auto cell = Mantid::Kernel::make_unique<QTableWidgetItem>(
-      QString::fromStdString(name));
+  auto cell = std::make_unique<QTableWidgetItem>(QString::fromStdString(name));
   auto flags = cell->flags();
   flags ^= Qt::ItemIsEditable;
   cell->setFlags(flags);
   setCell(std::move(cell), row, 0);
 
-  cell = Mantid::Kernel::make_unique<QTableWidgetItem>(
-      QString::number(spectrum.value));
+  cell = std::make_unique<QTableWidgetItem>(QString::number(spectrum.value));
   cell->setFlags(flags);
   setCell(std::move(cell), row, workspaceIndexColumn());
 
   const auto range = m_model->getFittingRange(dataIndex, spectrum);
-  cell = Mantid::Kernel::make_unique<QTableWidgetItem>(makeNumber(range.first));
+  cell = std::make_unique<QTableWidgetItem>(makeNumber(range.first));
   setCell(std::move(cell), row, startXColumn());
 
-  cell =
-      Mantid::Kernel::make_unique<QTableWidgetItem>(makeNumber(range.second));
+  cell = std::make_unique<QTableWidgetItem>(makeNumber(range.second));
   setCell(std::move(cell), row, endXColumn());
 
   const auto exclude = m_model->getExcludeRegion(dataIndex, spectrum);
-  cell = Mantid::Kernel::make_unique<QTableWidgetItem>(
-      QString::fromStdString(exclude));
+  cell = std::make_unique<QTableWidgetItem>(QString::fromStdString(exclude));
   setCell(std::move(cell), row, excludeColumn());
 }
 

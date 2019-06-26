@@ -665,7 +665,7 @@ void IndirectFittingModel::addOutput(WorkspaceGroup_sptr resultGroup,
     addOutput(m_fitOutput.get(), resultGroup, parameterTable, resultWorkspace,
               fitDataBegin, fitDataEnd);
   else
-    m_fitOutput = Mantid::Kernel::make_unique<IndirectFitOutput>(
+    m_fitOutput = std::make_unique<IndirectFitOutput>(
         createFitOutput(resultGroup, parameterTable, resultWorkspace,
                         fitDataBegin, fitDataEnd));
   m_previousModelSelected = isPreviousModelSelected();
@@ -680,9 +680,8 @@ void IndirectFittingModel::addOutput(WorkspaceGroup_sptr resultGroup,
     addOutput(m_fitOutput.get(), resultGroup, parameterTable, resultWorkspace,
               fitData, spectrum);
   else
-    m_fitOutput =
-        Mantid::Kernel::make_unique<IndirectFitOutput>(createFitOutput(
-            resultGroup, parameterTable, resultWorkspace, fitData, spectrum));
+    m_fitOutput = std::make_unique<IndirectFitOutput>(createFitOutput(
+        resultGroup, parameterTable, resultWorkspace, fitData, spectrum));
   m_previousModelSelected = isPreviousModelSelected();
 }
 

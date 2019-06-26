@@ -7,18 +7,15 @@
 #include "IndirectFitDataPresenter.h"
 #include "IndirectAddWorkspaceDialog.h"
 
-#include "MantidKernel/make_unique.h"
-
 namespace MantidQt {
 namespace CustomInterfaces {
 namespace IDA {
 
 IndirectFitDataPresenter::IndirectFitDataPresenter(IndirectFittingModel *model,
                                                    IIndirectFitDataView *view)
-    : IndirectFitDataPresenter(
-          model, view,
-          Mantid::Kernel::make_unique<IndirectDataTablePresenter>(
-              model, view->getDataTable())) {}
+    : IndirectFitDataPresenter(model, view,
+                               std::make_unique<IndirectDataTablePresenter>(
+                                   model, view->getDataTable())) {}
 
 IndirectFitDataPresenter::IndirectFitDataPresenter(
     IndirectFittingModel *model, IIndirectFitDataView *view,
@@ -95,6 +92,35 @@ void IndirectFitDataPresenter::setResolutionFBSuffices(
   m_view->setResolutionFBSuffices(suffices);
 }
 
+void IndirectFitDataPresenter::setMultiInputSampleWSSuffixes() {
+  if (m_addWorkspaceDialog)
+    m_addWorkspaceDialog->setWSSuffices(m_view->getSampleWSSuffices());
+}
+
+void IndirectFitDataPresenter::setMultiInputSampleFBSuffixes() {
+  if (m_addWorkspaceDialog)
+    m_addWorkspaceDialog->setFBSuffices(m_view->getSampleFBSuffices());
+}
+
+void IndirectFitDataPresenter::setMultiInputResolutionWSSuffixes() {
+  if (m_addWorkspaceDialog)
+    setMultiInputResolutionWSSuffixes(m_addWorkspaceDialog.get());
+}
+
+void IndirectFitDataPresenter::setMultiInputResolutionFBSuffixes() {
+  if (m_addWorkspaceDialog)
+    setMultiInputResolutionFBSuffixes(m_addWorkspaceDialog.get());
+}
+
+void IndirectFitDataPresenter::setMultiInputResolutionFBSuffixes(
+    IAddWorkspaceDialog *dialog) {
+  UNUSED_ARG(dialog);
+}
+
+void IndirectFitDataPresenter::setMultiInputResolutionWSSuffixes(
+    IAddWorkspaceDialog *dialog) {
+  UNUSED_ARG(dialog);
+}
 void IndirectFitDataPresenter::setStartX(double startX, DatasetIndex dataIndex,
                                          WorkspaceIndex spectrumIndex) {
   m_tablePresenter->setStartX(startX, dataIndex, spectrumIndex);
@@ -153,7 +179,9 @@ void IndirectFitDataPresenter::setResolutionHidden(bool hide) {
 }
 
 void IndirectFitDataPresenter::setModelWorkspace(const QString &name) {
+  observeReplace(false);
   setSingleModelData(name.toStdString());
+  observeReplace(true);
 }
 
 void IndirectFitDataPresenter::loadSettings(const QSettings &settings) {
@@ -194,6 +222,8 @@ void IndirectFitDataPresenter::showAddWorkspaceDialog() {
   m_addWorkspaceDialog->setWSSuffices(m_view->getSampleWSSuffices());
   m_addWorkspaceDialog->setFBSuffices(m_view->getSampleFBSuffices());
   m_addWorkspaceDialog->updateSelectedSpectra();
+//  setMultiInputSampleWSSuffixes();
+//  setMultiInputSampleFBSuffixes();
   m_addWorkspaceDialog->show();
   connect(m_addWorkspaceDialog.get(), SIGNAL(addData()), this, SLOT(addData()));
   connect(m_addWorkspaceDialog.get(), SIGNAL(closeDialog()), this,
@@ -202,7 +232,7 @@ void IndirectFitDataPresenter::showAddWorkspaceDialog() {
 
 std::unique_ptr<IAddWorkspaceDialog>
 IndirectFitDataPresenter::getAddWorkspaceDialog(QWidget *parent) const {
-  return Mantid::Kernel::make_unique<AddWorkspaceDialog>(parent);
+  return std::make_unique<AddWorkspaceDialog>(parent);
 }
 
 void IndirectFitDataPresenter::addData() {

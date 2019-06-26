@@ -14,7 +14,7 @@
 #include "MantidAPI/MultiDomainFunction.h"
 #include "MantidAPI/TextAxis.h"
 #include "MantidAPI/WorkspaceFactory.h"
-#include "MantidKernel/make_unique.h"
+
 #include "MantidQtWidgets/Common/PropertyHandler.h"
 #include "MantidQtWidgets/Common/SignalBlocker.h"
 
@@ -89,7 +89,6 @@ void IndirectFitAnalysisTab::connectDataPresenter() {
   connect(m_dataPresenter.get(),
           SIGNAL(startXChanged(double, DatasetIndex, WorkspaceIndex)), this,
           SLOT(tableStartXChanged(double, DatasetIndex, WorkspaceIndex)));
-
   connect(m_dataPresenter.get(),
           SIGNAL(endXChanged(double, DatasetIndex, WorkspaceIndex)), this,
           SLOT(tableEndXChanged(double, DatasetIndex, WorkspaceIndex)));
@@ -156,21 +155,20 @@ void IndirectFitAnalysisTab::setFitDataPresenter(
 }
 
 void IndirectFitAnalysisTab::setPlotView(IIndirectFitPlotView *view) {
-  m_plotPresenter = Mantid::Kernel::make_unique<IndirectFitPlotPresenter>(
-      m_fittingModel.get(), view);
+  m_plotPresenter =
+      std::make_unique<IndirectFitPlotPresenter>(m_fittingModel.get(), view);
 }
 
 void IndirectFitAnalysisTab::setSpectrumSelectionView(
     IndirectSpectrumSelectionView *view) {
-  m_spectrumPresenter =
-      Mantid::Kernel::make_unique<IndirectSpectrumSelectionPresenter>(
-          m_fittingModel.get(), view);
+  m_spectrumPresenter = std::make_unique<IndirectSpectrumSelectionPresenter>(
+      m_fittingModel.get(), view);
 }
 
 void IndirectFitAnalysisTab::setOutputOptionsView(
     IIndirectFitOutputOptionsView *view) {
   m_outOptionsPresenter =
-      Mantid::Kernel::make_unique<IndirectFitOutputOptionsPresenter>(view);
+      std::make_unique<IndirectFitOutputOptionsPresenter>(view);
 }
 
 void IndirectFitAnalysisTab::setFitPropertyBrowser(
@@ -183,20 +181,46 @@ void IndirectFitAnalysisTab::loadSettings(const QSettings &settings) {
   m_dataPresenter->loadSettings(settings);
 }
 
-void IndirectFitAnalysisTab::setSampleWSSuffices(const QStringList &suffices) {
+void IndirectFitAnalysisTab::setFileExtensionsByName(bool filter) {
+  auto const tab = tabName();
+  setSampleSuffixes(tab, filter);
+  if (hasResolution())
+    setResolutionSuffixes(tab, filter);
+}
+
+void IndirectFitAnalysisTab::setSampleSuffixes(std::string const &tab,
+                                               bool filter) {
+  QStringList const noSuffixes{""};
+  setSampleWSSuffixes(filter ? getSampleWSSuffixes(tab) : noSuffixes);
+  setSampleFBSuffixes(filter ? getSampleFBSuffixes(tab) : getExtensions(tab));
+  m_dataPresenter->setMultiInputSampleWSSuffixes();
+  m_dataPresenter->setMultiInputSampleFBSuffixes();
+}
+
+void IndirectFitAnalysisTab::setResolutionSuffixes(std::string const &tab,
+                                                   bool filter) {
+  QStringList const noSuffixes{""};
+  setResolutionWSSuffixes(filter ? getResolutionWSSuffixes(tab) : noSuffixes);
+  setResolutionFBSuffixes(filter ? getResolutionFBSuffixes(tab)
+                                 : getExtensions(tab));
+  m_dataPresenter->setMultiInputResolutionWSSuffixes();
+  m_dataPresenter->setMultiInputResolutionFBSuffixes();
+}
+
+void IndirectFitAnalysisTab::setSampleWSSuffixes(const QStringList &suffices) {
   m_dataPresenter->setSampleWSSuffices(suffices);
 }
 
-void IndirectFitAnalysisTab::setSampleFBSuffices(const QStringList &suffices) {
+void IndirectFitAnalysisTab::setSampleFBSuffixes(const QStringList &suffices) {
   m_dataPresenter->setSampleFBSuffices(suffices);
 }
 
-void IndirectFitAnalysisTab::setResolutionWSSuffices(
+void IndirectFitAnalysisTab::setResolutionWSSuffixes(
     const QStringList &suffices) {
   m_dataPresenter->setResolutionWSSuffices(suffices);
 }
 
-void IndirectFitAnalysisTab::setResolutionFBSuffices(
+void IndirectFitAnalysisTab::setResolutionFBSuffixes(
     const QStringList &suffices) {
   m_dataPresenter->setResolutionFBSuffices(suffices);
 }
@@ -266,6 +290,36 @@ void IndirectFitAnalysisTab::setDataTableExclude(const std::string &exclude) {
   m_dataPresenter->setExclude(exclude, m_plotPresenter->getSelectedDataIndex(),
                               m_plotPresenter->getSelectedSpectrum());
 }
+
+//void IndirectFitAnalysisTab::setBrowserStartX(double startX) {
+//  MantidQt::API::SignalBlocker blocker(m_fitPropertyBrowser);
+//  m_fitPropertyBrowser->setStartX(startX);
+//}
+//
+//void IndirectFitAnalysisTab::setBrowserEndX(double endX) {
+//  MantidQt::API::SignalBlocker blocker(m_fitPropertyBrowser);
+//  m_fitPropertyBrowser->setEndX(endX);
+//}
+//
+//void IndirectFitAnalysisTab::updateBrowserFittingRange() {
+//  const auto range = m_fittingModel->getFittingRange(getSelectedDataIndex(),
+//                                                     getSelectedSpectrum());
+//  setBrowserStartX(range.first);
+//  setBrowserEndX(range.second);
+//}
+//
+//void IndirectFitAnalysisTab::setBrowserWorkspace() {
+//  if (m_fittingModel->numberOfWorkspaces() > 0) {
+//    auto const name =
+//        m_fittingModel->getWorkspace(getSelectedDataIndex())->getName();
+//    m_fitPropertyBrowser->setWorkspaceName(QString::fromStdString(name));
+//  }
+//}
+//
+//void IndirectFitAnalysisTab::setBrowserWorkspace(std::size_t dataIndex) {
+//  const auto name = m_fittingModel->getWorkspace(dataIndex)->getName();
+//  m_fitPropertyBrowser->setWorkspaceName(QString::fromStdString(name));
+//}
 
 void IndirectFitAnalysisTab::tableStartXChanged(double startX,
                                                 DatasetIndex dataIndex,
@@ -399,7 +453,7 @@ void IndirectFitAnalysisTab::updateParameterValues(
 
 void IndirectFitAnalysisTab::updateFitBrowserParameterValues() {
   if (m_fittingAlgorithm) {
-    MantidQt::API::SignalBlocker<QObject> blocker(m_fitPropertyBrowser);
+    MantidQt::API::SignalBlocker blocker(m_fitPropertyBrowser);
     if (m_fittingModel->getFittingMode() == FittingMode::SEQUENTIAL) {
       auto const paramWsName =
           m_fittingAlgorithm->getPropertyValue("OutputParameterWorkspace");
@@ -434,7 +488,7 @@ void IndirectFitAnalysisTab::plotSelectedSpectra() {
 void IndirectFitAnalysisTab::plotSelectedSpectra(
     std::vector<SpectrumToPlot> const &spectra) {
   for (auto const &spectrum : spectra)
-    plotSpectrum(spectrum.first, spectrum.second, true);
+    plotSpectrum(spectrum.first, spectrum.second);
   m_outOptionsPresenter->clearSpectraToPlot();
 }
 
@@ -445,10 +499,9 @@ void IndirectFitAnalysisTab::plotSelectedSpectra(
  * @errorBars :: true if you want error bars to be plotted
  */
 void IndirectFitAnalysisTab::plotSpectrum(std::string const &workspaceName,
-                                          std::size_t const &index,
-                                          bool errorBars) {
+                                          std::size_t const &index) {
   IndirectTab::plotSpectrum(QString::fromStdString(workspaceName),
-                            static_cast<int>(index), errorBars);
+                            static_cast<int>(index));
 }
 
 /**

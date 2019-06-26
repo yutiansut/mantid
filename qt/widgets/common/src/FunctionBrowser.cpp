@@ -17,7 +17,6 @@
 #include "MantidAPI/ParameterTie.h"
 
 #include "MantidKernel/Logger.h"
-#include "MantidKernel/make_unique.h"
 
 #include <QApplication>
 #include <QClipboard>
@@ -48,7 +47,7 @@ FunctionBrowser::FunctionBrowser(QWidget *parent, bool multi,
                                  const std::vector<std::string> &categories)
     : QWidget(parent) {
   auto view = new FunctionTreeView(this, multi, categories);
-  m_presenter = make_unique<FunctionMultiDomainPresenter>(view);
+  m_presenter = std::make_unique<FunctionMultiDomainPresenter>(view);
   QHBoxLayout *layout = new QHBoxLayout(this);
   layout->setMargin(0);
   layout->addWidget(view);
@@ -145,6 +144,11 @@ bool FunctionBrowser::hasFunction() const { return m_presenter->hasFunction(); }
 /// Get the number of datasets
 int FunctionBrowser::getNumberOfDatasets() const {
   return m_presenter->getNumberOfDatasets();
+}
+
+/// Get the names of datasets
+QStringList FunctionBrowser::getDatasetNames() const {
+  return m_presenter->getDatasetNames();
 }
 
 /// Set new number of the datasets

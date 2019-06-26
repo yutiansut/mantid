@@ -35,8 +35,10 @@ IndirectFitDataView::IndirectFitDataView(QWidget *parent)
   connect(m_dataForm->pbAdd, SIGNAL(clicked()), this, SIGNAL(addClicked()));
   connect(m_dataForm->pbRemove, SIGNAL(clicked()), this,
           SIGNAL(removeClicked()));
-  connect(m_dataForm->dsbStartX, SIGNAL(valueChanged(double)), this, SIGNAL(startXChanged(double)));
-  connect(m_dataForm->dsbEndX, SIGNAL(valueChanged(double)), this, SIGNAL(endXChanged(double)));
+  connect(m_dataForm->dsbStartX, SIGNAL(valueChanged(double)), this,
+          SIGNAL(startXChanged(double)));
+  connect(m_dataForm->dsbEndX, SIGNAL(valueChanged(double)), this,
+          SIGNAL(endXChanged(double)));
 
   connect(this, SIGNAL(currentChanged(int)), this, SLOT(emitViewSelected(int)));
 }
@@ -111,15 +113,7 @@ void IndirectFitDataView::setSampleWorkspaceSelectorIndex(
   m_dataForm->dsSample->setSelectorIndex(1);
 }
 
-UserInputValidator &
-IndirectFitDataView::validate(UserInputValidator &validator) {
-  if (currentIndex() == 0)
-    return validateSingleData(validator);
-  return validateMultipleData(validator);
-}
-
-void IndirectFitDataView::setXRange(std::pair<double, double> const & range)
-{
+void IndirectFitDataView::setXRange(std::pair<double, double> const &range) {
   m_dataForm->dsbStartX->setRange(range.first, range.second);
   m_dataForm->dsbEndX->setRange(range.first, range.second);
   auto const dx = fabs(range.second - range.first) / 10.0;
@@ -129,14 +123,19 @@ void IndirectFitDataView::setXRange(std::pair<double, double> const & range)
   m_dataForm->dsbEndX->setValue(range.second);
 }
 
-void IndirectFitDataView::setStartX(double value)
-{
+void IndirectFitDataView::setStartX(double value) {
   m_dataForm->dsbStartX->setValue(value);
 }
 
-void IndirectFitDataView::setEndX(double value)
-{
+void IndirectFitDataView::setEndX(double value) {
   m_dataForm->dsbEndX->setValue(value);
+}
+
+UserInputValidator &
+IndirectFitDataView::validate(UserInputValidator &validator) {
+  if (currentIndex() == 0)
+    return validateSingleData(validator);
+  return validateMultipleData(validator);
 }
 
 UserInputValidator &

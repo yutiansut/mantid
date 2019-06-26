@@ -149,7 +149,7 @@ IndirectSpectrumSelectionPresenter::IndirectSpectrumSelectionPresenter(
 IndirectSpectrumSelectionPresenter::~IndirectSpectrumSelectionPresenter() {}
 
 void IndirectSpectrumSelectionPresenter::disableView() {
-  MantidQt::API::SignalBlocker<QObject> blocker(m_view.get());
+  MantidQt::API::SignalBlocker blocker(m_view.get());
   m_view->setDisabled(true);
 }
 
@@ -157,16 +157,16 @@ void IndirectSpectrumSelectionPresenter::enableView() {
   m_view->setEnabled(true);
 }
 
-void IndirectSpectrumSelectionPresenter::initSpectraSelectionWidget(int index)
-{
-  auto spectra = m_model->getSpectra(m_activeIndex);
-  if (index == 0) {
-    m_view->displaySpectra(spectra.getMinMax());
-  }  else {
-    m_view->displaySpectra(spectra.getString());
-  }
-
-}
+//void IndirectSpectrumSelectionPresenter::initSpectraSelectionWidget(int index)
+//{
+//  auto spectra = m_model->getSpectra(m_activeIndex);
+//  if (index == 0) {
+//    m_view->displaySpectra(spectra.getMinMax());
+//  }  else {
+//    m_view->displaySpectra(spectra.getString());
+//  }
+//
+//}
 
 void IndirectSpectrumSelectionPresenter::setActiveIndexToZero() {
   setActiveModelIndex(DatasetIndex{0});

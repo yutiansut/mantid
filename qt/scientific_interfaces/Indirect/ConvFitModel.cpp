@@ -187,6 +187,8 @@ boost::optional<double> instrumentResolution(MatrixWorkspace_sptr workspace) {
     return boost::none;
   } catch (std::invalid_argument const &) {
     return boost::none;
+  } catch (std::exception const &) {
+    return boost::none;
   }
 }
 
@@ -510,8 +512,7 @@ MatrixWorkspace_sptr ConvFitModel::getResolution(DatasetIndex index) const {
   return nullptr;
 }
 
-MultiDomainFunction_sptr
-ConvFitModel::getMultiDomainFunction() const {
+MultiDomainFunction_sptr ConvFitModel::getMultiDomainFunction() const {
   auto function = IndirectFittingModel::getMultiDomainFunction();
   const std::string base = "__ConvFitResolution";
 
@@ -527,8 +528,7 @@ std::vector<std::string> ConvFitModel::getSpectrumDependentAttributes() const {
   return {"WorkspaceIndex"};
 }
 
-void ConvFitModel::setFitFunction(
-    MultiDomainFunction_sptr function) {
+void ConvFitModel::setFitFunction(MultiDomainFunction_sptr function) {
   auto const composite =
       boost::dynamic_pointer_cast<CompositeFunction>(function);
   m_backgroundIndex = getFirstInCategory(composite, "Background");

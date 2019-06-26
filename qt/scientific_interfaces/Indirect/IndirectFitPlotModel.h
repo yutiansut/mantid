@@ -55,8 +55,8 @@ public:
   void setActiveSpectrum(WorkspaceIndex spectrum);
   void setStartX(double startX);
   void setEndX(double endX);
-  //void setFWHM(double fwhm);
-  //void setBackground(double background);
+  void setFWHM(double fwhm);
+  void setBackground(double background);
 
   void deleteExternalGuessWorkspace();
 

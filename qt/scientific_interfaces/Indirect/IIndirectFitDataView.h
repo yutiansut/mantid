@@ -51,7 +51,7 @@ public:
   virtual void readSettings(QSettings const &settings) = 0;
   virtual UserInputValidator &validate(UserInputValidator &validator) = 0;
 
-  virtual   void setXRange(std::pair<double, double> const &range) = 0;
+  virtual void setXRange(std::pair<double, double> const &range) = 0;
 
 public slots:
   virtual void displayWarning(std::string const &warning) = 0;
