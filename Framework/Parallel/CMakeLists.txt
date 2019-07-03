@@ -86,7 +86,8 @@ target_link_libraries(Parallel
                       ${TCMALLOC_LIBRARIES_LINKTIME}
                       ${GSL_LIBRARIES}
                       ${MANTIDLIBS}
-                      ${HDF5_LIBRARIES}
+                      ${HDF5_CXX_LIBRARIES}
+                      ${HDF5_CXX_HL_LIBRARIES}
                       Kernel)
 
 if(UNIX AND NOT APPLE)
@@ -122,7 +123,8 @@ target_link_libraries(EventParallelLoader
                       ${TCMALLOC_LIBRARIES_LINKTIME}
                       ${GSL_LIBRARIES}
                       ${MANTIDLIBS}
-                      ${HDF5_LIBRARIES}
+                      ${HDF5_CXX_LIBRARIES}
+                      ${HDF5_CXX_HL_LIBRARIES}
                       Kernel)
 
 if(UNIX AND NOT APPLE)
