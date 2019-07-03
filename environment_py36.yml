@@ -1,0 +1,37 @@
+name: mantid36
+channels:
+- defaults
+- conda-forge
+- mantid
+dependencies:
+- python=3.6
+- boost=1.66
+- ccache
+- cmake
+- c-compiler
+- cxx-compiler
+- ninja
+- pkg-config
+- eigen=3.3.7
+- hdf4=4.2.13
+- hdf5=1.8.18
+- muparser=2.2.5 0
+- gsl=2.4
+- openblas=0.2.20
+- blas=1.1 openblas
+- numpy=1.14
+- poco=1.7.3
+- nexus=4.4.3
+- jsoncpp=0.10.6
+- tbb=2018_20170919
+- librdkafka=0.11
+- openssl=1.0.2
+- qt=5.6.2=hce4f676_1013
+- pyqt=5.6.0
+- qtpy=1.6.0
+- qtconsole=4.4.3
+- qscintilla2=2.9.3
+- qtawesome=0.5.7
+- libglu=9.0.0
+- sphinx=1.8.4
+- sphinx_bootstrap_theme=0.5.3
