@@ -80,6 +80,7 @@ public:
   void notifyRowStateChanged(boost::optional<Item const &> item) override;
   void notifyRowOutputsChanged() override;
   void notifyRowOutputsChanged(boost::optional<Item const &> item) override;
+  void notifyAutoProcessSearchComplete() override;
 
   void reductionPaused() override;
   void reductionResumed() override;

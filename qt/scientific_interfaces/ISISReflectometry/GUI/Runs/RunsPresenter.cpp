@@ -123,6 +123,46 @@ void RunsPresenter::notifySearchFailed() {
   }
 }
 
+namespace {
+std::vector<std::vector<int>>
+findEmptyGroupsAndRows(const ReductionJobs &jobs) {
+  std::vector<std::vector<int>> removeLocations;
+  auto groups = jobs.groups();
+  for (auto groupIndex = 0; groupIndex < static_cast<int>(groups.size());
+       ++groupIndex) {
+    auto rows = groups[groupIndex].rows();
+    if (rows.size() > 0) {
+      for (auto rowIndex = 0; rowIndex < static_cast<int>(rows.size());
+           ++rowIndex) {
+        auto row = rows[rowIndex];
+        if (row) {
+          removeLocations.emplace_back(
+              std::vector<int>({groupIndex, rowIndex}));
+        }
+      }
+    } else {
+      removeLocations.emplace_back(std::vector<int>(groupIndex));
+    }
+  }
+  return removeLocations;
+}
+
+void attemptToRemoveEmptyGroupsAndRows(ReductionJobs &jobs) {
+  auto removeLocations = findEmptyGroupsAndRows(jobs);
+  for (const auto &location : removeLocations) {
+    if (location.size() == 2) {
+      removeRow(jobs, location[0], location[1]);
+    } else if (location.size() == 1) {
+      removeGroup(jobs, location[0]);
+    }
+  }
+}
+} // namespace
+
+void RunsPresenter::notifyAutoProcessSearchComplete() {
+  attemptToRemoveEmptyGroupsAndRows(mutableRunsTable().mutableReductionJobs());
+}
+
 void RunsPresenter::notifyTransfer() {
   transfer(m_view->getSelectedSearchRows(), TransferMatch::Any);
 }

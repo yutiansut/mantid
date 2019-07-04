@@ -116,6 +116,9 @@ void CatalogSearcher::notifySearchComplete() {
   }
 
   m_notifyee->notifySearchComplete();
+  if (m_searchType == SearchType::AUTO) {
+    m_notifyee->notifyAutoProcessSearchComplete();
+  }
 }
 
 bool CatalogSearcher::searchInProgress() const { return m_searchInProgress; }

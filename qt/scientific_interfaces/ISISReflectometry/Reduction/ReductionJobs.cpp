@@ -8,6 +8,7 @@
 #include "Common/IndexOf.h"
 #include "Common/Map.h"
 #include "MantidQtWidgets/Common/Batch/AssertOrThrow.h"
+#include "Row.h"
 #include "RowLocation.h"
 #include <iostream>
 #include <numeric>
@@ -111,11 +112,11 @@ std::string ReductionJobs::nextEmptyGroupName() {
  * user-entered content
  */
 bool hasGroupsWithContent(ReductionJobs const &jobs) {
-  if (jobs.groups().size() == 0)
-    return false;
-
-  if (jobs.containsSingleEmptyGroup())
-    return false;
+  // If there is an empty group and empty row then
+  if (jobs.groups().size() == 1)
+    // A row is empty if it is boost::none in the boost::optional
+    if (jobs.groups()[0].rows().size() == 1 && !jobs.groups()[0].rows()[0])
+      return false;
 
   return true;
 }
@@ -126,8 +127,10 @@ bool hasGroupsWithContent(ReductionJobs const &jobs) {
  * the last group/row so it always leaves at least one empty group.
  */
 void ensureAtLeastOneGroupExists(ReductionJobs &jobs) {
-  if (jobs.groups().size() == 0)
+  if (jobs.groups().size() == 0) {
     appendEmptyGroup(jobs);
+    appendEmptyRow(jobs, 0);
+  }
 }
 
 void removeGroup(ReductionJobs &jobs, int groupIndex) {

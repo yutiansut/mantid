@@ -18,7 +18,9 @@ namespace CustomInterfaces {
 class SearcherSubscriber {
 public:
   virtual void notifySearchComplete() = 0;
+  virtual void notifyAutoProcessSearchComplete() = 0;
   virtual void notifySearchFailed() = 0;
+  
 };
 
 /** @class ISearcher
