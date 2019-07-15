@@ -73,48 +73,59 @@ class DiagnosticsPagePresenter(object):
         if not input_file:
             return
 
-        self._view.disable_integrals()
-        period = self._view.period
-        state_model_with_view_update = self._parent_presenter._get_state_model_with_view_update()
-        state = self._create_state(state_model_with_view_update, input_file, period, self._facility)
-        mask = self._view.horizontal_mask
-        range = self._view.horizontal_range
-        listener = DiagnosticsPagePresenter.IntegralListener(self)
-        detector = get_detector_from_gui_selection(self._view.detector)
-        self._work_handler.process(listener, self.run_integral, 0, range, mask, IntegralEnum.Horizontal,
-                                   detector, state)
+        try:
+            self._view.disable_integrals()
+            period = self._view.period
+            state_model_with_view_update = self._parent_presenter._get_state_model_with_view_update()
+            state = self._create_state(state_model_with_view_update, input_file, period, self._facility)
+            mask = self._view.horizontal_mask
+            range = self._view.horizontal_range
+            listener = DiagnosticsPagePresenter.IntegralListener(self)
+            detector = get_detector_from_gui_selection(self._view.detector)
+            self._work_handler.process(listener, self.run_integral, 0, range, mask, IntegralEnum.Horizontal,
+                                       detector, state)
+        except (ValueError, RuntimeError) as error:
+            self._logger.warning(str(error))
+            self._view.enable_integrals()
 
     def on_vertical_clicked(self):
         input_file = self._view.run_input
         if not input_file:
             return
 
-        self._view.disable_integrals()
-        period = self._view.period
-        state_model_with_view_update = self._parent_presenter._get_state_model_with_view_update()
-        state = self._create_state(state_model_with_view_update, input_file, period, self._facility)
-        mask = self._view.vertical_mask
-        range = self._view.vertical_range
-        listener = DiagnosticsPagePresenter.IntegralListener(self)
-        detector = get_detector_from_gui_selection(self._view.detector)
-        self._work_handler.process(listener, self.run_integral, 0, range, mask, IntegralEnum.Vertical,
-                                   detector, state)
+        try:
+            self._view.disable_integrals()
+            period = self._view.period
+            state_model_with_view_update = self._parent_presenter._get_state_model_with_view_update()
+            state = self._create_state(state_model_with_view_update, input_file, period, self._facility)
+            mask = self._view.vertical_mask
+            range = self._view.vertical_range
+            listener = DiagnosticsPagePresenter.IntegralListener(self)
+            detector = get_detector_from_gui_selection(self._view.detector)
+            self._work_handler.process(listener, self.run_integral, 0, range, mask, IntegralEnum.Vertical,
+                                       detector, state)
+        except (ValueError, RuntimeError) as error:
+            self._logger.warning(str(error))
+            self._view.enable_integrals()
 
     def on_time_clicked(self):
         input_file = self._view.run_input
         if not input_file:
             return
-
-        self._view.disable_integrals()
-        period = self._view.period
-        state_model_with_view_update = self._parent_presenter._get_state_model_with_view_update()
-        state = self._create_state(state_model_with_view_update, input_file, period, self._facility)
-        mask = self._view.time_mask
-        range = self._view.time_range
-        listener = DiagnosticsPagePresenter.IntegralListener(self)
-        detector = get_detector_from_gui_selection(self._view.detector)
-        self._work_handler.process(listener, self.run_integral, 0, range, mask, IntegralEnum.Time,
-                                   detector, state)
+        try:
+            self._view.disable_integrals()
+            period = self._view.period
+            state_model_with_view_update = self._parent_presenter._get_state_model_with_view_update()
+            state = self._create_state(state_model_with_view_update, input_file, period, self._facility)
+            mask = self._view.time_mask
+            range = self._view.time_range
+            listener = DiagnosticsPagePresenter.IntegralListener(self)
+            detector = get_detector_from_gui_selection(self._view.detector)
+            self._work_handler.process(listener, self.run_integral, 0, range, mask, IntegralEnum.Time,
+                                       detector, state)
+        except (ValueError, RuntimeError) as error:
+            self._logger.warning(str(error))
+            self._view.enable_integrals()
 
     def on_processing_finished_integral(self, result):
         self._view.enable_integrals()
