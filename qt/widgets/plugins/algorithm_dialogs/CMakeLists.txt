@@ -9,6 +9,7 @@ set(SRC_FILES
     src/LoadRawDialog.cpp
     src/LOQScriptInputDialog.cpp
     src/MantidGLWidget.cpp
+    src/GetNegMuMuonicXRDDialog.cpp
     src/PeriodicTableWidget.cpp
     src/PlotAsymmetryByLogValueDialog.cpp
     src/SampleShapeHelpers.cpp
@@ -26,6 +27,7 @@ set(MOC_FILES
   inc/MantidQtWidgets/Plugins/AlgorithmDialogs/LoadRawDialog.h
   inc/MantidQtWidgets/Plugins/AlgorithmDialogs/LOQScriptInputDialog.h
   inc/MantidQtWidgets/Plugins/AlgorithmDialogs/MantidGLWidget.h
+  inc/MantidQtWidgets/Plugins/AlgorithmDialogs/GetNegMuMuonicXRDDialog.h
   inc/MantidQtWidgets/Plugins/AlgorithmDialogs/PeriodicTableWidget.h
   inc/MantidQtWidgets/Plugins/AlgorithmDialogs/PlotAsymmetryByLogValueDialog.h
   inc/MantidQtWidgets/Plugins/AlgorithmDialogs/SampleShapeHelpers.h
