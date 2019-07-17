@@ -20,6 +20,7 @@ from mantid.py3compat.mock import Mock, patch
 from mantidqt.widgets.plotconfigdialog.curvestabwidget import CurveProperties
 from mantidqt.widgets.plotconfigdialog.curvestabwidget.presenter import (
     CurvesTabWidgetPresenter, remove_curve_from_ax, curve_has_errors)
+from workbench.plotting.figureerrorsmanager import FigureErrorsManager
 
 
 class CurvesTabWidgetPresenterTest(unittest.TestCase):
@@ -194,10 +195,10 @@ class CurvesTabWidgetPresenterTest(unittest.TestCase):
         fig = figure()
         ax = fig.add_subplot(111)
         curve = ax.errorbar([0, 1, 2, 4], [0, 1, 2, 4], yerr=[0.1, 0.2, 0.3, 0.4])
-        new_curve = CurvesTabWidgetPresenter._replot_mpl_curve(ax, curve,
+        new_curve = FigureErrorsManager._replot_mpl_curve(ax, curve,
                                                                {'errorevery': 2})
         self.assertEqual(2, len(new_curve[2][0].get_segments()))
-        new_curve = CurvesTabWidgetPresenter._replot_mpl_curve(ax, new_curve,
+        new_curve = FigureErrorsManager._replot_mpl_curve(ax, new_curve,
                                                                {'errorevery': 1})
         self.assertTrue(hasattr(new_curve, 'errorbar_data'))
         self.assertEqual(4, len(new_curve[2][0].get_segments()))
