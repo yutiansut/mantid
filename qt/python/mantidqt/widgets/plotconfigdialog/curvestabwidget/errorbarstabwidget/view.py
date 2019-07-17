@@ -11,8 +11,8 @@ from __future__ import (absolute_import, unicode_literals)
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QWidget
 
-from mantidqt.widgets.plotconfigdialog.colorselector import ColorSelector
 from mantidqt.utils.qt import load_ui
+from mantidqt.widgets.plotconfigdialog.colorselector import ColorSelector
 
 
 class ErrorbarsTabWidgetView(QWidget):

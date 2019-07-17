@@ -11,11 +11,11 @@ from __future__ import (absolute_import, unicode_literals)
 from qtpy.QtCore import Qt
 from qtpy.QtWidgets import QWidget
 
+from mantidqt.utils.qt import load_ui
 from mantidqt.widgets.plotconfigdialog.curvestabwidget.errorbarstabwidget.view import ErrorbarsTabWidgetView
 from mantidqt.widgets.plotconfigdialog.curvestabwidget.linetabwidget.view import LineTabWidgetView
 from mantidqt.widgets.plotconfigdialog.curvestabwidget.markertabwidget.view import MarkerTabWidgetView
 from mantidqt.widgets.plotconfigdialog.curvestabwidget import CurveProperties
-from mantidqt.utils.qt import load_ui
 
 
 class CurvesTabWidgetView(QWidget):
