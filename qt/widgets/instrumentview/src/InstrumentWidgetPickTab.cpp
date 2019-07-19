@@ -1546,6 +1546,8 @@ void DetectorPlotController::prepareDataForIntegralsPlot(
  * Save data plotted on the miniplot into a MatrixWorkspace.
  */
 void DetectorPlotController::savePlotToWorkspace() {
+	// we want a function like this but does not put the plot into the ADS and just spits out the ws
+	// this function can then call the new one and shove the result into the ADS
   if (!m_plot->hasCurve() && !m_plot->hasStored()) {
     // nothing to save
     return;
