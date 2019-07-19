@@ -432,29 +432,29 @@ void InstrumentWidget::setSurfaceType(int type) {
       auto sample_pos = componentInfo.samplePosition();
       auto axis = getSurfaceAxis(surfaceType);
 
-      m_maskTab->setDisabled(false);
+      //m_maskTab->setDisabled(false);
 
       // create the surface
       if (surfaceType == FULL3D) {
-        m_renderTab->forceLayers(false);
+        ///m_renderTab->forceLayers(false);
 
         if (m_instrumentActor->hasGridBank())
-          m_maskTab->setDisabled(true);
+          //m_maskTab->setDisabled(true);
 
         surface = new Projection3D(m_instrumentActor.get(),
                                    getInstrumentDisplayWidth(),
                                    getInstrumentDisplayHeight());
       } else if (surfaceType <= CYLINDRICAL_Z) {
-        m_renderTab->forceLayers(true);
+        //m_renderTab->forceLayers(true);
         surface =
             new UnwrappedCylinder(m_instrumentActor.get(), sample_pos, axis);
       } else if (surfaceType <= SPHERICAL_Z) {
-        m_renderTab->forceLayers(true);
+       // m_renderTab->forceLayers(true);
         surface =
             new UnwrappedSphere(m_instrumentActor.get(), sample_pos, axis);
       } else // SIDE_BY_SIDE
       {
-        m_renderTab->forceLayers(true);
+       // m_renderTab->forceLayers(true);
         surface = new PanelsSurface(m_instrumentActor.get(), sample_pos, axis);
       }
     } catch (InstrumentHasNoSampleError &) {
@@ -1107,7 +1107,7 @@ void InstrumentWidget::setSurface(ProjectionSurface *surface) {
   UnwrappedSurface *unwrappedSurface =
       dynamic_cast<UnwrappedSurface *>(surface);
   if (unwrappedSurface) {
-    m_renderTab->flipUnwrappedView(unwrappedSurface->isFlippedView());
+  // m_renderTab->flipUnwrappedView(unwrappedSurface->isFlippedView());
   }
 }
 
@@ -1198,12 +1198,12 @@ bool InstrumentWidget::isGLEnabled() const { return m_useOpenGL; }
  */
 void InstrumentWidget::createTabs(QSettings &settings) {
   // Render Controls
-  m_renderTab = new InstrumentWidgetRenderTab(this);
-  connect(m_renderTab, SIGNAL(setAutoscaling(bool)), this,
-          SLOT(setColorMapAutoscaling(bool)));
-  connect(m_renderTab, SIGNAL(rescaleColorMap()), this, SLOT(setupColorMap()));
-  mControlsTab->addTab(m_renderTab, QString("Render"));
-  m_renderTab->loadSettings(settings);
+//  m_renderTab = new InstrumentWidgetRenderTab(this);
+ // connect(m_renderTab, SIGNAL(setAutoscaling(bool)), this,
+  //        SLOT(setColorMapAutoscaling(bool)));
+ // connect(m_renderTab, SIGNAL(rescaleColorMap()), this, SLOT(setupColorMap()));
+ // mControlsTab->addTab(m_renderTab, QString("Render"));
+  //m_renderTab->loadSettings(settings);
 
   // Pick controls
   m_pickTab = new InstrumentWidgetPickTab(this);
@@ -1211,23 +1211,21 @@ void InstrumentWidget::createTabs(QSettings &settings) {
   m_pickTab->loadSettings(settings);
 
   // Mask controls
-  m_maskTab = new InstrumentWidgetMaskTab(this);
-  mControlsTab->addTab(m_maskTab, QString("Draw"));
-  connect(m_maskTab, SIGNAL(executeAlgorithm(const QString &, const QString &)),
-          this, SLOT(executeAlgorithm(const QString &, const QString &)));
-  connect(m_xIntegration, SIGNAL(changed(double, double)), m_maskTab,
-          SLOT(changedIntegrationRange(double, double)));
-  m_maskTab->loadSettings(settings);
+  //m_maskTab = new InstrumentWidgetMaskTab(this);
+  //mControlsTab->addTab(m_maskTab, QString("Draw"));
+  //connect(m_maskTab, SIGNAL(executeAlgorithm(const QString &, const QString &)),
+   //       this, SLOT(executeAlgorithm(const QString &, const QString &)));
+  //connect(m_xIntegration, SIGNAL(changed(double, double)), m_maskTab,
+   //       SLOT(changedIntegrationRange(double, double)));
+  //m_maskTab->loadSettings(settings);
 
   // Instrument tree controls
-  m_treeTab = new InstrumentWidgetTreeTab(this);
-  mControlsTab->addTab(m_treeTab, QString("Instrument"));
-  m_treeTab->loadSettings(settings);
+
 
   connect(mControlsTab, SIGNAL(currentChanged(int)), this,
           SLOT(tabChanged(int)));
 
-  m_tabs << m_renderTab << m_pickTab << m_maskTab << m_treeTab;
+  m_tabs << m_pickTab;
 }
 
 /**

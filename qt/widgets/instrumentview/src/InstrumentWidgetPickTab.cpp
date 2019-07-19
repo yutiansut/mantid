@@ -508,7 +508,10 @@ void InstrumentWidgetPickTab::showEvent(QShowEvent * /*unused*/) {
 /**
  * Keep current curve permanently displayed on the plot.
  */
-void InstrumentWidgetPickTab::storeCurve() { m_plot->store(); }
+void InstrumentWidgetPickTab::storeCurve() {
+  m_plot->store();
+  std::cout << "would need to send the curve/data from here to external plot" << std::endl;
+}
 
 /**
  * Remove a stored curve.
