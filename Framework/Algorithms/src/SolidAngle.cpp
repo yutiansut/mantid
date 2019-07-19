@@ -44,43 +44,60 @@ namespace SolidAngleHelpers {
 
 constexpr double MM_TO_METERS = 1. / 1000.;
 
+
 /**
  * Returns the angle between the sample-to-pixel vector and its
  * projection on the X-Z (vertical tube) or Y-Z (horizontal tube) plane.
  * Note, in all cases Y is assumed to be the pointing-up direction, Z is the
  * beam direction.
  */
-struct AlphaAngleCalculator {
-  AlphaAngleCalculator(const DetectorInfo &detectorInfo)
-      : m_detectorInfo(detectorInfo),
-        m_samplePos(detectorInfo.samplePosition()) {}
-  double getAlpha(size_t index) const {
-    const auto sampleDetVec = m_detectorInfo.position(index) - m_samplePos;
-    auto inPlane = sampleDetVec;
-    project(inPlane);
-    return sampleDetVec.angle(inPlane);
-  }
-  virtual void project(V3D &v) const = 0;
-  virtual ~AlphaAngleCalculator() = default;
-
+template <class T>
+class AlphaAngleCalculator
+{
+  public:
+    AlphaAngleCalculator(const DetectorInfo &detectorInfo)
+        : m_detectorInfo(detectorInfo),
+          m_samplePos(detectorInfo.samplePosition()) {}
+    ~AlphaAngleCalculator()  { }
+    void project(V3D &v) const
+    {
+      static_cast<const T*>(this)->projectImpl(v); //here the magic is!!!
+    }
+    double getAlpha(size_t index) const {
+      const auto sampleDetVec = m_detectorInfo.position(index) - m_samplePos;
+      auto inPlane = sampleDetVec;
+      this->project(inPlane);
+      return sampleDetVec.angle(inPlane);
+    }
 private:
   const DetectorInfo &m_detectorInfo;
   const V3D m_samplePos;
 };
 
-struct AlphaAngleVertical : public AlphaAngleCalculator {
-  using AlphaAngleCalculator::AlphaAngleCalculator;
-  void project(V3D &v) const override { v.setY(0.0); }
+class Vertical : public AlphaAngleCalculator<Vertical>
+{
+  public:
+    //here comes the implementation of the write method on the subclass
+    void projectImpl(V3D &v) const
+    {
+       v.setY(0.0);
+    }
 };
 
-struct AlphaAngleHorizontal : public AlphaAngleCalculator {
-  using AlphaAngleCalculator::AlphaAngleCalculator;
-  void project(V3D &v) const override { v.setX(0.0); }
+class Horizontal : public AlphaAngleCalculator<Horizontal>
+{
+  public:
+    //here comes the implementation of the write method on the subclass
+    void projectImpl(V3D &v) const
+    {
+       v.setX(0.0);
+    }
 };
 
 /**
  *Creates the solid angle calculator based on the selected method.
  */
+template <class U>
 struct SolidAngleCalculator {
   SolidAngleCalculator(const ComponentInfo &componentInfo,
                        const DetectorInfo &detectorInfo,
@@ -88,11 +105,9 @@ struct SolidAngleCalculator {
       : m_componentInfo(componentInfo), m_detectorInfo(detectorInfo),
         m_pixelArea(pixelArea), m_samplePos(detectorInfo.samplePosition()) {
     if (method.find("Vertical") != std::string::npos) {
-      m_alphaAngleCalculator =
-          std::make_unique<AlphaAngleVertical>(detectorInfo);
+      m_alphaAngleCalculator = Vertical();
     } else if (method.find("Horizontal") != std::string::npos) {
-      m_alphaAngleCalculator =
-          std::make_unique<AlphaAngleHorizontal>(detectorInfo);
+      m_alphaAngleCalculator = Horizontal();
     }
   }
   virtual double solidAngle(size_t index) const = 0;
@@ -103,7 +118,7 @@ protected:
   const DetectorInfo &m_detectorInfo;
   const double m_pixelArea;
   const V3D m_samplePos;
-  std::unique_ptr<const AlphaAngleCalculator> m_alphaAngleCalculator;
+  U m_alphaAngleCalculator;
 };
 
 struct GenericShape : public SolidAngleCalculator {
