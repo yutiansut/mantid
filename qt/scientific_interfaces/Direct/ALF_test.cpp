@@ -5,25 +5,24 @@
 //     & Institut Laue - Langevin
 // SPDX - License - Identifier: GPL - 3.0 +
 #include "ALF_test.h"
-#include "MantidQtWidgets/InstrumentView/InstrumentWidget.h"
+#include "MantidQtWidgets/Common/FunctionBrowser.h"
 
+#include "MantidQtWidgets/InstrumentView/InstrumentWidget.h"
+#include "MantidQtWidgets/Plotting/PreviewPlot.h"
 
 #include <QGridLayout>
 #include <QHBoxLayout>
+#include <QPushButton>
+#include <QSpinBox>
+#include <QSplitter>
 #include <QVBoxLayout>
 #include <QWidget>
-#include <QPushButton>
-#include <QSplitter>
-#include <QSpinBox>
-
-
+#include <QLineEdit>
 
 namespace MantidQt {
 namespace CustomInterfaces {
 using namespace Mantid::Kernel;
 using namespace Mantid::API;
-
-
 
 DECLARE_SUBWINDOW(ALFTest)
 
@@ -38,38 +37,78 @@ using Mantid::API::Workspace_sptr;
 /// static logger
 Mantid::Kernel::Logger g_log("ALFTest");
 
-ALFTest::ALFTest(QWidget *parent)
-    : UserSubWindow(parent) { 
-	  IAlgorithm_sptr alg = AlgorithmManager::Instance().create("LoadEmptyInstrument");
+ALFTest::ALFTest(QWidget *parent) : UserSubWindow(parent) {
+  IAlgorithm_sptr alg =
+      AlgorithmManager::Instance().create("LoadEmptyInstrument");
 
   alg->initialize();
   alg->setProperty("OutputWorkspace", "ALF");
 
   alg->setProperty("InstrumentName", "ALF");
   alg->execute();
-
 }
 
 void ALFTest::initLayout() {
 
   m_instrument = new MantidQt::MantidWidgets::InstrumentWidget("ALF");
+
+  // create load widget
   m_button = new QPushButton("Load");
   m_SpinBox = new QSpinBox();
   m_SpinBox->setMaximum(1000000);
- QWidget *loadBar = new QWidget();
-  QHBoxLayout *mainLayout = new QHBoxLayout(loadBar);
-  mainLayout->addWidget(m_SpinBox);
-  mainLayout->addWidget(m_button);
-      QSplitter *controlPanelLayout = new QSplitter(Qt::Vertical);
-  controlPanelLayout->addWidget(loadBar);
-  controlPanelLayout->addWidget(m_instrument);
-
-  this->setCentralWidget(controlPanelLayout);
-
-    connect(m_button, SIGNAL(clicked()), this, SLOT(change()));
+  QWidget *loadBar = new QWidget();
+  QHBoxLayout *loadLayout = new QHBoxLayout(loadBar);
+  loadLayout->addWidget(m_SpinBox);
+  loadLayout->addWidget(m_button);
+  //
 
 
-	}
+  QSplitter *MainLayout = new QSplitter(Qt::Vertical);
+  MainLayout->addWidget(loadBar);
+
+
+  QSplitter *widgetSplitter = new QSplitter(Qt::Horizontal);
+  widgetSplitter->addWidget(m_instrument);
+  //m_instrument->connectToStoreCurve(plotCurve);
+
+  // plot
+  m_plot = new MantidQt::MantidWidgets::PreviewPlot();
+  m_plot->setCanvasColour(Qt::white);
+   // test adding a plot
+  std::vector<double> vals{0.0, 1.0, 2.0, 3.0, 4.0, 4.0};
+  std::vector<double> yvals{0.0, 1.0, 2.0, 3.0, 4.0, 5.0};
+  IAlgorithm_sptr alg = AlgorithmManager::Instance().create("CreateWorkspace");
+  alg->initialize();
+  alg->setProperty("OutputWorkspace", "test");
+  alg->setProperty("DataX", vals);
+  alg->setProperty("DataY", yvals);
+  alg->execute();
+  m_plot->addSpectrum("Data", "test", 0, Qt::black);
+  // end test
+  //
+
+  // fit - plot widget
+  QSplitter *fitPlotLayout = new QSplitter(Qt::Vertical);
+  fitPlotLayout->addWidget(m_plot);
+
+
+	// function browser
+
+	 m_fitProp = new MantidQt::MantidWidgets::FitPropertyBrowser(this);
+	 QSplitter *fitLayout = new QSplitter(Qt::Vertical);
+
+         m_fitProp->init();
+	fitLayout->addWidget(m_fitProp);
+   //
+
+   fitPlotLayout->addWidget(fitLayout);
+
+  widgetSplitter->addWidget(fitPlotLayout);
+  MainLayout->addWidget(widgetSplitter);
+  this->setCentralWidget(MainLayout);
+
+  connect(m_button, SIGNAL(clicked()), this, SLOT(change()));
+}
 
 void ALFTest::change() {
   IAlgorithm_sptr alg = AlgorithmManager::Instance().create("Load");
@@ -78,12 +117,10 @@ void ALFTest::change() {
   alg->setProperty("Filename", "ALF" + std::to_string(int(m_SpinBox->value())));
   alg->setProperty("OutputWorkspace", "ALF");
   alg->execute();
-        }
-  /**
+}
+/**
  * Destructor
  */
 
-
-  
 } // namespace CustomInterfaces
 } // namespace MantidQt

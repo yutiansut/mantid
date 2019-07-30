@@ -7,12 +7,17 @@
 #ifndef MANTID_CUSTOMINTERFACES_ALFTEST_H_
 #define MANTID_CUSTOMINTERFACES_ALFTEST_H_
 
-#include "MantidQtWidgets/Common/UserSubWindow.h"
-#include "MantidQtWidgets/InstrumentView/InstrumentWidget.h"// can only get to common or plotting -> need to find out how to get around it
 #include "DllConfig.h"
+#include "MantidQtWidgets/Common/UserSubWindow.h"
+#include "MantidQtWidgets/InstrumentView/InstrumentWidget.h" // can only get to common or plotting -> need to find out how to get around it
+#include "MantidQtWidgets/Plotting/PreviewPlot.h"
+#include "MantidQtWidgets/Common/FunctionBrowser.h"
+#include "MantidQtWidgets/Common/FitPropertyBrowser.h"
+
 #include <QDialog>
 #include <QPushButton>
 #include <QSpinBox>
+#include <QLineEdit>
 
 namespace MantidQt {
 namespace CustomInterfaces {
@@ -35,9 +40,14 @@ public slots:
   void change();
 
 private:
+  void plotCurve();
+
   MantidQt::MantidWidgets::InstrumentWidget *m_instrument;
   QPushButton *m_button;
   QSpinBox *m_SpinBox;
+  MantidQt::MantidWidgets::PreviewPlot *m_plot;
+  MantidQt::MantidWidgets::FitPropertyBrowser *m_fitProp;
+
 };
 } // namespace CustomInterfaces
 } // namespace MantidQt

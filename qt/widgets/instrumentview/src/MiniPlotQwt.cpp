@@ -422,6 +422,8 @@ void MiniPlotQwt::store() {
     m_colorIndex %= m_colors.size();
     m_curve = nullptr;
     m_label = "";
+   // std::vector<double> tmp = m_curve->xdata();
+
   }
 }
 

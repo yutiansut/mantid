@@ -95,6 +95,7 @@ public:
   virtual void loadFromProject(const std::string &lines) override;
   /// Save settings for the pick tab to a project file
   virtual std::string saveToProject() const override;
+  void connectToStoreCurve(const char *slot);
 
 public slots:
   void setTubeXUnits(int units);

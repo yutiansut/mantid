@@ -319,8 +319,10 @@ void InstrumentWidget::resetSurface() {
 void InstrumentWidget::selectTab(int tab) {
   mControlsTab->setCurrentIndex(tab);
 }
-
-/**
+void InstrumentWidget::connectToStoreCurve(const char *slot) {
+  m_pickTab->connectToStoreCurve(slot);
+}
+    /**
  * Returns the named tab or the current tab if none supplied
  * @param title Optional title of a tab (default="")
  */

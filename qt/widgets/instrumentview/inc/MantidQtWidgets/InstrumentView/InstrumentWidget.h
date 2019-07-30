@@ -155,8 +155,10 @@ public:
   void loadFromProject(const std::string &lines);
   /// Save the widget to a Mantid projecy file.
   std::string saveToProject() const;
+  void connectToStoreCurve(const char *slot);
 
-signals:
+signals
+      :
   void enableLighting(bool /*_t1*/);
   void plot1D(const QString & /*_t1*/, const std::set<int> & /*_t2*/,
               bool /*_t3*/);

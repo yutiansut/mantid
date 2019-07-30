@@ -68,6 +68,7 @@ mtd_add_qt_library(TARGET_NAME MantidScientificInterfacesDirect
                    MTD_QT_LINK_LIBS
                      MantidQtWidgetsCommon
                      MantidQtWidgetsInstrumentView
+					 MantidQtWidgetsPlotting
                      MantidQtWidgetsMplCpp
                    INSTALL_DIR_BASE
                      ${WORKBENCH_PLUGINS_DIR}

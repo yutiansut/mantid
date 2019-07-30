@@ -290,6 +290,10 @@ bool InstrumentWidgetPickTab::canUpdateTouchedDetector() const {
   return !m_peak->isChecked();
 }
 
+void InstrumentWidgetPickTab::connectToStoreCurve(const char *slot) {
+  connect(m_savePlotToWorkspace, SIGNAL(triggered()), this, SLOT(slot));
+}
+
 /**
  * Display the miniplot's context menu.
  */
