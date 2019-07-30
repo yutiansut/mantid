@@ -11,27 +11,33 @@
 #include "MantidQtWidgets/InstrumentView/InstrumentWidget.h"// can only get to common or plotting -> need to find out how to get around it
 #include "DllConfig.h"
 #include <QDialog>
+#include <QPushButton>
+#include <QSpinBox>
 
 namespace MantidQt {
 namespace CustomInterfaces {
 
 /** ALCInterface : Custom interface for Avoided Level Crossing analysis
  */
-class MANTIDQT_MUONINTERFACE_DLL ALFTest : public API::UserSubWindow {
+class MANTIDQT_DIRECT_DLL ALFTest : public API::UserSubWindow {
   Q_OBJECT
 
 public:
   ALFTest(QWidget *parent = nullptr);
 
   static std::string name() { return "ALF test"; }
-  static QString categoryInfo() { return "Muon"; }
+  static QString categoryInfo() { return "Direct"; }
 
 protected:
   void initLayout() override;
 
-private:
-  //InstrumentWidget *m_instrument;
+public slots:
+  void change();
 
+private:
+  MantidQt::MantidWidgets::InstrumentWidget *m_instrument;
+  QPushButton *m_button;
+  QSpinBox *m_SpinBox;
 };
 } // namespace CustomInterfaces
 } // namespace MantidQt
