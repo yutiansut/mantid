@@ -8,33 +8,8 @@
 //#include "MantidQtWidgets/InstrumentView/InstrumentWidget.h"
 
 
-#include <QApplication>
-#include <QCheckBox>
-#include <QColorDialog>
-#include <QComboBox>
-#include <QDoubleValidator>
-#include <QDragEnterEvent>
-#include <QDropEvent>
-#include <QFileDialog>
-#include <QFileInfo>
 #include <QGridLayout>
-#include <QGroupBox>
 #include <QHBoxLayout>
-#include <QImageWriter>
-#include <QKeyEvent>
-#include <QLabel>
-#include <QLineEdit>
-#include <QMenu>
-#include <QMessageBox>
-#include <QMimeData>
-#include <QPushButton>
-#include <QRadioButton>
-#include <QSettings>
-#include <QSplitter>
-#include <QStackedLayout>
-#include <QString>
-#include <QTemporaryFile>
-#include <QUrl>
 #include <QVBoxLayout>
 #include <QWidget>
 
@@ -63,11 +38,11 @@ ALFTest::ALFTest(QWidget *parent)
     : UserSubWindow(parent) {}
 
 void ALFTest::initLayout() {
- // AlgorithmManager::Instance().create("Load");
- // alg->initialize();
+  IAlgorithm_sptr alg = AlgorithmManager::Instance().create("Load");
+  alg->initialize();
 
-  //alg->setProperty("Filename", "ALF80511");
-  //alg->execute();
+  alg->setProperty("Filename", "ALF80511");
+  alg->execute();
     QVBoxLayout *mainLayout = new QVBoxLayout(this);
     //m_instrument = new InstrumentWidget("ALF80511");
     //mainLayout->addWidget(m_instrument);

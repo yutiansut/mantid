@@ -30,7 +30,7 @@ protected:
   void initLayout() override;
 
 private:
-  //InstrumentWidget m_instrument;
+  //InstrumentWidget *m_instrument;
 
 };
 } // namespace CustomInterfaces
