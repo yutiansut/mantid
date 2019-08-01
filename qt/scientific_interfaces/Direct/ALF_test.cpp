@@ -9,6 +9,7 @@
 
 #include "MantidQtWidgets/InstrumentView/InstrumentWidget.h"
 #include "MantidQtWidgets/Plotting/PreviewPlot.h"
+#include "MantidQtWidgets/InstrumentView/InstrumentWidgetPickTab.h"
 
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -18,6 +19,10 @@
 #include <QVBoxLayout>
 #include <QWidget>
 #include <QLineEdit>
+#include <math.h>
+	  bool extractTubeCondition(bool ifPlot, bool ifStored) {
+  return (ifPlot || ifStored);
+}
 
 namespace MantidQt {
 namespace CustomInterfaces {
@@ -51,14 +56,22 @@ ALFTest::ALFTest(QWidget *parent) : UserSubWindow(parent) {
 void ALFTest::initLayout() {
 
   m_instrument = new MantidQt::MantidWidgets::InstrumentWidget("ALF");
+  m_instrument->connectToStoreCurve();
+  m_extractTube = new QAction("Extract Tube", this);
+  connect(m_extractTube, SIGNAL(triggered()),this, SLOT(updatePlot())),
+
+	  m_instrument->addAction(m_extractTube, &extractTubeCondition );
+
 
   // create load widget
-  m_button = new QPushButton("Load");
-  m_SpinBox = new QSpinBox();
-  m_SpinBox->setMaximum(1000000);
+  m_button = new QPushButton("Browse");
+
+  // connect(m_button, SIGNAL(clicked()), this, SLOT(change()));
+  m_run = new QLineEdit();
+  connect(m_run, SIGNAL(editingFinished()), this, SLOT(change()));
   QWidget *loadBar = new QWidget();
   QHBoxLayout *loadLayout = new QHBoxLayout(loadBar);
-  loadLayout->addWidget(m_SpinBox);
+  loadLayout->addWidget(m_run);
   loadLayout->addWidget(m_button);
   //
 
@@ -94,12 +107,28 @@ void ALFTest::initLayout() {
 
 	// function browser
 
-	 m_fitProp = new MantidQt::MantidWidgets::FitPropertyBrowser(this);
+  m_funcBrowser = new MantidQt::MantidWidgets::FunctionBrowser(this);
+  m_fit = new QPushButton("Fit");
+  QLabel *start = new QLabel("Fit from:");
+  m_start = new QLineEdit("-15.0");
+  QLabel *end = new QLabel("to:");
+  m_end = new QLineEdit("15.0");
+  
+  QWidget *range = new QWidget();
+  QHBoxLayout *rangeLayout = new QHBoxLayout(range);
+  
+  rangeLayout->addWidget(start);
+  rangeLayout->addWidget(m_start);
+  rangeLayout->addWidget(end);
+  rangeLayout->addWidget(m_end);
+  
 	 QSplitter *fitLayout = new QSplitter(Qt::Vertical);
 
-         m_fitProp->init();
-	fitLayout->addWidget(m_fitProp);
+         fitLayout->addWidget(m_fit);
+         fitLayout->addWidget(m_funcBrowser);
+         fitLayout->addWidget(range);
    //
+         connect(m_fit, SIGNAL(clicked()), this, SLOT(doFit()));
 
    fitPlotLayout->addWidget(fitLayout);
 
@@ -107,16 +136,68 @@ void ALFTest::initLayout() {
   MainLayout->addWidget(widgetSplitter);
   this->setCentralWidget(MainLayout);
 
-  connect(m_button, SIGNAL(clicked()), this, SLOT(change()));
+}
+
+void ALFTest::doFit() {
+  IAlgorithm_sptr alg = AlgorithmManager::Instance().create("Fit");
+  alg->initialize();
+  alg->setProperty("Function", m_funcBrowser->getFunction());
+  alg->setProperty("InputWorkspace", "Curves");
+  alg->setProperty("Output", "ALF_fits");
+  alg->setProperty("StartX", m_start->text().toDouble());
+  alg->setProperty("EndX", m_end->text().toDouble());
+  alg->execute();
+  m_plot->clear();
+  m_plot->addSpectrum("new Data", "ALF_fits_Workspace", 0, Qt::black);
+  m_plot->addSpectrum("Fit", "ALF_fits_Workspace", 1, Qt::red);
+  //need to update function browser
+  Mantid::API::IFunction_sptr function = alg->getProperty("Function");
+  m_funcBrowser->updateMultiDatasetParameters(*function);
 }
 
 void ALFTest::change() {
+  const std::string name = "ALF" + std::to_string(m_run->text().toDouble());
+
   IAlgorithm_sptr alg = AlgorithmManager::Instance().create("Load");
   alg->initialize();
 
-  alg->setProperty("Filename", "ALF" + std::to_string(int(m_SpinBox->value())));
+  alg->setProperty("Filename",name );
   alg->setProperty("OutputWorkspace", "ALF");
   alg->execute();
+
+  IAlgorithm_sptr normAlg =
+      AlgorithmManager::Instance().create("NormaliseByCurrent");
+  normAlg->initialize();
+  normAlg->setProperty("InputWorkspace", "ALF");
+  normAlg->setProperty("OutputWorkspace", "ALF");
+  normAlg->execute();
+
+  IAlgorithm_sptr dSpacingAlg = AlgorithmManager::Instance().create("ConvertUnits");
+  dSpacingAlg->initialize();
+
+  dSpacingAlg->setProperty("InputWorkspace", "ALF");
+  dSpacingAlg->setProperty("Target", "dSpacing");
+  dSpacingAlg->setProperty("OutputWorkspace", "ALF");
+  dSpacingAlg->execute();
+
+
+}
+void ALFTest::updatePlot() { 
+	// will need to rescale to degrees
+m_instrument->getPickTab()->savePlotToWorkspace();
+
+        IAlgorithm_sptr alg = AlgorithmManager::Instance().create("ScaleX");
+        alg->initialize();
+
+        alg->setProperty("InputWorkspace", "Curves");
+        alg->setProperty("OutputWorkspace", "Curves");
+        alg->setProperty("Factor",180./M_PI);
+
+        alg->execute();
+
+	  m_plot->clear();
+  m_plot->addSpectrum("new Data", "Curves", 0, Qt::black);
+
 }
 /**
  * Destructor

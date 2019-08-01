@@ -281,6 +281,8 @@ InstrumentWidgetPickTab::InstrumentWidgetPickTab(InstrumentWidget *instrWidget)
   layout->addWidget(m_activeTool);
   layout->addLayout(toolBox);
   layout->addWidget(panelStack);
+
+  m_actionCondition = nullptr;
 }
 
 /**
@@ -291,7 +293,7 @@ bool InstrumentWidgetPickTab::canUpdateTouchedDetector() const {
 }
 
 void InstrumentWidgetPickTab::connectToStoreCurve(const char *slot) {
-  connect(m_savePlotToWorkspace, SIGNAL(triggered()), this, SLOT(slot));
+  connect(this, SIGNAL(plotSaved), this, slot);
 }
 
 /**
@@ -659,10 +661,19 @@ bool InstrumentWidgetPickTab::addToDisplayContextMenu(QMenu &context) const {
     context.addAction(m_savePlotToWorkspace);
     res = true;
   }
+  if (m_actionCondition && m_actionCondition(m_plot->hasStored(), m_plot->hasCurve())) {
+    context.addAction(m_addedAction);
+  }
   return res;
 }
 
-/**
+void InstrumentWidgetPickTab::addActionToContext(QAction
+	*action, bool (*actionCondition)(bool,bool)) {
+  m_addedAction = action;
+  m_actionCondition = actionCondition;
+}
+/*
+**
  * Select a tool on the tab
  * @param tool One of the enumerated tool types, @see ToolType
  */

@@ -319,9 +319,18 @@ void InstrumentWidget::resetSurface() {
 void InstrumentWidget::selectTab(int tab) {
   mControlsTab->setCurrentIndex(tab);
 }
-void InstrumentWidget::connectToStoreCurve(const char *slot) {
-  m_pickTab->connectToStoreCurve(slot);
+void InstrumentWidget::connectToStoreCurve() {
+  connect(m_pickTab, SIGNAL(plotSaved()), this, SLOT(sendPlotSaved()));
 }
+void InstrumentWidget::sendPlotSaved() { 
+	emit plotSaved();
+}
+
+// long term want the condition to have arg of dict of bools
+void InstrumentWidget::addAction(QAction *action, FunctionPointer actionCondition) {
+  m_pickTab->addActionToContext( action, actionCondition);
+}
+
     /**
  * Returns the named tab or the current tab if none supplied
  * @param title Optional title of a tab (default="")
@@ -1211,7 +1220,8 @@ void InstrumentWidget::createTabs(QSettings &settings) {
   m_pickTab = new InstrumentWidgetPickTab(this);
   mControlsTab->addTab(m_pickTab, QString("Pick"));
   m_pickTab->loadSettings(settings);
-
+   connect(m_pickTab, SIGNAL(plotSaved()), this,
+          SLOT(sendPlotSaved()));
   // Mask controls
   //m_maskTab = new InstrumentWidgetMaskTab(this);
   //mControlsTab->addTab(m_maskTab, QString("Draw"));

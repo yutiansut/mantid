@@ -96,10 +96,15 @@ public:
   /// Save settings for the pick tab to a project file
   virtual std::string saveToProject() const override;
   void connectToStoreCurve(const char *slot);
+  void addActionToContext(QAction *action,
+                          bool (*actionCondition)(bool, bool));
 
+signals:
+  void plotSaved();
 public slots:
   void setTubeXUnits(int units);
   void changedIntegrationRange(double /*unused*/, double /*unused*/);
+  void savePlotToWorkspace();
 private slots:
   void plotContextMenu();
   void sumDetectors();
@@ -118,7 +123,6 @@ private slots:
   void updateSelectionInfoDisplay();
   void shapeCreated();
   void updatePlotMultipleDetectors();
-  void savePlotToWorkspace();
 
 private:
   void showEvent(QShowEvent * /*unused*/) override;
@@ -181,7 +185,12 @@ private:
   int m_tubeXUnitsCache;
   int m_plotTypeCache;
 
-  friend class InstrumentWidgetEncoder;
+  //long term want this to be a vector of action, condition pairs. 
+  QAction *m_addedAction;
+  typedef bool(*FunctionPointer)(bool, bool); // Typedef for a function pointer
+  FunctionPointer m_actionCondition;
+
+      friend class InstrumentWidgetEncoder;
   friend class InstrumentWidgetDecoder;
 };
 
@@ -196,6 +205,7 @@ public:
   ComponentInfoController(InstrumentWidgetPickTab *tab,
                           const InstrumentWidget *instrWidget,
                           QTextEdit *infoDisplay);
+
 public slots:
   void displayInfo(size_t pickID);
   void displayComparePeaksInfo(

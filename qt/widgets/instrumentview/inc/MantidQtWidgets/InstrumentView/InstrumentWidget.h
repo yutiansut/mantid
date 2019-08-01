@@ -45,6 +45,9 @@ class QDropEvent;
 class QStackedLayout;
 class QSettings;
 
+// long term want the condition to have arg of dict of bools
+  typedef bool (*FunctionPointer)(bool, bool); // Typedef for a function pointer
+
 namespace MantidQt {
 namespace MantidWidgets {
 class InstrumentActor;
@@ -155,10 +158,14 @@ public:
   void loadFromProject(const std::string &lines);
   /// Save the widget to a Mantid projecy file.
   std::string saveToProject() const;
-  void connectToStoreCurve(const char *slot);
+  void connectToStoreCurve();
 
-signals
-      :
+  InstrumentWidgetPickTab *getPickTab() { return m_pickTab; }
+
+
+  void addAction(QAction *action, FunctionPointer actionCondition);
+signals:
+  void plotSaved();
   void enableLighting(bool /*_t1*/);
   void plot1D(const QString & /*_t1*/, const std::set<int> & /*_t2*/,
               bool /*_t3*/);
@@ -187,6 +194,7 @@ protected:
   bool eventFilter(QObject *obj, QEvent *ev) override;
 
 public slots:
+  void sendPlotSaved();
   void tabChanged(int /*unused*/);
   void componentSelected(size_t componentIndex);
   void executeAlgorithm(const QString & /*unused*/, const QString & /*unused*/);
