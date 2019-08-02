@@ -7,6 +7,8 @@
 #  This file is part of the mantid package
 from __future__ import absolute_import
 
+from matplotlib.container import ErrorbarContainer
+
 from mantid.py3compat import Enum
 
 
@@ -31,3 +33,14 @@ def find_errorbar_container(line, containers):
     for container in containers:
         if line == container[0]:
             return container
+
+
+def get_errorbar_containers(ax):
+    return [e_cont for e_cont in ax.containers
+            if isinstance(e_cont, ErrorbarContainer)]
+
+
+def get_axes_index(ax):
+    """Get the index position of given Axes in its figure"""
+    index = ax.rowNum*ax.numCols + ax.colNum + 1
+    return index
