@@ -14,6 +14,7 @@ User Interface
 Improvements
 ############
 - The keyboard shortcut Ctrl+N now opens a new tab in the script editor.
+- There is now a button on the plot window's toolbar to generate a script that will re-create the plot.
 
 Bugfixes
 ########
