@@ -1,10 +1,19 @@
+# Mantid Repository : https://github.com/mantidproject/mantid
+#
+# Copyright &copy; 2019 ISIS Rutherford Appleton Laboratory UKRI,
+#     NScD Oak Ridge National Laboratory, European Spallation Source
+#     & Institut Laue - Langevin
+# SPDX - License - Identifier: GPL - 3.0 +
+
 from __future__ import (absolute_import, division, print_function, unicode_literals)
 
 import numpy as np
 import unittest
 
-from mantid.simpleapi import *
+from mantid.simpleapi import CreateEmptyTableWorkspace, CreateWorkspace, DeleteWorkspace, FitGaussianPeaks
 from mantid.api import *
+
+import plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks as _FitGaussianPeaks
 
 
 class FitGaussianPeaksTest(unittest.TestCase):
@@ -42,7 +51,7 @@ class FitGaussianPeaksTest(unittest.TestCase):
         self.data_ws = data_ws
         self.peak_guess_table = peak_table
 
-        self.alg_instance = fgp()
+        self.alg_instance = _FitGaussianPeaks.FitGaussianPeaks()
 
     def tearDown(self):
         self.delete_if_present('data_ws')
@@ -284,7 +293,6 @@ class FitGaussianPeaksTest(unittest.TestCase):
         idx = [250, 750]
 
         ret = self.alg_instance.estimate_parameters(self.x_values, self.y_values, idx, 10)
-        print(ret)
 
         self.assertEqual(len(ret), 6)
 

@@ -1,10 +1,18 @@
+# Mantid Repository : https://github.com/mantidproject/mantid
+#
+# Copyright &copy; 2019 ISIS Rutherford Appleton Laboratory UKRI,
+#     NScD Oak Ridge National Laboratory, European Spallation Source
+#     & Institut Laue - Langevin
+# SPDX - License - Identifier: GPL - 3.0 +
+
 import unittest
 import numpy as np
 
-from mantid.simpleapi import *
+from mantid.simpleapi import CreateEmptyTableWorkspace, CreateWorkspace, DeleteWorkspace, FindPeakAutomatic
+from mantid.api import mtd
 from mantid.py3compat import mock
 
-from plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic import FindPeakAutomatic as fpa
+import plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic as _FindPeakAutomatic
 
 
 class FindPeakAutomaticTest(unittest.TestCase):
@@ -42,7 +50,7 @@ class FindPeakAutomaticTest(unittest.TestCase):
         self.data_ws = data_ws
         self.peak_guess_table = peak_table
 
-        self.alg_instance = fpa()
+        self.alg_instance = _FindPeakAutomatic.FindPeakAutomatic()
 
     def tearDown(self):
         self.delete_if_present('data_ws')
