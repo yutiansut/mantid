@@ -237,7 +237,7 @@ class FitGaussianPeaksTest(unittest.TestCase):
 
     def test_that_poisson_cost_returns_expected_value(self):
         hyp = np.ones(len(self.x_values))
-        yvals = np.array(map(lambda (x, y): max(x, y), zip(0.001*np.ones(len(self.x_values)), self.y_values)))
+        yvals = np.array([max(x, y) for x, y in zip(0.001*np.ones(len(self.x_values)), self.y_values)])
 
         expected = np.sum(-yvals + hyp*np.log(yvals))
         actual = self.alg_instance.poisson_cost(hyp, yvals)
