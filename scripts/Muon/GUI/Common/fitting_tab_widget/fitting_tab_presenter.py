@@ -340,12 +340,12 @@ class FittingTabPresenter(object):
         self.model.function_name = self.view.function_name
 
     def handle_function_structure_changed(self):
-        if self._tf_asymmetry_mode:
-            self.view.warning_popup('Cannot change function structure during tf asymmetry mode')
-            self.view.function_browser.blockSignals(True)
-            self.view.function_browser.setFunction(str(self._fit_function[self.view.get_index_for_start_end_times()]))
-            self.view.function_browser.blockSignals(False)
-            return
+        # if self._tf_asymmetry_mode:
+        #     self.view.warning_popup('Cannot change function structure during tf asymmetry mode')
+        #     self.view.function_browser.blockSignals(True)
+        #     self.view.function_browser.setFunction(str(self._fit_function[self.view.get_index_for_start_end_times()]))
+        #     self.view.function_browser.blockSignals(False)
+        #     return
 
         if not self.view.fit_object:
             self._fit_function = [None] * len(self.selected_data) if self.selected_data else [None]
@@ -384,13 +384,13 @@ class FittingTabPresenter(object):
         self._tf_asymmetry_mode = self.view.tf_asymmetry_mode
         global_parameters = self.view.get_global_parameters()
         if self._tf_asymmetry_mode:
-            self.view.select_workspaces_to_fit_button.setEnabled(False)
+            # self.view.select_workspaces_to_fit_button.setEnabled(False)
             new_global_parameters = [str('f0.f1.f1.' + item) for item in global_parameters]
             if self.automatically_update_fit_name:
                 self.view.function_name += ',TFAsymmetry'
                 self.model.function_name = self.view.function_name
         else:
-            self.view.select_workspaces_to_fit_button.setEnabled(True)
+            # self.view.select_workspaces_to_fit_button.setEnabled(True)
             new_global_parameters = [item[9:] for item in global_parameters]
             if self.automatically_update_fit_name:
                 self.view.function_name = self.view.function_name.replace(',TFAsymmetry', '')

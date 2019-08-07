@@ -17,7 +17,6 @@ from Muon.GUI.FrequencyDomainAnalysis.FFT import fft_presenter_new
 from Muon.GUI.FrequencyDomainAnalysis.FFT import fft_view_new
 from Muon.GUI.FrequencyDomainAnalysis.FFT import fft_model
 
-from Muon.GUI.Common.utilities.algorithm_utils import convert_to_field
 
 def retrieve_combobox_info(combo_box):
     output_list = []

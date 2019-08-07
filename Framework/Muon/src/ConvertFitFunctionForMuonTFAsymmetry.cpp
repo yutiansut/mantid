@@ -293,7 +293,8 @@ IFunction_sptr ConvertFitFunctionForMuonTFAsymmetry::extractUserFunction(
     throw std::runtime_error("Input function is not of the correct form");
   }
   // getFunction(1) -> g
-  return TFFunc->getFunction(1);
+  TFFunc->removeFunction(0);
+  return TFFunc;
 }
 
 /** Get the nomralisation constants from the table

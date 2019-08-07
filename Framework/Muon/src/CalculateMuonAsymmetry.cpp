@@ -203,6 +203,11 @@ void CalculateMuonAsymmetry::exec() {
     API::MatrixWorkspace_sptr normWS =
         API::AnalysisDataService::Instance().retrieveWS<API::MatrixWorkspace>(
             wsNames[j]);
+    API::MatrixWorkspace_sptr normFit = getProperty("OutputWorkspace");
+
+    normWS->mutableY(0) = ws->y(0) / norms[j];
+    normWS->mutableY(0) -= 1.0;
+    normWS->mutableE(0) = ws->e(0) / norms[j];
 
     normWS->mutableY(0) = ws->y(0) / norms[j];
     normWS->mutableY(0) -= 1.0;
