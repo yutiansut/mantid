@@ -8,7 +8,7 @@ import numpy as np
 import scipy.signal
 
 
-class FindPeakAutomatic(PythonAlgorithm):
+class FindPeakAutomatic(DataProcessorAlgorithm):
     start_index = 5
     end_index = 1000
     acceptance = 0.01
@@ -30,6 +30,9 @@ class FindPeakAutomatic(PythonAlgorithm):
 
     def seeAlso(self):
         return ['FitGaussianPeaks']
+
+    def __init__(self):
+        DataProcessorAlgorithm.__init__(self)
 
     def PyInit(self):
         # Input workspace
@@ -106,10 +109,14 @@ class FindPeakAutomatic(PythonAlgorithm):
         self.min_sigma = self.getProperty('MinPeakSigma').value
         self.max_sigma = self.getProperty('MaxPeakSigma').value
 
+        # Progress reporter that covers the whole algorithm
+        prog_reporter = Progress(self, start=0.0, end=0.1, nreports=5)
+
         # Load the data and clean from Nans
         raw_data_ws = self.getProperty('InputWorkspace').value
         raw_xvals = raw_data_ws.readX(0).copy()
         raw_yvals = raw_data_ws.readY(0).copy()
+        prog_reporter.report('Loaded data')
 
         # If the data does not have errors use poisson statistics create an workspace with added errors
         raw_error = raw_data_ws.readE(0).copy()
@@ -124,6 +131,7 @@ class FindPeakAutomatic(PythonAlgorithm):
             error_ws = raw_data_ws
 
         # Convert the data to point data
+        prog_reporter.report('Converting to point data')
         raw_data_ws = ConvertToPointData(error_ws)
         raw_xvals = raw_data_ws.readX(0).copy()
         raw_yvals = raw_data_ws.readY(0).copy()
@@ -134,6 +142,7 @@ class FindPeakAutomatic(PythonAlgorithm):
         raw_xvals = raw_xvals[np.isfinite(raw_yvals)][self.start_index:self.end_index]
         raw_error = raw_error[np.isfinite(raw_yvals)][self.start_index:self.end_index]
         raw_yvals = raw_yvals[np.isfinite(raw_yvals)][self.start_index:self.end_index]
+        prog_reporter.report('Cropped data')
 
         # Find the best peaks
         peakids, peak_table, refit_peak_table = self.process(
@@ -145,7 +154,9 @@ class FindPeakAutomatic(PythonAlgorithm):
             bad_peak_to_consider=self.bad_peak_to_consider,
             use_poisson=self.use_poisson_cost,
             peak_width_estimate=self.peak_width_estimate,
-            fit_to_baseline=self.fit_to_baseline)
+            fit_to_baseline=self.fit_to_baseline,
+            prog_reporter=prog_reporter
+        )
 
         # Plot results if required
         if plot_peaks:
@@ -234,6 +245,8 @@ class FindPeakAutomatic(PythonAlgorithm):
 
     def find_good_peaks(self, xvals, peakids, acceptance, bad_peak_to_consider, use_poisson, fit_ws,
                         peak_width_estimate):
+        prog_reporter = Progress(self, start=0.1, end=1.0, nreports=2+len(peakids))
+
         actual_peaks = []
         skipped = 0
         cost_idx = 1 if use_poisson else 0
@@ -247,8 +260,9 @@ class FindPeakAutomatic(PythonAlgorithm):
                                RefitTolerance=0.001)
         peak_table, refit_peak_table, cost = ret
         old_cost = cost.column(cost_idx)[0]
+        prog_reporter.report('Fitting null hypothesis')
 
-        for pid in peakids:
+        for idx, pid in enumerate(peakids):
             ret = FitGaussianPeaks(InputWorkspace=fit_ws,
                                    PeakGuessTable=self.generate_peak_guess_table(
                                        xvals, actual_peaks + [pid]),
@@ -276,6 +290,7 @@ class FindPeakAutomatic(PythonAlgorithm):
                 old_cost = new_cost
             else:
                 skipped += 1
+            prog_reporter.report('Iteration {}, {} peaks found'.format(idx, len(actual_peaks)))
 
         ret = FitGaussianPeaks(InputWorkspace=fit_ws,
                                PeakGuessTable=self.generate_peak_guess_table(xvals, actual_peaks),
@@ -285,11 +300,12 @@ class FindPeakAutomatic(PythonAlgorithm):
                                MaxPeakSigma=self.max_sigma,
                                GeneralFitTolerance=0.1,
                                RefitTolerance=0.001)
+        prog_reporter.report('Fitting done')
         peak_table, refit_peak_table, cost = ret
         return actual_peaks, peak_table, refit_peak_table
 
     def process(self, raw_xvals, raw_yvals, raw_error, acceptance, average_window,
-                bad_peak_to_consider, use_poisson, peak_width_estimate, fit_to_baseline):
+                bad_peak_to_consider, use_poisson, peak_width_estimate, fit_to_baseline, prog_reporter):
         # Remove background
         rough_base = self.average(raw_yvals, average_window)
         baseline = rough_base + self.average(raw_yvals - rough_base, average_window)
@@ -302,6 +318,7 @@ class FindPeakAutomatic(PythonAlgorithm):
                                   DataY=np.concatenate((flat_yvals, baseline)),
                                   DataE=np.concatenate((raw_error, raw_error)),
                                   NSpec=2)
+        prog_reporter.report('Removed background')
 
         # Find all the peaks. find_peaks was introduced in scipy 1.1.0, if using an older version use find_peaks_cwt
         # however this will not do an equally good job as it cannot sort by prominence (also added in 1.1.0)
@@ -318,6 +335,7 @@ class FindPeakAutomatic(PythonAlgorithm):
         else:
             flat_peaks = scipy.signal.find_peaks_cwt(flat_yvals, widths=np.array([0.1]))
             flat_peaks = sorted(flat_peaks, key=lambda pid: flat_yvals[pid], reverse=True)
+        prog_reporter.report('Found all peaks')
 
         return self.find_good_peaks(raw_xvals,
                                     flat_peaks,

@@ -8,7 +8,7 @@ import numpy as np
 import scipy.optimize
 
 
-class FitGaussianPeaks(PythonAlgorithm):
+class FitGaussianPeaks(DataProcessorAlgorithm):
     cost_function = 'chi2'
     centre_tolerance = 1.0
     estimate_sigma = 3.0
@@ -22,6 +22,9 @@ class FitGaussianPeaks(PythonAlgorithm):
 
     def summary(self):
         return 'Fits a list of gaussian peaks returning the parameters and the value of a cost function.'
+
+    def __init__(self):
+        DataProcessorAlgorithm.__init__(self)
 
     def PyInit(self):
         self.declareProperty(
