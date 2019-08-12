@@ -283,7 +283,8 @@ class FitGaussianPeaks(DataProcessorAlgorithm):
             OutputCompositeMembers=True,
             StartX=min(xvals),
             EndX=max(xvals),
-            Constraints=fit_constr)
+            Constraints=fit_constr
+        )
 
         return fit_result.readY(1).copy(), param
 
