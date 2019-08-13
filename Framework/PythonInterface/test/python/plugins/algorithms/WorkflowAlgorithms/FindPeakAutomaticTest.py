@@ -29,24 +29,30 @@ class FindPeakAutomaticTest(unittest.TestCase):
     def setUp(self):
         # Creating two peaks on an exponential background with gaussian noise
         self.x_values = np.linspace(0, 100, 1001)
-        centre = [25, 75]
-        height = [35, 20]
-        width = [10, 5]
-        self.y_values = self._gaussian_peak(self.x_values, centre[0], height[0], width[0])
-        self.y_values += self._gaussian_peak(self.x_values, centre[1], height[1], width[1])
-        background = 10 * np.ones(len(self.x_values))
-        self.y_values += background
+        self.x_values = np.linspace(0, 100, 1001)
+        self.centre = [25, 75]
+        self.height = [35, 20]
+        self.width = [10, 5]
+        self.y_values = self.gaussian(self.x_values, self.centre[0], self.height[0], self.width[0])
+        self.y_values += self.gaussian(self.x_values, self.centre[1], self.height[1], self.width[1])
+        self.background = 10 * np.ones(len(self.x_values))
+        self.y_values += self.background
 
         # Generating a table with a guess of the position of the centre of the peaks
         peak_table = CreateEmptyTableWorkspace()
         peak_table.addColumn(type='float', name='Approximated Centre')
-        peak_table.addRow([centre[0] + 2])
-        peak_table.addRow([centre[1] - 3])
+        peak_table.addRow([self.centre[0] + 2])
+        peak_table.addRow([self.centre[1] - 3])
+
+        self.peakids = [
+            np.argwhere(self.x_values == self.centre[0])[0, 0],
+            np.argwhere(self.x_values == self.centre[1])[0, 0]
+        ]
 
         # Generating a workspace with the data and a flat background
         data_ws = CreateWorkspace(DataX=np.concatenate((self.x_values, self.x_values)),
-                                  DataY=np.concatenate((self.y_values, background)),
-                                  DataE=np.sqrt(np.concatenate((self.y_values, background))),
+                                  DataY=np.concatenate((self.y_values, self.background)),
+                                  DataE=np.sqrt(np.concatenate((self.y_values, self.background))),
                                   NSpec=2)
 
         self.data_ws = data_ws
@@ -66,13 +72,14 @@ class FindPeakAutomaticTest(unittest.TestCase):
         self.delete_if_present('fit_table')
         self.delete_if_present('data_table')
         self.delete_if_present('refit_data_table')
+        self.delete_if_present('tmp_table')
 
         self.alg_instance = None
         self.peak_guess_table = None
         self.data_ws = None
 
     @staticmethod
-    def _gaussian_peak(xvals, centre, height, sigma):
+    def gaussian(xvals, centre, height, sigma):
         exponent = (xvals - centre) / (np.sqrt(2) * sigma)
         return height * np.exp(-exponent * exponent)
 
@@ -80,6 +87,12 @@ class FindPeakAutomaticTest(unittest.TestCase):
     def delete_if_present(workspace):
         if workspace in mtd:
             DeleteWorkspace(workspace)
+
+    def assertTableEqual(self, expected, actual):
+        self.assertEqual(expected.columnCount(), actual.columnCount())
+        self.assertEqual(expected.rowCount(), actual.rowCount())
+        for i in range(expected.rowCount()):
+            self.assertEqual(expected.row(i), actual.row(i))
 
     def test_algorithm_with_no_input_workspace_raises_exception(self):
         with self.assertRaises(RuntimeError):
@@ -111,80 +124,78 @@ class FindPeakAutomaticTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             FindPeakAutomatic(InputWorkspace=self.data_ws, MaxPeakSigma=-0.1, PlotPeaks=False)
 
-    def test_that_single_erosion_returns_correct_result(self):
+    def test_single_erosion_returns_correct_result(self):
         yvals = np.array([-2, 3, 1, 0, 4])
 
         self.assertEqual(-2, self.alg_instance._single_erosion(yvals, 2, 2))
 
-    def test_that_single_erosion_checks_extremes_of_list_correctly(self):
+    def test_single_erosion_checks_extremes_of_list_correctly(self):
         yvals = np.array([-5, -3, 0, 1, -2, 2, 9])
 
         self.assertEqual(-2, self.alg_instance._single_erosion(yvals, 3, 1))
         self.assertEqual(-3, self.alg_instance._single_erosion(yvals, 3, 2))
 
-    def test_that_single_erosion_with_zero_window_does_nothing(self):
+    def test_single_erosion_with_zero_window_does_nothing(self):
         yvals = np.array([-5, -3, 0, 1, -2, 2, 9])
 
         self.assertEqual(0, self.alg_instance._single_erosion(yvals, 2, 0))
 
-    def test_that_single_dilation_returns_correct_result(self):
+    def test_single_dilation_returns_correct_result(self):
         yvals = np.array([-2, 3, 1, 0, 4])
 
         self.assertEqual(4, self.alg_instance._single_dilation(yvals, 2, 2))
 
-    def test_that_single_dilation_checks_extremes_of_list_correctly(self):
+    def test_single_dilation_checks_extremes_of_list_correctly(self):
         yvals = np.array([-5, 3, 0, -7, 2, -2, 9])
 
         self.assertEqual(2, self.alg_instance._single_dilation(yvals, 3, 1))
         self.assertEqual(3, self.alg_instance._single_dilation(yvals, 3, 2))
 
-    def test_that_single_dilation_with_zero_window_does_nothing(self):
+    def test_single_dilation_with_zero_window_does_nothing(self):
         yvals = np.array([-5, -3, 0, 1, -2, 2, 9])
 
         self.assertEqual(0, self.alg_instance._single_dilation(yvals, 2, 0))
 
-    def test_that_erosion_with_zero_window_is_an_invariant(self):
+    def test_erosion_with_zero_window_is_an_invariant(self):
         np.testing.assert_equal(self.y_values, self.alg_instance.erosion(self.y_values, 0))
 
-    @mock.patch(
-        'plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.FindPeakAutomatic._single_erosion')
-    def test_that_erosion_calls_single_erosion_the_correct_number_of_times(
-            self, mock_single_erosion):
-        times = len(self.y_values)
-        win_size = 2
-        call_list = []
-        for i in range(times):
-            call_list.append(mock.call(self.y_values, i, win_size))
+    def test_erosion_calls_single_erosion_the_correct_number_of_times(self, ):
+        with mock.patch(
+                'plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.FindPeakAutomatic._single_erosion'
+        ) as mock_single_erosion:
+            times = len(self.y_values)
+            win_size = 2
+            call_list = []
+            for i in range(times):
+                call_list.append(mock.call(self.y_values, i, win_size))
 
-        self.alg_instance.erosion(self.y_values, win_size)
+            self.alg_instance.erosion(self.y_values, win_size)
 
-        self.assertEqual(times, mock_single_erosion.call_count)
-        mock_single_erosion.assert_has_calls(call_list, any_order=True)
+            self.assertEqual(times, mock_single_erosion.call_count)
+            mock_single_erosion.assert_has_calls(call_list, any_order=True)
 
-    def test_that_dilation_with_zero_window_is_an_invariant(self):
+    def test_dilation_with_zero_window_is_an_invariant(self):
         np.testing.assert_equal(self.y_values, self.alg_instance.dilation(self.y_values, 0))
 
-    @mock.patch(
-        'plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.FindPeakAutomatic._single_dilation'
-    )
-    def test_that_dilation_calls_single_erosion_the_correct_number_of_times(
-            self, mock_single_dilation):
-        times = len(self.y_values)
-        win_size = 2
-        call_list = []
-        for i in range(times):
-            call_list.append(mock.call(self.y_values, i, win_size))
+    def test_dilation_calls_single_erosion_the_correct_number_of_times(self):
+        with mock.patch(
+                'plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.FindPeakAutomatic._single_dilation'
+        ) as mock_single_dilation:
+            times = len(self.y_values)
+            win_size = 2
+            call_list = []
+            for i in range(times):
+                call_list.append(mock.call(self.y_values, i, win_size))
 
-        self.alg_instance.dilation(self.y_values, win_size)
+            self.alg_instance.dilation(self.y_values, win_size)
 
-        self.assertEqual(times, mock_single_dilation.call_count)
-        mock_single_dilation.assert_has_calls(call_list, any_order=True)
+            self.assertEqual(times, mock_single_dilation.call_count)
+            mock_single_dilation.assert_has_calls(call_list, any_order=True)
 
     @mock.patch('plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.FindPeakAutomatic.erosion')
     @mock.patch('plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.FindPeakAutomatic.dilation'
                 )
-    def test_that_opening_calls_correct_functions_in_correct_order(self, mock_dilation,
-                                                                   mock_erosion):
+    def test_opening_calls_correct_functions_in_correct_order(self, mock_dilation, mock_erosion):
         win_size = 3
 
         self.alg_instance.opening(self.y_values, win_size)
@@ -199,8 +210,8 @@ class FindPeakAutomaticTest(unittest.TestCase):
     @mock.patch('plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.FindPeakAutomatic.dilation'
                 )
     @mock.patch('plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.FindPeakAutomatic.erosion')
-    def test_that_average_calls_right_functions_in_right_order(self, mock_erosion, mock_dilation,
-                                                               mock_opening):
+    def test_average_calls_right_functions_in_right_order(self, mock_erosion, mock_dilation,
+                                                          mock_opening):
         win_size = 3
 
         self.alg_instance.average(self.y_values, win_size)
@@ -213,24 +224,203 @@ class FindPeakAutomaticTest(unittest.TestCase):
         mock_dilation.assert_called_with(op_ret, win_size)
         mock_erosion.assert_called_with(op_ret, win_size)
 
-    def test_that_generate_peak_guess_table_correctly_formats_table(self):
+    def test_generate_peak_guess_table_correctly_formats_table(self):
         peakids = [2, 4, 10, 34]
 
         peak_guess_table = self.alg_instance.generate_peak_guess_table(self.x_values, peakids)
 
         self.assertEqual(peak_guess_table.getColumnNames(), ['centre'])
 
-    def test_that_generate_peak_guess_table_with_no_peaks_generates_empty_table(self):
+    def test_generate_peak_guess_table_with_no_peaks_generates_empty_table(self):
         peak_guess_table = self.alg_instance.generate_peak_guess_table(self.x_values, [])
 
         self.assertEqual(peak_guess_table.rowCount(), 0)
 
-    def test_that_generate_peak_guess_table_adds_correct_values_of_peak_centre(self):
+    def test_generate_peak_guess_table_adds_correct_values_of_peak_centre(self):
         peakids = [2, 23, 19, 34, 25, 149, 234]
         peak_guess_table = self.alg_instance.generate_peak_guess_table(self.x_values, peakids)
 
         for i, pid in enumerate(sorted(peakids)):
             self.assertAlmostEqual(peak_guess_table.row(i)['centre'], self.x_values[pid], 5)
+
+    def test_find_good_peaks_calls_fit_gaussian_peaks_twice_if_no_peaks_given(self):
+        with mock.patch('plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.FitGaussianPeaks'
+                        ) as mock_fit:
+            tmp_table = CreateEmptyTableWorkspace()
+            tmp_table.addColumn(type='float', name='chi2')
+            tmp_table.addColumn(type='float', name='poisson')
+            tmp_table.addRow([10, 20])
+            mock_fit.return_value = (None, None, tmp_table)
+            self.alg_instance.min_sigma = 1
+            self.alg_instance.max_sigma = 10
+            peakids = [
+                np.argwhere(self.x_values == self.centre[0])[0, 0],
+                np.argwhere(self.x_values == self.centre[1])[0, 0]
+            ]
+
+            self.alg_instance.find_good_peaks(self.x_values, [], 0.1, 5, False, self.data_ws, 5)
+
+            self.assertEqual(2, mock_fit.call_count)
+
+    def _table_side_effect(self, idx):
+        raise ValueError('Index = %d' % idx)
+
+    def test_find_good_peaks_selects_correct_column_for_error(self):
+        with mock.patch('plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.FitGaussianPeaks'
+                        ) as mock_fit:
+            mock_table = mock.Mock()
+            mock_table.column.side_effect = self._table_side_effect
+            mock_fit.return_value = None, None, mock_table
+
+            # chi2 cost
+            with self.assertRaises(ValueError) as chi2:
+                self.alg_instance.find_good_peaks(self.x_values, [], 0.1, 5, False, self.data_ws, 5)
+
+            # poisson cost
+            with self.assertRaises(ValueError) as poisson:
+                self.alg_instance.find_good_peaks(self.x_values, [], 0.1, 5, True, self.data_ws, 5)
+
+            self.assertIn('Index = 0', chi2.exception)
+            self.assertNotIn('Index = 1', chi2.exception)
+            self.assertNotIn('Index = 0', poisson.exception)
+            self.assertIn('Index = 1', poisson.exception)
+
+    def test_find_good_peaks_returns_correct_peaks(self):
+        self.alg_instance.min_sigma = 1
+        self.alg_instance.max_sigma = 10
+        actual_peaks, peak_table, refit_peak_table = self.alg_instance.find_good_peaks(
+            self.x_values, self.peakids, 0, 5, False, self.data_ws, 5)
+        peak1 = peak_table.row(0)
+        peak2 = peak_table.row(1)
+
+        self.assertEquals(self.peakids, actual_peaks)
+        self.assertEqual(0, refit_peak_table.rowCount())
+        self.assertEqual(refit_peak_table.getColumnNames(), peak_table.getColumnNames())
+
+        # Test that centre is correct (within error)
+        self.assertLess(peak1['centre'] - peak1['error centre'], self.centre[0])
+        self.assertGreater(peak1['centre'] + peak1['error centre'], self.centre[0])
+        self.assertLess(peak2['centre'] - peak2['error centre'], self.centre[1])
+        self.assertGreater(peak2['centre'] + peak2['error centre'], self.centre[1])
+
+        # Test that height is correct (within error)
+        # The +10 corrects for the addition of a background
+        self.assertLess(peak1['height'] - peak1['error height'], self.height[0] + 10)
+        self.assertGreater(peak1['height'] + peak1['error height'], self.height[0] + 10)
+        self.assertLess(peak2['height'] - peak2['error height'], self.height[1] + 10)
+        self.assertGreater(peak2['height'] + peak2['error height'], self.height[1] + 10)
+
+        # Test that sigma is correct, here error tends to be greater, need to account for that
+        self.assertLess(peak1['sigma'] - 3 * peak1['error sigma'], self.width[0])
+        self.assertGreater(peak1['sigma'] + 3 * peak1['error sigma'], self.width[0])
+        self.assertLess(peak2['sigma'] - 3 * peak2['error sigma'], self.width[1])
+        self.assertGreater(peak2['sigma'] + 3 * peak2['error sigma'], self.width[1])
+
+    def test_find_peaks_is_called_if_scipy_version_higher_1_1_0(self):
+        with mock.patch(
+                'plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.scipy') as mock_scipy:
+            mock_scipy.__version__ = '1.1.0'
+            mock_scipy.signal.find_peaks.return_value = (self.peakids, {
+                'prominences': self.peakids
+            })
+            self.alg_instance.process(self.x_values,
+                                      self.y_values,
+                                      raw_error=np.sqrt(self.y_values),
+                                      acceptance=0,
+                                      average_window=50,
+                                      bad_peak_to_consider=2,
+                                      use_poisson=False,
+                                      peak_width_estimate=5,
+                                      fit_to_baseline=False,
+                                      prog_reporter=mock.Mock())
+
+            self.assertEqual(2, mock_scipy.signal.find_peaks.call_count)
+            self.assertEqual(0, mock_scipy.signal.find_peaks_cwt.call_count)
+
+    def test_find_peaks_cwt_is_called_if_scipy_version_lower_1_1_0(self):
+        with mock.patch(
+                'plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.scipy') as mock_scipy:
+            mock_scipy.__version__ = '1.0.0'
+            mock_scipy.signal.find_peaks.return_value = (self.peakids, {
+                'prominences': self.peakids
+            })
+            self.alg_instance.process(self.x_values,
+                                      self.y_values,
+                                      raw_error=np.sqrt(self.y_values),
+                                      acceptance=0,
+                                      average_window=50,
+                                      bad_peak_to_consider=2,
+                                      use_poisson=False,
+                                      peak_width_estimate=5,
+                                      fit_to_baseline=False,
+                                      prog_reporter=mock.Mock())
+
+            self.assertEqual(0, mock_scipy.signal.find_peaks.call_count)
+            self.assertEqual(1, mock_scipy.signal.find_peaks_cwt.call_count)
+
+    def test_process_calls_find_good_peaks(self):
+        with mock.patch('plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.CreateWorkspace'
+                        ) as mock_create_ws:
+            mock_create_ws.return_value = self.data_ws
+            self.alg_instance.find_good_peaks = mock.Mock()
+
+            actual_return = self.alg_instance.process(self.x_values,
+                                                      self.y_values,
+                                                      raw_error=np.sqrt(self.y_values),
+                                                      acceptance=0,
+                                                      average_window=50,
+                                                      bad_peak_to_consider=2,
+                                                      use_poisson=False,
+                                                      peak_width_estimate=5,
+                                                      fit_to_baseline=False,
+                                                      prog_reporter=mock.Mock())
+
+            base = self.alg_instance.average(self.y_values, 50)
+            base += self.alg_instance.average(self.y_values - base, 50)
+            flat = self.y_values - base
+
+            self.assertEqual(1, self.alg_instance.find_good_peaks.call_count)
+            self.alg_instance.find_good_peaks.asser_called_with(self.x_values,
+                                                                flat,
+                                                                acceptance=0,
+                                                                bad_peak_to_consider=2,
+                                                                use_poisson=False,
+                                                                fit_ws=self.data_ws,
+                                                                peak_width_estimate=5)
+
+    def test_process_returns_the_return_value_of_find_good_peaks(self):
+        with mock.patch('plugins.algorithms.WorkflowAlgorithms.FindPeakAutomatic.CreateWorkspace'
+                        ) as mock_create_ws:
+            mock_create_ws.return_value = self.data_ws
+            win_size = 500
+
+            actual_return = self.alg_instance.process(self.x_values,
+                                                      self.y_values,
+                                                      raw_error=np.sqrt(self.y_values),
+                                                      acceptance=0,
+                                                      average_window=win_size,
+                                                      bad_peak_to_consider=2,
+                                                      use_poisson=False,
+                                                      peak_width_estimate=5,
+                                                      fit_to_baseline=False,
+                                                      prog_reporter=mock.Mock())
+            import copy
+            actual_return = copy.deepcopy(actual_return)
+
+            base = self.alg_instance.average(self.y_values, win_size)
+            base += self.alg_instance.average(self.y_values - base, win_size)
+            flat = self.y_values - base
+            expected_return = self.alg_instance.find_good_peaks(self.x_values,
+                                                                self.peakids,
+                                                                acceptance=0,
+                                                                bad_peak_to_consider=2,
+                                                                use_poisson=False,
+                                                                fit_ws=self.data_ws,
+                                                                peak_width_estimate=5), base
+
+            self.assertEqual(expected_return[0][0], actual_return[0][0])
+            self.assertTableEqual(expected_return[0][1], actual_return[0][1])
+            np.testing.assert_almost_equal(expected_return[1], actual_return[1])
 
 
 if __name__ == '__main__':

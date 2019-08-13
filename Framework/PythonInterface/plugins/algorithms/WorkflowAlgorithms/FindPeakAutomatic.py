@@ -86,6 +86,8 @@ class FindPeakAutomatic(DataProcessorAlgorithm):
                              validator=FloatBoundedValidator(lower=0.0))
         self.declareProperty('PlotPeaks', False,
                              'Plot the position of the peaks found by the algorithm')
+        self.declareProperty('PlotBaseline', False,
+                             'Plot the baseline as calculated by the algorithm')
 
         # Output table
         self.declareProperty(name='PeakPropertiesTableName',
@@ -105,6 +107,7 @@ class FindPeakAutomatic(DataProcessorAlgorithm):
         self.use_poisson_cost = self.getProperty('UsePoissonCost').value
         self.fit_to_baseline = self.getProperty('FitToBaseline').value
         plot_peaks = self.getProperty('PlotPeaks').value
+        plot_baseline = self.getProperty('PlotBaseline').value
         self.peak_width_estimate = self.getProperty('EstimatePeakSigma').value
         self.min_sigma = self.getProperty('MinPeakSigma').value
         self.max_sigma = self.getProperty('MaxPeakSigma').value
@@ -145,23 +148,24 @@ class FindPeakAutomatic(DataProcessorAlgorithm):
         prog_reporter.report('Cropped data')
 
         # Find the best peaks
-        peakids, peak_table, refit_peak_table = self.process(
-            raw_xvals,
-            raw_yvals,
-            raw_error,
-            acceptance=self.acceptance,
-            average_window=self.smooth_window,
-            bad_peak_to_consider=self.bad_peak_to_consider,
-            use_poisson=self.use_poisson_cost,
-            peak_width_estimate=self.peak_width_estimate,
-            fit_to_baseline=self.fit_to_baseline,
-            prog_reporter=prog_reporter
-        )
+        (peakids, peak_table,
+         refit_peak_table), baseline = self.process(raw_xvals,
+                                                    raw_yvals,
+                                                    raw_error,
+                                                    acceptance=self.acceptance,
+                                                    average_window=self.smooth_window,
+                                                    bad_peak_to_consider=self.bad_peak_to_consider,
+                                                    use_poisson=self.use_poisson_cost,
+                                                    peak_width_estimate=self.peak_width_estimate,
+                                                    fit_to_baseline=self.fit_to_baseline,
+                                                    prog_reporter=prog_reporter)
 
         # Plot results if required
         if plot_peaks:
             import matplotlib.pyplot as plt
             plt.plot(raw_xvals, raw_yvals)
+            if plot_baseline:
+                plt.plot(raw_xvals, baseline)
             plt.scatter(raw_xvals[peakids], raw_yvals[peakids], marker='x', c='r')
             plt.show()
 
@@ -245,34 +249,33 @@ class FindPeakAutomatic(DataProcessorAlgorithm):
 
     def find_good_peaks(self, xvals, peakids, acceptance, bad_peak_to_consider, use_poisson, fit_ws,
                         peak_width_estimate):
-        prog_reporter = Progress(self, start=0.1, end=1.0, nreports=2+len(peakids))
+        prog_reporter = Progress(self, start=0.1, end=1.0, nreports=2 + len(peakids))
 
         actual_peaks = []
         skipped = 0
         cost_idx = 1 if use_poisson else 0
-        ret = FitGaussianPeaks(InputWorkspace=fit_ws,
-                               PeakGuessTable=self.generate_peak_guess_table(xvals, []),
-                               CentreTolerance=1.0,
-                               EstimatedPeakSigma=peak_width_estimate,
-                               MinPeakSigma=self.min_sigma,
-                               MaxPeakSigma=self.max_sigma,
-                               GeneralFitTolerance=0.1,
-                               RefitTolerance=0.001)
-        peak_table, refit_peak_table, cost = ret
+        peak_table, refit_peak_table, cost = FitGaussianPeaks(
+            InputWorkspace=fit_ws,
+            PeakGuessTable=self.generate_peak_guess_table(xvals, []),
+            CentreTolerance=1.0,
+            EstimatedPeakSigma=peak_width_estimate,
+            MinPeakSigma=self.min_sigma,
+            MaxPeakSigma=self.max_sigma,
+            GeneralFitTolerance=0.1,
+            RefitTolerance=0.001)
         old_cost = cost.column(cost_idx)[0]
         prog_reporter.report('Fitting null hypothesis')
 
         for idx, pid in enumerate(peakids):
-            ret = FitGaussianPeaks(InputWorkspace=fit_ws,
-                                   PeakGuessTable=self.generate_peak_guess_table(
-                                       xvals, actual_peaks + [pid]),
-                                   CentreTolerance=1.0,
-                                   EstimatedPeakSigma=peak_width_estimate,
-                                   MinPeakSigma=self.min_sigma,
-                                   MaxPeakSigma=self.max_sigma,
-                                   GeneralFitTolerance=0.1,
-                                   RefitTolerance=0.001)
-            peak_table, refit_peak_table, cost = ret
+            peak_table, refit_peak_table, cost = FitGaussianPeaks(
+                InputWorkspace=fit_ws,
+                PeakGuessTable=self.generate_peak_guess_table(xvals, actual_peaks + [pid]),
+                CentreTolerance=1.0,
+                EstimatedPeakSigma=peak_width_estimate,
+                MinPeakSigma=self.min_sigma,
+                MaxPeakSigma=self.max_sigma,
+                GeneralFitTolerance=0.1,
+                RefitTolerance=0.001)
             new_cost = cost.column(cost_idx)[0]
             if use_poisson:
                 # test if p_new > p_old, but working with logs
@@ -292,20 +295,21 @@ class FindPeakAutomatic(DataProcessorAlgorithm):
                 skipped += 1
             prog_reporter.report('Iteration {}, {} peaks found'.format(idx, len(actual_peaks)))
 
-        ret = FitGaussianPeaks(InputWorkspace=fit_ws,
-                               PeakGuessTable=self.generate_peak_guess_table(xvals, actual_peaks),
-                               CentreTolerance=1.0,
-                               EstimatedPeakSigma=peak_width_estimate,
-                               MinPeakSigma=self.min_sigma,
-                               MaxPeakSigma=self.max_sigma,
-                               GeneralFitTolerance=0.1,
-                               RefitTolerance=0.001)
+        peak_table, refit_peak_table, cost = FitGaussianPeaks(
+            InputWorkspace=fit_ws,
+            PeakGuessTable=self.generate_peak_guess_table(xvals, actual_peaks),
+            CentreTolerance=1.0,
+            EstimatedPeakSigma=peak_width_estimate,
+            MinPeakSigma=self.min_sigma,
+            MaxPeakSigma=self.max_sigma,
+            GeneralFitTolerance=0.1,
+            RefitTolerance=0.001)
         prog_reporter.report('Fitting done')
-        peak_table, refit_peak_table, cost = ret
         return actual_peaks, peak_table, refit_peak_table
 
     def process(self, raw_xvals, raw_yvals, raw_error, acceptance, average_window,
-                bad_peak_to_consider, use_poisson, peak_width_estimate, fit_to_baseline, prog_reporter):
+                bad_peak_to_consider, use_poisson, peak_width_estimate, fit_to_baseline,
+                prog_reporter):
         # Remove background
         rough_base = self.average(raw_yvals, average_window)
         baseline = rough_base + self.average(raw_yvals - rough_base, average_window)
@@ -336,6 +340,7 @@ class FindPeakAutomatic(DataProcessorAlgorithm):
             flat_peaks = scipy.signal.find_peaks_cwt(flat_yvals, widths=np.array([0.1]))
             flat_peaks = sorted(flat_peaks, key=lambda pid: flat_yvals[pid], reverse=True)
         prog_reporter.report('Found all peaks')
+        print(flat_peaks)
 
         return self.find_good_peaks(raw_xvals,
                                     flat_peaks,
@@ -343,7 +348,7 @@ class FindPeakAutomatic(DataProcessorAlgorithm):
                                     bad_peak_to_consider=bad_peak_to_consider,
                                     use_poisson=use_poisson,
                                     fit_ws=flat_ws,
-                                    peak_width_estimate=peak_width_estimate)
+                                    peak_width_estimate=peak_width_estimate), baseline
 
 
 AlgorithmFactory.subscribe(FindPeakAutomatic())

@@ -139,6 +139,13 @@ class FitGaussianPeaks(DataProcessorAlgorithm):
         self.setProperty('RefitPeakProperties', refit_peak_table)
         self.setProperty('FitCost', fit_cost)
 
+        self.delete_if_present('tmp_fit_ws')
+
+    @staticmethod
+    def delete_if_present(workspace):
+        if workspace in mtd:
+            DeleteWorkspace(workspace)
+
     def parse_fit_table(self, param, data_table, refit=False):
         to_refit = []
         data_table.addColumn(type='float', name='centre')
@@ -239,19 +246,14 @@ class FitGaussianPeaks(DataProcessorAlgorithm):
             rside = 5 + lside
         x_range = xvals[lside:rside]
         y_range = yvals[lside:rside]
+        # The function least_squares should not be used as it is not present in scipy < 1.1.0
+        # Using the mantid fitting function will not produce an equally good result here
         p_est = scipy.optimize.leastsq(
             self.gaussian_peak_background,
             x0=np.array([np.average(y_range), 0, xvals[centre], yvals[centre],
                          self.estimate_sigma]),
             args=(x_range, y_range))[0]
         params = [p_est[2], p_est[0] + p_est[1] * p_est[2] + p_est[3], p_est[4]]
-
-        return params
-
-    def estimate_parameters(self, xvals, yvals, peakids, win_size):
-        params = []
-        for pid in peakids:
-            params += list(self.estimate_single_parameters(xvals, yvals, pid, win_size))
 
         return params
 
@@ -262,8 +264,15 @@ class FitGaussianPeaks(DataProcessorAlgorithm):
         fit_func = ''
         fit_constr = ''
         for i, pid in enumerate(peakids):
-            params = tuple(self.estimate_single_parameters(xvals, yvals, pid, 3))
-            fit_func += 'name=Gaussian,PeakCentre=%f,Height=%f,Sigma=%f;' % params
+            win_size = int(self.estimate_sigma * len(xvals) / (max(xvals) - min(xvals)))
+            if win_size < 2:
+                win_size = 2
+            centre, height, sigma = tuple(self.estimate_single_parameters(xvals, yvals, pid, win_size))
+            if sigma < self.min_sigma:
+                centre = xvals[pid]
+                height = yvals[pid]
+                sigma = self.estimate_sigma
+            fit_func += 'name=Gaussian,PeakCentre={},Height={},Sigma={};'.format(centre, height, sigma)
             fit_constr += '%f<f%d.PeakCentre<%f,%f<f%d.Height<%f,%f<f%d.Sigma<%d,' \
                           % (xvals[pid] * (1-self.general_tolerance), i, xvals[pid] * (1+self.general_tolerance),
                              yvals[pid] * (1-self.general_tolerance), i, yvals[pid] * (1+self.general_tolerance),
@@ -283,8 +292,7 @@ class FitGaussianPeaks(DataProcessorAlgorithm):
             OutputCompositeMembers=True,
             StartX=min(xvals),
             EndX=max(xvals),
-            Constraints=fit_constr
-        )
+            Constraints=fit_constr)
 
         return fit_result.readY(1).copy(), param
 

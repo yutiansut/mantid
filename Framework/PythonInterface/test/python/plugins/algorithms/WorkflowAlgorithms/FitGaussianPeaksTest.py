@@ -27,28 +27,28 @@ class FitGaussianPeaksTest(unittest.TestCase):
     alg_instance = None
     x_values = None
     y_values = None
+    background = None
 
     def setUp(self):
         # Creating two peaks on an exponential background with gaussian noise
         self.x_values = np.linspace(0, 100, 1001)
-        centre = [25, 75]
-        height = [35, 20]
-        width = [10, 5]
-        self.y_values = self.gaussian(self.x_values, centre[0], height[0], width[0])
-        self.y_values += self.gaussian(self.x_values, centre[1], height[1], width[1])
-        background = 10 * np.ones(len(self.x_values))
-        self.y_values += background
+        self.centre = [25, 75]
+        self.height = [35, 20]
+        self.width = [10, 5]
+        self.y_values = self.gaussian(self.x_values, self.centre[0], self.height[0], self.width[0])
+        self.y_values += self.gaussian(self.x_values, self.centre[1], self.height[1], self.width[1])
+        self.background = 10 * np.ones(len(self.x_values))
 
         # Generating a table with a guess of the position of the centre of the peaks
         peak_table = CreateEmptyTableWorkspace()
         peak_table.addColumn(type='float', name='Approximated Centre')
-        peak_table.addRow([centre[0] + 2])
-        peak_table.addRow([centre[1] - 3])
+        peak_table.addRow([self.centre[0] + 2])
+        peak_table.addRow([self.centre[1] - 3])
 
         # Generating a workspace with the data and a flat background
         data_ws = CreateWorkspace(DataX=np.concatenate((self.x_values, self.x_values)),
-                                  DataY=np.concatenate((self.y_values, background)),
-                                  DataE=np.sqrt(np.concatenate((self.y_values, background))),
+                                  DataY=np.concatenate((self.y_values, self.background)),
+                                  DataE=np.sqrt(np.concatenate((self.y_values, self.background))),
                                   NSpec=2)
 
         self.data_ws = data_ws
@@ -240,10 +240,9 @@ class FitGaussianPeaksTest(unittest.TestCase):
 
     def test_poisson_cost_returns_correct_value(self):
         hyp = np.ones(len(self.x_values))
-        yvals = np.array(
-            [max(x, y) for x, y in zip(0.001 * np.ones(len(self.x_values)), self.y_values)])
+        yvals = np.array([max(x, y) for x, y in zip(0.001 * np.ones(len(self.x_values)), self.y_values)])
 
-        expected = np.sum(-yvals + hyp * np.log(yvals))
+        expected = sum(-yvals + hyp * np.log(yvals))
         actual = self.alg_instance.poisson_cost(hyp, yvals)
 
         self.assertAlmostEqual(expected, actual)
@@ -297,13 +296,6 @@ class FitGaussianPeaksTest(unittest.TestCase):
 
         self.assertEqual(len(ret), 3)
 
-    def test_estimate_parameters_returns_correct_number_parameters(self):
-        idx = [250, 750]
-
-        ret = self.alg_instance.estimate_parameters(self.x_values, self.y_values, idx, 10)
-
-        self.assertEqual(len(ret), 6)
-
     def test_general_fit_returns_if_given_no_peaks(self):
         yvals, params = self.alg_instance.general_fit(self.x_values, self.y_values, [])
 
@@ -322,15 +314,14 @@ class FitGaussianPeaksTest(unittest.TestCase):
             self.assertEqual(params, 'parameters')
             np.testing.assert_equal(yvals, [7, 8])
             mock_fit.assert_called_with(
-                Function='name=Gaussian,PeakCentre=1.000000,Height=2.000000,Sigma=3.000000;',
+                Function='name=Gaussian,PeakCentre=1,Height=2,Sigma=3;',
                 InputWorkspace='ws',
                 Output='fit_result',
                 Minimizer='Levenberg-MarquardtMD',
                 OutputCompositeMembers=True,
                 StartX=min(self.x_values),
                 EndX=max(self.x_values),
-                Constraints=
-                '0.900000<PeakCentre<1.100000,10.768245<Height<13.161188,0.000000<Sigma<30,')
+                Constraints='0.900000<PeakCentre<1.100000,1.768245<Height<2.161188,0.000000<Sigma<30,')
 
     # Separating the cases 1/multiple peaks tests that the constraints are named correctly in both cases
     def test_fit_function_is_called_correctly_when_given_multiple_peaks(self):
@@ -345,21 +336,19 @@ class FitGaussianPeaksTest(unittest.TestCase):
             self.assertEqual(params, 'parameters')
             np.testing.assert_equal(yvals, [7, 8])
             mock_fit.assert_called_with(
-                Function='name=Gaussian,PeakCentre=1.000000,Height=2.000000,Sigma=3.000000;'
-                'name=Gaussian,PeakCentre=1.000000,Height=2.000000,Sigma=3.000000;',
+                Function='name=Gaussian,PeakCentre=1,Height=2,Sigma=3;'
+                         'name=Gaussian,PeakCentre=1,Height=2,Sigma=3;',
                 InputWorkspace='ws',
                 Output='fit_result',
                 Minimizer='Levenberg-MarquardtMD',
                 OutputCompositeMembers=True,
                 StartX=min(self.x_values),
                 EndX=max(self.x_values),
-                Constraints=
-                '0.900000<f0.PeakCentre<1.100000,10.768245<f0.Height<13.161188,0.000000<f0.Sigma<30,'
-                '1.800000<f1.PeakCentre<2.200000,11.236669<f1.Height<13.733706,0.000000<f1.Sigma<30,'
+                Constraints='0.900000<f0.PeakCentre<1.100000,1.768245<f0.Height<2.161188,0.000000<f0.Sigma<30,'
+                            '1.800000<f1.PeakCentre<2.200000,2.236669<f1.Height<2.733706,0.000000<f1.Sigma<30,'
             )
 
-    @mock.patch(
-        'plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks.FitGaussianPeaks.getProperty')
+    @mock.patch('plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks.FitGaussianPeaks.getProperty')
     def test_refit_peaks_uses_xvalue_from_input_workspace(self, mock_get_property):
         self.alg_instance.refit_peaks([])
         calls = [
@@ -369,8 +358,7 @@ class FitGaussianPeaksTest(unittest.TestCase):
         ]
         mock_get_property.assert_has_calls(calls, any_order=True)
 
-    @mock.patch(
-        'plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks.FitGaussianPeaks.getProperty')
+    @mock.patch('plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks.FitGaussianPeaks.getProperty')
     def test_refit_peaks_returns_if_given_no_parameters(self, mock_get_property):
         self.alg_instance.refit_peaks([])
         mock_get_property().value.readX().copy.return_value = [1, 2, 3, 4]
@@ -380,8 +368,7 @@ class FitGaussianPeaksTest(unittest.TestCase):
         np.testing.assert_equal(yvals, np.zeros(4))
 
     @mock.patch('plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks.Fit')
-    @mock.patch(
-        'plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks.FitGaussianPeaks.getProperty')
+    @mock.patch('plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks.FitGaussianPeaks.getProperty')
     def test_refit_peaks_is_called_correctly_when_given_one_peak(self, mock_get_property, mock_fit):
         mock_get_property().value.readX().copy.return_value = self.x_values
         self.alg_instance.getPropertyValue = mock.Mock(return_value='ws')
@@ -404,8 +391,7 @@ class FitGaussianPeaksTest(unittest.TestCase):
 
     # Separating the cases 1/multiple peaks tests that the constraints are named correctly in both cases
     @mock.patch('plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks.Fit')
-    @mock.patch(
-        'plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks.FitGaussianPeaks.getProperty')
+    @mock.patch('plugins.algorithms.WorkflowAlgorithms.FitGaussianPeaks.FitGaussianPeaks.getProperty')
     def test_refit_peaks_is_called_correctly_when_given_multiple_peaks(
             self, mock_get_property, mock_fit):
         mock_get_property().value.readX().copy.return_value = self.x_values
@@ -426,9 +412,62 @@ class FitGaussianPeaksTest(unittest.TestCase):
             OutputCompositeMembers=True,
             StartX=min(self.x_values),
             EndX=max(self.x_values),
-            Constraints=
-            '0.999000<f0.PeakCentre<1.001000,1.998000<f0.Height<2.002000,0.000000<f0.Sigma<30,'
-            '3.996000<f1.PeakCentre<4.004000,4.995000<f1.Height<5.005000,0.000000<f1.Sigma<30,')
+            Constraints='0.999000<f0.PeakCentre<1.001000,1.998000<f0.Height<2.002000,0.000000<f0.Sigma<30,'
+                        '3.996000<f1.PeakCentre<4.004000,4.995000<f1.Height<5.005000,0.000000<f1.Sigma<30,')
+
+    def test_algorithm_does_not_need_refitting_when_given_good_data(self):
+        peak_table, refit_peak_table, fit_cost = FitGaussianPeaks(
+            InputWorkspace=self.data_ws,
+            PeakGuessTable=self.peak_guess_table
+        )
+
+        self.assertEqual(0, refit_peak_table.rowCount())
+        self.assertEqual(2, peak_table.rowCount())
+
+    def test_fit_cost_contains_correct_numbers(self):
+        peak_table, refit_peak_table, fit_cost = FitGaussianPeaks(
+            InputWorkspace=self.data_ws,
+            PeakGuessTable=self.peak_guess_table,
+            EstimatedPeakSigma=5,
+            MinPeakSigma=3,
+            MaxPeakSigma=12,
+            GeneralFitTolerance=1
+        )
+        chi2 = fit_cost.column(0)[0]
+        poisson = fit_cost.column(1)[0]
+
+        peak1 = peak_table.row(0)
+        peak2 = peak_table.row(1)
+        yvals = self.gaussian(self.x_values, peak1['centre'], peak1['height'], peak1['sigma'])
+        yvals += self.gaussian(self.x_values, peak2['centre'], peak2['height'], peak2['sigma'])
+
+        real_chi2 = self.alg_instance.function_difference(self.y_values, yvals)
+        real_poisson = self.alg_instance.poisson_cost(self.y_values + self.background, yvals + self.background)
+
+        self.assertAlmostEqual(real_chi2, chi2, 3)
+        self.assertAlmostEqual(real_poisson, poisson, 3)
+
+    def test_peak_parameters_are_correct(self):
+        peak_table, refit_peak_table, fit_cost = FitGaussianPeaks(
+            InputWorkspace=self.data_ws,
+            PeakGuessTable=self.peak_guess_table,
+            EstimatedPeakSigma=5,
+            MinPeakSigma=3,
+            MaxPeakSigma=12,
+            GeneralFitTolerance=1
+        )
+
+        peak1 = peak_table.row(0)
+        peak2 = peak_table.row(1)
+        centre1, height1, sigma1 = peak1['centre'], peak1['height'], peak1['sigma']
+        centre2, height2, sigma2 = peak2['centre'], peak2['height'], peak2['sigma']
+
+        self.assertAlmostEqual(centre1, self.centre[0])
+        self.assertAlmostEqual(centre2, self.centre[1])
+        self.assertAlmostEqual(height1, self.height[0])
+        self.assertAlmostEqual(height2, self.height[1])
+        self.assertAlmostEqual(sigma1, self.width[0])
+        self.assertAlmostEqual(sigma2, self.width[1])
 
 
 if __name__ == '__main__':
