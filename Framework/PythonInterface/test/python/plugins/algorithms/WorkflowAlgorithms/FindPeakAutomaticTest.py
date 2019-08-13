@@ -50,12 +50,16 @@ class FindPeakAutomaticTest(unittest.TestCase):
         ]
 
         # Generating a workspace with the data and a flat background
-        data_ws = CreateWorkspace(DataX=np.concatenate((self.x_values, self.x_values)),
-                                  DataY=np.concatenate((self.y_values, self.background)),
-                                  DataE=np.sqrt(np.concatenate((self.y_values, self.background))),
-                                  NSpec=2)
+        self.raw_ws = CreateWorkspace(DataX=self.x_values,
+                                      DataY=self.y_values,
+                                      OutputWorkspace='raw_ws')
+        self.data_ws = CreateWorkspace(DataX=np.concatenate((self.x_values, self.x_values)),
+                                       DataY=np.concatenate((self.y_values, self.background)),
+                                       DataE=np.sqrt(
+                                           np.concatenate((self.y_values, self.background))),
+                                       NSpec=2,
+                                       OutputWorkspace='data_ws')
 
-        self.data_ws = data_ws
         self.peak_guess_table = peak_table
 
         self.alg_instance = _FindPeakAutomatic.FindPeakAutomatic()
@@ -94,6 +98,20 @@ class FindPeakAutomaticTest(unittest.TestCase):
         for i in range(expected.rowCount()):
             self.assertEqual(expected.row(i), actual.row(i))
 
+    def assertPeakFound(self, peak_params, centre, height, sigma):
+        # Test that centre is correct (within error)
+        self.assertLess(peak_params['centre'] - peak_params['error centre'], centre)
+        self.assertGreater(peak_params['centre'] + peak_params['error centre'], centre)
+
+        # Test that height is correct (within error)
+        self.assertLess(peak_params['height'] - peak_params['error height'], height)
+        self.assertGreater(peak_params['height'] + peak_params['error height'], height)
+
+        # Test that sigma is correct, here error tends to be greater, need to account for that
+        self.assertLess(peak_params['sigma'] - 3 * peak_params['error sigma'], sigma)
+        self.assertGreater(peak_params['sigma'] + 3 * peak_params['error sigma'], sigma)
+
+
     def test_algorithm_with_no_input_workspace_raises_exception(self):
         with self.assertRaises(RuntimeError):
             FindPeakAutomatic()
@@ -123,6 +141,37 @@ class FindPeakAutomaticTest(unittest.TestCase):
     def test_algorithm_with_negative_max_peak_sigma_throws(self):
         with self.assertRaises(ValueError):
             FindPeakAutomatic(InputWorkspace=self.data_ws, MaxPeakSigma=-0.1, PlotPeaks=False)
+
+    def test_algorithm_creates_all_output_workspaces(self):
+        ws_name = self.raw_ws.getName()
+        FindPeakAutomatic(self.raw_ws)
+
+        self.assertIn('{}_with_errors'.format(ws_name), mtd)
+        self.assertIn('raw_data_ws_{}'.format('properties'), mtd)
+        self.assertIn('raw_data_ws_{}'.format('refit_properties'), mtd)
+
+    def test_algorithm_removes_temporary_workspaces(self):
+        FindPeakAutomatic(self.raw_ws)
+
+        self.assertNotIn('ret', mtd)
+        self.assertNotIn('peak_table', mtd)
+        self.assertNotIn('refit_peak_table', mtd)
+        self.assertNotIn('raw_data_ws', mtd)
+        self.assertNotIn('flat_ws', mtd)
+        self.assertNotIn('fit_result_NormalisedCovarianceMatrix', mtd)
+        self.assertNotIn('fit_result_Parameters', mtd)
+        self.assertNotIn('fit_result_Workspace', mtd)
+        self.assertNotIn('fit_cost', mtd)
+
+    def test_output_tables_are_correctly_formatted(self):
+        FindPeakAutomatic(self.raw_ws, FitToBaseline=True)
+
+        peak_table = mtd['raw_data_ws_{}'.format('properties')]
+        refit_peak_table = mtd['raw_data_ws_{}'.format('refit_properties')]
+        self.assertEqual(self.peak_table_header, peak_table.getColumnNames())
+        self.assertEqual(self.peak_table_header, refit_peak_table.getColumnNames())
+        self.assertEqual(2, peak_table.rowCount())
+        self.assertEqual(0, refit_peak_table.rowCount())
 
     def test_single_erosion_returns_correct_result(self):
         yvals = np.array([-2, 3, 1, 0, 4])
@@ -297,24 +346,8 @@ class FindPeakAutomaticTest(unittest.TestCase):
         self.assertEqual(0, refit_peak_table.rowCount())
         self.assertEqual(refit_peak_table.getColumnNames(), peak_table.getColumnNames())
 
-        # Test that centre is correct (within error)
-        self.assertLess(peak1['centre'] - peak1['error centre'], self.centre[0])
-        self.assertGreater(peak1['centre'] + peak1['error centre'], self.centre[0])
-        self.assertLess(peak2['centre'] - peak2['error centre'], self.centre[1])
-        self.assertGreater(peak2['centre'] + peak2['error centre'], self.centre[1])
-
-        # Test that height is correct (within error)
-        # The +10 corrects for the addition of a background
-        self.assertLess(peak1['height'] - peak1['error height'], self.height[0] + 10)
-        self.assertGreater(peak1['height'] + peak1['error height'], self.height[0] + 10)
-        self.assertLess(peak2['height'] - peak2['error height'], self.height[1] + 10)
-        self.assertGreater(peak2['height'] + peak2['error height'], self.height[1] + 10)
-
-        # Test that sigma is correct, here error tends to be greater, need to account for that
-        self.assertLess(peak1['sigma'] - 3 * peak1['error sigma'], self.width[0])
-        self.assertGreater(peak1['sigma'] + 3 * peak1['error sigma'], self.width[0])
-        self.assertLess(peak2['sigma'] - 3 * peak2['error sigma'], self.width[1])
-        self.assertGreater(peak2['sigma'] + 3 * peak2['error sigma'], self.width[1])
+        self.assertPeakFound(peak1, self.centre[0], self.height[0]+10, self.width[0])
+        self.assertPeakFound(peak2, self.centre[1], self.height[1]+10, self.width[1])
 
     def test_find_peaks_is_called_if_scipy_version_higher_1_1_0(self):
         with mock.patch(
@@ -421,6 +454,31 @@ class FindPeakAutomaticTest(unittest.TestCase):
             self.assertEqual(expected_return[0][0], actual_return[0][0])
             self.assertTableEqual(expected_return[0][1], actual_return[0][1])
             np.testing.assert_almost_equal(expected_return[1], actual_return[1])
+
+    def _assert_matplotlib_not_present(self, *args):
+        import sys
+        self.assertNotIn('matplotlib.pyplot', sys.modules)
+
+    # If matplotlib.pyplot is imported other tests fail on windows and ubuntu
+    def test_matplotlib_pyplot_is_not_imported(self):
+        self.alg_instance.dilation = mock.Mock(side_effect=self._assert_matplotlib_not_present)
+        self.alg_instance.opening(self.y_values, 0)
+
+    def test_that_algorithm_finds_peaks_correctly(self):
+        FindPeakAutomatic(
+            InputWorkspace=self.raw_ws,
+            SmoothWindow=500,
+            EstimatePeakSigma=5,
+            MinPeakSigma=3,
+            MaxPeakSigma=15,
+        )
+        peak_table = mtd['raw_data_ws_{}'.format('properties')]
+        refit_peak_table = mtd['raw_data_ws_{}'.format('refit_properties')]
+
+        self.assertEqual(2, peak_table.rowCount())
+        self.assertEqual(0, refit_peak_table.rowCount())
+        self.assertPeakFound(peak_table.row(0), self.centre[0], self.height[0], self.width[0])
+        self.assertPeakFound(peak_table.row(1), self.centre[1], self.height[1], self.width[1])
 
 
 if __name__ == '__main__':

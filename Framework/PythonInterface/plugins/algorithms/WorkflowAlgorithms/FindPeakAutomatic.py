@@ -340,7 +340,6 @@ class FindPeakAutomatic(DataProcessorAlgorithm):
             flat_peaks = scipy.signal.find_peaks_cwt(flat_yvals, widths=np.array([0.1]))
             flat_peaks = sorted(flat_peaks, key=lambda pid: flat_yvals[pid], reverse=True)
         prog_reporter.report('Found all peaks')
-        print(flat_peaks)
 
         return self.find_good_peaks(raw_xvals,
                                     flat_peaks,
