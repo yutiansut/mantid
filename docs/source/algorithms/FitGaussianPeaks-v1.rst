@@ -108,7 +108,7 @@ Output (the number on your machine may differ slightly from these:
 
 .. testoutput:: SimpleGaussianFit
 
-    Peak 1: centre=25.00+/-0.11, height=35.00+/-0.47, sigma=10.00+/-0.08
+    Peak 1: centre=25.00+/-0.11, height=35.00+/-0.47, sigma=10.00+/-0.09
     Peak 2: centre=75.00+/-0.10, height=20.00+/-0.49, sigma=5.00+/-0.07
     Chi2 cost: 0.000
     Poisson cost: 46444.723
