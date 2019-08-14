@@ -9,7 +9,6 @@
 from __future__ import (absolute_import, unicode_literals)
 
 from mantid.plots import MantidAxes
-
 from mantidqt.widgets.plotconfigdialog import curve_in_ax
 from workbench.plugins.editor import DEFAULT_CONTENT
 from workbench.plotting.plotscriptgenerator.axes import generate_add_subplot_command, generate_axis_limit_commands

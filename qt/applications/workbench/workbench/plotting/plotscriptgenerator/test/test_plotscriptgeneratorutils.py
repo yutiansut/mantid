@@ -10,6 +10,7 @@ import unittest
 
 from ast import parse
 from collections import OrderedDict
+
 from numpy import array
 
 from mantid.py3compat.mock import patch, Mock

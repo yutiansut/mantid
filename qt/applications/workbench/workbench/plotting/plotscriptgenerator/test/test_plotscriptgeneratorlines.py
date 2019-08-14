@@ -7,11 +7,11 @@
 #  This file is part of the mantid workbench.
 
 import unittest
+from copy import copy
 
 import matplotlib
 matplotlib.use("Agg")  # noqa
 import matplotlib.pyplot as plt
-from copy import copy
 from matplotlib.container import ErrorbarContainer
 
 from mantid.py3compat.mock import Mock, patch
