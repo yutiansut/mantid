@@ -329,10 +329,10 @@ class FindPeakAutomaticTest(unittest.TestCase):
             with self.assertRaises(ValueError) as poisson:
                 self.alg_instance.find_good_peaks(self.x_values, [], 0.1, 5, True, self.data_ws, 5)
 
-            self.assertIn('Index = 0', chi2.exception)
-            self.assertNotIn('Index = 1', chi2.exception)
-            self.assertNotIn('Index = 0', poisson.exception)
-            self.assertIn('Index = 1', poisson.exception)
+            self.assertIn('Index = 0', chi2.exception.args)
+            self.assertNotIn('Index = 1', chi2.exception.args)
+            self.assertNotIn('Index = 0', poisson.exception.args)
+            self.assertIn('Index = 1', poisson.exception.args)
 
     def test_find_good_peaks_returns_correct_peaks(self):
         self.alg_instance.min_sigma = 1
