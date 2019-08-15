@@ -98,18 +98,16 @@ class FindPeakAutomaticTest(unittest.TestCase):
         for i in range(expected.rowCount()):
             self.assertEqual(expected.row(i), actual.row(i))
 
-    def assertPeakFound(self, peak_params, centre, height, sigma):
-        # Test that centre is correct (within error)
-        self.assertLess(peak_params['centre'] - peak_params['error centre'], centre)
-        self.assertGreater(peak_params['centre'] + peak_params['error centre'], centre)
-
-        # Test that height is correct (within error)
-        self.assertLess(peak_params['height'] - peak_params['error height'], height)
-        self.assertGreater(peak_params['height'] + peak_params['error height'], height)
-
-        # Test that sigma is correct, here error tends to be greater, need to account for that
-        self.assertLess(peak_params['sigma'] - 3 * peak_params['error sigma'], sigma)
-        self.assertGreater(peak_params['sigma'] + 3 * peak_params['error sigma'], sigma)
+    def assertPeakFound(self, peak_params, centre, height, sigma, tolerance=0.01):
+        if not np.isclose(peak_params['centre'], centre, rtol=tolerance):
+            raise Exception('Expected {}, got {}. Difference greater than tolerance {}'
+                            .format(centre, peak_params['centre'], tolerance))
+        if not np.isclose(peak_params['height'], height, rtol=tolerance):
+            raise Exception('Expected {}, got {}. Difference greater than tolerance {}'
+                            .format(height, peak_params['height'], tolerance))
+        if not np.isclose(peak_params['sigma'], sigma, rtol=tolerance):
+            raise Exception('Expected {}, got {}. Difference greater than tolerance {}'
+                            .format(sigma, peak_params['sigma'], tolerance))
 
 
     def test_algorithm_with_no_input_workspace_raises_exception(self):
@@ -335,8 +333,8 @@ class FindPeakAutomaticTest(unittest.TestCase):
             self.assertIn('Index = 1', poisson.exception.args)
 
     def test_find_good_peaks_returns_correct_peaks(self):
-        self.alg_instance.min_sigma = 1
-        self.alg_instance.max_sigma = 10
+        self.alg_instance._min_sigma = 1
+        self.alg_instance._max_sigma = 10
         actual_peaks, peak_table, refit_peak_table = self.alg_instance.find_good_peaks(
             self.x_values, self.peakids, 0, 5, False, self.data_ws, 5)
         peak1 = peak_table.row(0)
@@ -346,8 +344,8 @@ class FindPeakAutomaticTest(unittest.TestCase):
         self.assertEqual(0, refit_peak_table.rowCount())
         self.assertEqual(refit_peak_table.getColumnNames(), peak_table.getColumnNames())
 
-        self.assertPeakFound(peak1, self.centre[0], self.height[0]+10, self.width[0])
-        self.assertPeakFound(peak2, self.centre[1], self.height[1]+10, self.width[1])
+        self.assertPeakFound(peak1, self.centre[0], self.height[0]+10, self.width[0], 0.05)
+        self.assertPeakFound(peak2, self.centre[1], self.height[1]+10, self.width[1], 0.05)
 
     def test_find_peaks_is_called_if_scipy_version_higher_1_1_0(self):
         with mock.patch(
@@ -477,8 +475,8 @@ class FindPeakAutomaticTest(unittest.TestCase):
 
         self.assertEqual(2, peak_table.rowCount())
         self.assertEqual(0, refit_peak_table.rowCount())
-        self.assertPeakFound(peak_table.row(0), self.centre[0], self.height[0], self.width[0])
-        self.assertPeakFound(peak_table.row(1), self.centre[1], self.height[1], self.width[1])
+        self.assertPeakFound(peak_table.row(0), self.centre[0], self.height[0], self.width[0], 0.05)
+        self.assertPeakFound(peak_table.row(1), self.centre[1], self.height[1], self.width[1], 0.05)
 
 
 if __name__ == '__main__':

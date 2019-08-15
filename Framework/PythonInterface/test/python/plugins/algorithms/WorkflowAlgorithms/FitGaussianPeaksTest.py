@@ -233,8 +233,8 @@ class FitGaussianPeaksTest(unittest.TestCase):
     def test_function_difference_returns_correct_value(self):
         hyp = np.ones(len(self.x_values))
 
-        expected = np.sum(np.power(self.y_values - hyp, 2)) / len(self.x_values)
-        actual = self.alg_instance.function_difference(self.y_values, hyp)
+        expected = np.sum(np.power(self.y_values - hyp, 2) / self.y_values) / len(self.x_values)
+        actual = self.alg_instance.function_difference(self.y_values, hyp, np.sqrt(self.y_values))
 
         self.assertAlmostEqual(expected, actual)
 
@@ -260,11 +260,12 @@ class FitGaussianPeaksTest(unittest.TestCase):
         cost = self.alg_instance.evaluate_cost(self.x_values,
                                                self.data_ws.readY(0),
                                                self.data_ws.readY(1),
+                                               self.data_ws.readE(0),
                                                peak_param=data_table,
                                                refit_peak_param=refit_data_table,
                                                use_poisson=False)
         model = self.alg_instance.multi_peak(params, self.x_values, np.zeros(len(self.x_values)))
-        expected = self.alg_instance.function_difference(model, self.data_ws.readY(0))
+        expected = self.alg_instance.function_difference(self.data_ws.readY(0), model, self.data_ws.readE(0))
 
         self.assertAlmostEqual(cost, expected, 5)
 
@@ -281,6 +282,7 @@ class FitGaussianPeaksTest(unittest.TestCase):
         cost = self.alg_instance.evaluate_cost(self.x_values,
                                                self.data_ws.readY(0),
                                                self.data_ws.readY(1),
+                                               self.data_ws.readE(0),
                                                peak_param=data_table,
                                                refit_peak_param=refit_data_table,
                                                use_poisson=True)
@@ -441,7 +443,7 @@ class FitGaussianPeaksTest(unittest.TestCase):
         yvals = self.gaussian(self.x_values, peak1['centre'], peak1['height'], peak1['sigma'])
         yvals += self.gaussian(self.x_values, peak2['centre'], peak2['height'], peak2['sigma'])
 
-        real_chi2 = self.alg_instance.function_difference(self.y_values, yvals)
+        real_chi2 = self.alg_instance.function_difference(self.y_values, yvals, np.sqrt(self.y_values))
         real_poisson = self.alg_instance.poisson_cost(self.y_values + self.background, yvals + self.background)
 
         self.assertAlmostEqual(real_chi2, chi2, 3)
