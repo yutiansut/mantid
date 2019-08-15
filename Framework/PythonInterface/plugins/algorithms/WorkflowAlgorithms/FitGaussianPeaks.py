@@ -379,4 +379,4 @@ class FitGaussianPeaks(DataProcessorAlgorithm):
         return fit_result.readY(1).copy(), param
 
 
-AlgorithmFactory.subscribe(FitGaussianPeaks())
+AlgorithmFactory.subscribe(FitGaussianPeaks)
