@@ -117,9 +117,9 @@ The most important to this effect are:
 
     # Fitting the data with strong noise
     FindPeakAutomatic(InputWorkspace=high_noise_ws,
-                      AcceptanceThreshold=0.02,
+                      AcceptanceThreshold=0.1,
                       SmoothWindow=30,
-                      EstimatePeakSigma=3,
+                      EstimatePeakSigma=2,
                       MaxPeakSigma=5,
                       PlotPeaks=False,
                       PeakPropertiesTableName='properties',
